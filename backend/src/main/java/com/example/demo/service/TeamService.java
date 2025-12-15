@@ -1,0 +1,72 @@
+package com.example.demo.service;
+
+import java.util.List;
+import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import com.example.demo.dao.TeamDao;
+import com.example.demo.model.Team;
+import com.example.demo.model.TeamMember;
+
+@Service
+public class TeamService {
+
+	@Autowired
+	private TeamDao dao;
+
+	// 팀 생성
+	public int createTeam(Team team) {
+		// 팀 코드 자동 생성
+		String code = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+		team.setTeamCode(code);
+		return dao.insertTeam(team);
+	}
+
+	// 팀 멤버 추가
+	public int addMember(TeamMember member) {
+		return dao.insertMember(member);
+	}
+
+	// 팀 코드로 팀 조회
+	public Team findByCode(String teamCode) {
+		return dao.findByCode(teamCode);
+	}
+
+	// 팀 ID로 팀 조회
+	public Team findById(int teamId) {
+		return dao.findById(teamId);
+	}
+
+	// 내가 속한 팀 목록
+	public List<Team> findMyTeams(int memberNo) {
+		return dao.findMyTeams(memberNo);
+	}
+
+	// 팀 멤버 목록
+	public List<TeamMember> findMembers(int teamId) {
+		return dao.findMembers(teamId);
+	}
+
+	// 팀 멤버 여부 확인
+	public boolean isMember(int teamId, int memberNo) {
+		TeamMember member = new TeamMember();
+		member.setTeamId(teamId);
+		member.setMemberNo(memberNo);
+		return dao.isMember(member) > 0;
+	}
+
+	// 팀 멤버 삭제 (탈퇴/강퇴)
+	public int removeMember(TeamMember member) {
+		return dao.deleteMember(member);
+	}
+
+	// 팀 삭제
+	public int deleteTeam(int teamId) {
+		return dao.deleteTeam(teamId);
+	}
+
+	// 팀 정보 수정
+	public int updateTeam(Team team) {
+		return dao.updateTeam(team);
+	}
+}

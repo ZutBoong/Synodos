@@ -1,0 +1,310 @@
+/* ===== 캘린더 페이지 레이아웃 ===== */
+.calendar-page {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+}
+
+.calendar-layout {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin-left: 52px;
+    transition: margin-left 0.2s ease;
+}
+
+.calendar-layout.sidebar-open {
+    margin-left: 260px;
+}
+
+.calendar-layout.sidebar-closed {
+    margin-left: 52px;
+}
+
+/* ===== 헤더 ===== */
+.calendar-header {
+    height: 56px;
+    min-height: 56px;
+    background: white;
+    border-bottom: 1px solid #e5e5e5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    flex-shrink: 0;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-left h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+    min-width: 150px;
+}
+
+.nav-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-btn:hover {
+    background: #f5f5f5;
+    border-color: #ccc;
+}
+
+.today-btn {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #666;
+}
+
+.today-btn:hover {
+    background: #f5f5f5;
+    border-color: #ccc;
+}
+
+.header-center {
+    display: flex;
+    align-items: center;
+}
+
+.team-name {
+    font-size: 14px;
+    color: #666;
+    background: #f0f0f0;
+    padding: 4px 12px;
+    border-radius: 4px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.view-toggle {
+    display: flex;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.view-toggle button {
+    padding: 6px 14px;
+    border: none;
+    background: white;
+    cursor: pointer;
+    font-size: 13px;
+    color: #666;
+    transition: all 0.15s;
+}
+
+.view-toggle button:not(:last-child) {
+    border-right: 1px solid #ddd;
+}
+
+.view-toggle button:hover {
+    background: #f5f5f5;
+}
+
+.view-toggle button.active {
+    background: #4a90d9;
+    color: white;
+}
+
+.logout-btn {
+    padding: 8px 16px;
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #666;
+}
+
+.logout-btn:hover {
+    background: #f5f5f5;
+    border-color: #ccc;
+    color: #333;
+}
+
+/* ===== 캘린더 콘텐츠 ===== */
+.calendar-content {
+    flex: 1;
+    background-color: #f4f5f7;
+    overflow: auto;
+    padding: 20px;
+}
+
+.no-team-selected,
+.calendar-loading {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 120px);
+    color: #666;
+    text-align: center;
+}
+
+.no-team-selected h2 {
+    margin: 0 0 10px 0;
+    color: #172b4d;
+}
+
+/* ===== 캘린더 그리드 ===== */
+.calendar-grid {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: #f8f9fa;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.weekday {
+    padding: 12px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #666;
+}
+
+.weekday:first-child {
+    color: #dc3545;
+}
+
+.weekday:last-child {
+    color: #0d6efd;
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-day {
+    min-height: 120px;
+    border-right: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 8px;
+    background: white;
+}
+
+.calendar-day:nth-child(7n) {
+    border-right: none;
+}
+
+.calendar-day.other-month {
+    background: #f8f9fa;
+}
+
+.calendar-day.other-month .day-number {
+    color: #aaa;
+}
+
+.calendar-day.today {
+    background: #e8f4fc;
+}
+
+.calendar-day.today .day-number {
+    background: #4a90d9;
+    color: white;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.day-header {
+    margin-bottom: 6px;
+}
+
+.day-number {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
+
+.day-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.task-item {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: white;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: opacity 0.15s;
+}
+
+.task-item:hover {
+    opacity: 0.9;
+}
+
+.more-tasks {
+    font-size: 11px;
+    color: #666;
+    padding: 2px 4px;
+    cursor: default;
+}
+
+/* ===== 주간 뷰 ===== */
+.calendar-grid.week .calendar-day {
+    min-height: 200px;
+}
+
+/* ===== 반응형 ===== */
+@media (max-width: 768px) {
+    .calendar-day {
+        min-height: 80px;
+        padding: 4px;
+    }
+
+    .task-item {
+        font-size: 10px;
+        padding: 2px 4px;
+    }
+
+    .day-number {
+        font-size: 12px;
+    }
+
+    .header-left h1 {
+        font-size: 16px;
+        min-width: 120px;
+    }
+}

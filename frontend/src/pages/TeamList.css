@@ -1,0 +1,142 @@
+.team-list-container {
+    padding: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.team-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.team-list-header h2 {
+    margin: 0;
+    color: #172b4d;
+}
+
+.team-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.no-teams {
+    text-align: center;
+    padding: 60px 20px;
+    background: #f4f5f7;
+    border-radius: 8px;
+    color: #666;
+}
+
+.teams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.team-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.team-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.team-card h3 {
+    margin: 0 0 15px 0;
+    color: #026aa7;
+    font-size: 18px;
+}
+
+.team-code {
+    font-family: monospace;
+    background: #f4f5f7;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #666;
+    display: inline-block;
+    margin-bottom: 10px;
+}
+
+.team-leader {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.team-card-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* 모달 스타일 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h3 {
+    margin: 0 0 20px 0;
+    color: #172b4d;
+}
+
+.modal-content .form-group {
+    margin-bottom: 20px;
+}
+
+.modal-content .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.modal-content .form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.modal-content .form-group input:focus {
+    outline: none;
+    border-color: #026aa7;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+}

@@ -1,0 +1,506 @@
+/* ===== 전체 페이지 레이아웃 ===== */
+.board-page {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+}
+
+.board-layout {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin-left: 52px;
+    transition: margin-left 0.2s ease;
+}
+
+.board-layout.sidebar-open {
+    margin-left: 260px;
+}
+
+.board-layout.sidebar-closed {
+    margin-left: 52px;
+}
+
+/* ===== 헤더 ===== */
+.board-page-header {
+    height: 56px;
+    min-height: 56px;
+    background: white;
+    border-bottom: 1px solid #e5e5e5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    flex-shrink: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-left h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.team-code-badge {
+    font-size: 12px;
+    font-family: monospace;
+    background: #f0f0f0;
+    color: #666;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.ws-status {
+    font-size: 10px;
+    margin-left: 8px;
+}
+
+.ws-status.connected {
+    color: #22c55e;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logout-btn {
+    padding: 8px 16px;
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #666;
+    transition: all 0.15s ease;
+}
+
+.logout-btn:hover {
+    background: #f5f5f5;
+    border-color: #ccc;
+    color: #333;
+}
+
+/* ===== 메인 콘텐츠 ===== */
+.board-content {
+    flex: 1;
+    background-color: #f4f5f7;
+    overflow: auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.board {
+    padding: 20px;
+    min-height: calc(100vh - 76px);
+}
+
+.board-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 76px);
+    color: #666;
+}
+
+.no-team-selected {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 76px);
+    color: #666;
+    text-align: center;
+}
+
+.no-team-selected h2 {
+    margin: 0 0 10px 0;
+    color: #172b4d;
+}
+
+.no-team-selected p {
+    margin: 0;
+    color: #888;
+}
+
+/* ===== 컬럼 컨테이너 ===== */
+.columns-container {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    overflow-x: auto;
+    padding-bottom: 20px;
+}
+
+.column {
+    background-color: #ebecf0;
+    border-radius: 8px;
+    min-width: 280px;
+    max-width: 280px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+.column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 4px;
+    margin-bottom: 8px;
+}
+
+.column-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #172b4d;
+    cursor: pointer;
+    flex: 1;
+}
+
+.column-header h3:hover {
+    background-color: #ddd;
+    border-radius: 4px;
+    padding: 4px 8px;
+    margin: -4px -8px;
+}
+
+.column-header input {
+    flex: 1;
+    padding: 6px 8px;
+    border: 2px solid #0079bf;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: #6b778c;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.delete-btn:hover {
+    background-color: #ddd;
+    color: #172b4d;
+}
+
+/* ===== 태스크 ===== */
+.tasks-container {
+    min-height: 50px;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.tasks-container.dragging-over {
+    background-color: #d4d8dc;
+}
+
+.task-card {
+    background-color: #fff;
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.task-card:hover {
+    background-color: #f4f5f7;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.task-card.dragging {
+    transform: rotate(3deg);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.task-card.closed {
+    opacity: 0.6;
+}
+
+.task-card.closed .task-card-title {
+    text-decoration: line-through;
+    color: #888;
+}
+
+/* 태스크 카드 헤더 (우선순위 + 삭제버튼) */
+.task-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.task-card-header .delete-btn {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.task-card:hover .task-card-header .delete-btn {
+    opacity: 1;
+}
+
+/* 우선순위 배지 */
+.priority-badge {
+    font-size: 10px;
+    font-weight: 600;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+
+/* 태스크 제목 */
+.task-card-title {
+    font-size: 14px;
+    color: #172b4d;
+    word-break: break-word;
+    line-height: 1.4;
+}
+
+/* 태스크 메타 정보 (담당자, 마감일) */
+.task-card-meta {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #5e6c84;
+}
+
+.task-card-meta .assignee,
+.task-card-meta .due-date {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.task-card-meta .icon {
+    font-size: 11px;
+}
+
+.task-card-meta .due-date.overdue {
+    color: #dc3545;
+    font-weight: 500;
+}
+
+/* 태스크 상태 배지 */
+.task-card-status {
+    margin-top: 8px;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    display: inline-block;
+    width: fit-content;
+}
+
+.task-card-status.status-in-progress {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.task-card-status.status-resolved {
+    background-color: #198754;
+    color: white;
+}
+
+.task-card-status.status-closed {
+    background-color: #6c757d;
+    color: white;
+}
+
+.task-card-status.status-cannot-reproduce {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.task-card-status.status-duplicate {
+    background-color: #6c757d;
+    color: white;
+}
+
+.task-card span {
+    flex: 1;
+    font-size: 14px;
+    color: #172b4d;
+    cursor: pointer;
+    word-break: break-word;
+}
+
+.task-card input {
+    flex: 1;
+    padding: 4px 8px;
+    border: 2px solid #0079bf;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* ===== 추가 버튼들 ===== */
+.add-task {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.add-task input {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: #fff;
+}
+
+.add-task input:focus {
+    outline: 2px solid #0079bf;
+}
+
+.add-task button {
+    padding: 8px 12px;
+    background-color: #0079bf;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.add-task button:hover {
+    background-color: #026aa7;
+}
+
+.add-column {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    min-width: 280px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.add-column input {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: #fff;
+}
+
+.add-column input:focus {
+    outline: 2px solid #0079bf;
+}
+
+.add-column button {
+    padding: 8px 12px;
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #172b4d;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.add-column button:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* ===== 태스크 태그 ===== */
+.task-card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.task-tag {
+    font-size: 10px;
+    font-weight: 500;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+
+.task-tag-more {
+    font-size: 10px;
+    color: #666;
+    padding: 2px 4px;
+}
+
+/* ===== 검증 상태 배지 ===== */
+.task-card-verification {
+    margin-top: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    display: inline-block;
+    width: fit-content;
+}
+
+/* ===== 채팅 패널 레이아웃 ===== */
+.board-layout.chat-open .board-content {
+    width: calc(100% - 320px);
+    flex: none;
+}
+
+.board-layout .chat-panel-wrapper {
+    position: fixed;
+    top: 56px;
+    right: 0;
+    width: 320px;
+    height: calc(100vh - 56px);
+    z-index: 50;
+}
+
+.chat-toggle-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #4a90d9;
+    color: white;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, background 0.2s;
+    z-index: 100;
+}
+
+.chat-toggle-btn:hover {
+    background: #3a7bc8;
+    transform: scale(1.05);
+}
+
+.chat-toggle-btn.active {
+    background: #666;
+}

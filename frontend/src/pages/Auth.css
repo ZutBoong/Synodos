@@ -1,0 +1,143 @@
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 100px);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+}
+
+.auth-box {
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 450px;
+}
+
+.auth-box h2 {
+    text-align: center;
+    color: #026aa7;
+    margin-bottom: 30px;
+    font-size: 28px;
+}
+
+.auth-box .form-group {
+    margin-bottom: 20px;
+}
+
+.auth-box .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.auth-box .form-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+}
+
+.auth-box .form-group input:focus {
+    outline: none;
+    border-color: #026aa7;
+}
+
+.input-with-button {
+    display: flex;
+    gap: 10px;
+}
+
+.input-with-button input {
+    flex: 1;
+}
+
+.btn-small {
+    padding: 10px 15px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.error-msg {
+    display: block;
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.success-msg {
+    display: block;
+    color: #28a745;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 30px;
+}
+
+.button-group .btn {
+    flex: 1;
+    padding: 14px;
+    font-size: 16px;
+}
+
+.auth-links {
+    text-align: center;
+    margin-top: 20px;
+    color: #666;
+    font-size: 14px;
+}
+
+.auth-links span {
+    cursor: pointer;
+    color: #026aa7;
+}
+
+.auth-links span:hover {
+    text-decoration: underline;
+}
+
+.auth-links .divider {
+    margin: 0 10px;
+    color: #ccc;
+    cursor: default;
+}
+
+.result-box {
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.result-box h3 {
+    color: #026aa7;
+    margin-bottom: 10px;
+}
+
+.result-box p {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.result-box .userid-display {
+    font-size: 24px;
+    font-weight: bold;
+    color: #026aa7;
+    background: #e7f3ff;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+}

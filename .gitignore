@@ -1,0 +1,37 @@
+# Backend (Java/Spring Boot/Maven)
+backend/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Frontend (React/Node)
+frontend/node_modules/
+frontend/build/
+frontend/.cache/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment files (uncomment if you use .env)
+# .env
+# .env.local
+# .env.*.local
+
+# Claude Code local settings
+.claude/
+
+# Test coverage
+coverage/

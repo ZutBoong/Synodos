@@ -1,0 +1,31 @@
+package com.example.demo.dao;
+
+import org.apache.ibatis.annotations.Mapper;
+import com.example.demo.model.Member;
+
+@Mapper
+public interface MemberDao {
+	// 회원가입
+	int insert(Member member);
+
+	// 아이디 중복 체크
+	int checkUserid(String userid);
+
+	// 이메일 중복 체크
+	int checkEmail(String email);
+
+	// 로그인 (기존)
+	Member login(Member member);
+
+	// userid로 회원 조회 (JWT 로그인용)
+	Member findByUserid(String userid);
+
+	// 아이디 찾기 (이름 + 이메일)
+	String findUserid(Member member);
+
+	// 비밀번호 찾기 전 회원 확인 (아이디 + 이메일)
+	Member findMemberForPassword(Member member);
+
+	// 비밀번호 변경
+	int updatePassword(Member member);
+}
