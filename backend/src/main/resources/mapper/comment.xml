@@ -5,10 +5,10 @@
 	<!-- 댓글 생성 -->
 	<insert id="insert" parameterType="comment">
 		<selectKey keyProperty="commentId" resultType="int" order="BEFORE">
-			SELECT flowtask_comment_seq.nextval FROM dual
+			SELECT nextval('flowtask_comment_seq')
 		</selectKey>
 		INSERT INTO flowtask_comment (comment_id, task_id, author_no, content, created_at, updated_at)
-		VALUES (#{commentId}, #{taskId}, #{authorNo}, #{content}, sysdate, sysdate)
+		VALUES (#{commentId}, #{taskId}, #{authorNo}, #{content}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 	</insert>
 
 	<!-- 태스크별 댓글 목록 -->
@@ -33,7 +33,7 @@
 	<!-- 댓글 수정 -->
 	<update id="update" parameterType="comment">
 		UPDATE flowtask_comment
-		SET content = #{content}, updated_at = sysdate
+		SET content = #{content}, updated_at = CURRENT_TIMESTAMP
 		WHERE comment_id = #{commentId}
 	</update>
 

@@ -5,10 +5,10 @@
 	<!-- 저장소 연결 -->
 	<insert id="insert" parameterType="gitRepo">
 		<selectKey keyProperty="repoId" resultType="int" order="BEFORE">
-			SELECT flowtask_git_repo_seq.nextval FROM dual
+			SELECT nextval('flowtask_git_repo_seq')
 		</selectKey>
 		INSERT INTO flowtask_git_repo (repo_id, team_id, provider, repo_owner, repo_name, access_token, created_at)
-		VALUES (#{repoId}, #{teamId}, #{provider}, #{repoOwner}, #{repoName}, #{accessToken}, sysdate)
+		VALUES (#{repoId}, #{teamId}, #{provider}, #{repoOwner}, #{repoName}, #{accessToken}, CURRENT_TIMESTAMP)
 	</insert>
 
 	<!-- 팀별 저장소 조회 -->

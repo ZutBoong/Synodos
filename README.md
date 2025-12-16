@@ -6,7 +6,7 @@
 
 - **Backend**: Spring Boot 3.2, MyBatis, Java 17
 - **Frontend**: React 18, React Router
-- **Database**: Oracle XE
+- **Database**: PostgreSQL
 - **Real-time**: WebSocket (STOMP)
 - **Auth**: JWT
 
@@ -26,33 +26,29 @@
 
 - Java 17+
 - Node.js 18+
-- Oracle XE (11g 이상)
+- PostgreSQL 15+
 
 ## 초기 설정
 
 ### 1. 데이터베이스 설정
 
-Oracle XE에 사용자와 테이블을 생성합니다.
+PostgreSQL에 데이터베이스와 사용자를 생성합니다.
 
 ```sql
--- Oracle에 접속 후 사용자 생성
-CREATE USER flow IDENTIFIED BY flow123;
-GRANT CONNECT, RESOURCE TO flow;
-GRANT UNLIMITED TABLESPACE TO flow;
+-- PostgreSQL에 접속 후
+CREATE DATABASE flowtask;
+CREATE USER flow WITH PASSWORD 'flow123';
+GRANT ALL PRIVILEGES ON DATABASE flowtask TO flow;
+
+-- flowtask DB에 접속 후 스키마 권한 부여
+\c flowtask
+GRANT ALL ON SCHEMA public TO flow;
 ```
 
-flow 사용자로 접속 후 스키마 파일들을 순서대로 실행:
+flow 사용자로 접속 후 스키마 파일 실행:
 
 ```bash
-# SQL*Plus 또는 SQL Developer에서 실행
-@database/schema.sql
-@database/kanban_schema.sql
-@database/issue_tracker_schema.sql
-@database/tag_schema.sql
-@database/verifier_schema.sql
-@database/comment_schema.sql
-@database/chat_schema.sql
-@database/git_schema.sql
+psql -U flow -d flowtask -f database/postgresql_schema.sql
 ```
 
 ### 2. Backend 실행
@@ -96,7 +92,7 @@ Flowtask/
 `backend/src/main/resources/application.properties`:
 
 ```properties
-spring.datasource.url=jdbc:oracle:thin:@localhost:1521:xe
+spring.datasource.url=jdbc:postgresql://localhost:5432/flowtask
 spring.datasource.username=flow
 spring.datasource.password=flow123
 ```

@@ -6,10 +6,10 @@
 	<insert id="insert" parameterType="task">
 		INSERT INTO flowtask_task (task_id, column_id, title, description, position, created_at,
 			assignee_no, priority, due_date, status)
-		VALUES (flowtask_task_seq.nextval, #{columnId}, #{title}, #{description, jdbcType=VARCHAR},
-			#{position}, sysdate,
+		VALUES (nextval('flowtask_task_seq'), #{columnId}, #{title}, #{description, jdbcType=VARCHAR},
+			#{position}, CURRENT_TIMESTAMP,
 			#{assigneeNo, jdbcType=INTEGER}, #{priority, jdbcType=VARCHAR},
-			#{dueDate, jdbcType=DATE}, NVL(#{status, jdbcType=VARCHAR}, 'OPEN'))
+			#{dueDate, jdbcType=DATE}, COALESCE(#{status, jdbcType=VARCHAR}, 'OPEN'))
 	</insert>
 
 	<!-- 컬럼별 태스크 목록 -->
@@ -98,7 +98,7 @@
 
 	<!-- 컬럼 내 최대 position 조회 -->
 	<select id="getMaxPosition" parameterType="int" resultType="int">
-		SELECT NVL(MAX(position), 0) FROM flowtask_task WHERE column_id = #{columnId}
+		SELECT COALESCE(MAX(position), 0) FROM flowtask_task WHERE column_id = #{columnId}
 	</select>
 
 	<!-- 담당자별 태스크 목록 -->
@@ -171,7 +171,7 @@
 		UPDATE flowtask_task
 		SET verification_status = #{verificationStatus},
 			verified_at = CASE
-				WHEN #{verificationStatus} IN ('APPROVED', 'REJECTED') THEN sysdate
+				WHEN #{verificationStatus} IN ('APPROVED', 'REJECTED') THEN CURRENT_TIMESTAMP
 				ELSE NULL
 			END,
 			verification_notes = #{verificationNotes, jdbcType=VARCHAR},

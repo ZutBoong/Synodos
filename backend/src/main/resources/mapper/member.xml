@@ -5,7 +5,7 @@
 	<!-- 회원가입 -->
 	<insert id="insert" parameterType="member">
 		INSERT INTO flowtask_member (no, userid, password, name, email, phone, register)
-		VALUES (flowtask_member_seq.nextval, #{userid}, #{password}, #{name}, #{email}, #{phone}, sysdate)
+		VALUES (nextval('flowtask_member_seq'), #{userid}, #{password}, #{name}, #{email}, #{phone}, CURRENT_TIMESTAMP)
 	</insert>
 
 	<!-- 아이디 중복 체크 -->

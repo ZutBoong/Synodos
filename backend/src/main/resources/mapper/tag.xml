@@ -6,10 +6,10 @@
 
     <insert id="insert" parameterType="Tag">
         <selectKey keyProperty="tagId" resultType="int" order="BEFORE">
-            SELECT flowtask_tag_seq.nextval FROM dual
+            SELECT nextval('flowtask_tag_seq')
         </selectKey>
         INSERT INTO flowtask_tag (tag_id, team_id, tag_name, color, created_at)
-        VALUES (#{tagId}, #{teamId}, #{tagName}, #{color, jdbcType=VARCHAR}, SYSDATE)
+        VALUES (#{tagId}, #{teamId}, #{tagName}, #{color, jdbcType=VARCHAR}, CURRENT_TIMESTAMP)
     </insert>
 
     <select id="listByTeam" parameterType="int" resultType="Tag">
