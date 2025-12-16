@@ -4,11 +4,34 @@
 
 ## 기술 스택
 
-- **Backend**: Spring Boot 3.2, MyBatis, Java 17
-- **Frontend**: React 18, React Router
-- **Database**: PostgreSQL
-- **Real-time**: WebSocket (STOMP)
-- **Auth**: JWT
+### 런타임 환경
+| 기술 | 버전 |
+|------|------|
+| Java | 17 |
+| Node.js | 18+ |
+| PostgreSQL | 15+ |
+
+### Backend
+| 라이브러리 | 버전 |
+|------------|------|
+| Spring Boot | 3.2.0 |
+| Spring Boot Security | 3.2.0 |
+| Spring Boot WebSocket | 3.2.0 |
+| MyBatis Spring Boot Starter | 3.0.3 |
+| JJWT (JWT) | 0.12.3 |
+| Lombok | Spring 관리 |
+
+### Frontend
+| 라이브러리 | 버전 |
+|------------|------|
+| React | 18.2.0 |
+| React DOM | 18.2.0 |
+| React Router DOM | 6.20.0 |
+| React Scripts | 5.0.1 |
+| Axios | 1.6.2 |
+| @hello-pangea/dnd | 16.5.0 |
+| @stomp/stompjs | 7.2.1 |
+| sockjs-client | 1.6.1 |
 
 ## 주요 기능
 
