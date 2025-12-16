@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Flowtask is a team-based Kanban board application with a Spring Boot backend and React frontend, using Oracle database for persistence. Features include JWT authentication, real-time updates via WebSocket, task comments, tags, verification workflow, team chat, and Git integration.
+Flowtask is a team-based Kanban board application with a Spring Boot backend and React frontend, using PostgreSQL database for persistence. Features include JWT authentication, real-time updates via WebSocket, task comments, tags, verification workflow, team chat, and Git integration.
 
 ## Build and Run Commands
 
@@ -27,19 +27,16 @@ npm test                        # Run tests
 ```
 
 ### Database
-Oracle XE running on localhost:1521. Schema files in `database/`:
-- `schema.sql` - Member tables
-- `kanban_schema.sql` - Columns and tasks
-- `issue_tracker_schema.sql` - Extended task fields (priority, assignee, dates)
-- `tag_schema.sql` - Task tags
-- `verifier_schema.sql` - Task verification workflow
-- `comment_schema.sql` - Task comments
-- `chat_schema.sql` - Team chat messages
-- `git_schema.sql` - Git repository and commit links
+PostgreSQL running on localhost:5432. Main schema file: `database/postgresql_schema.sql`
+
+Initialize database:
+```bash
+psql -U flow -d flowtask -f database/postgresql_schema.sql
+```
 
 ## Architecture
 
-### Backend Structure (Spring Boot 3.2 + MyBatis + Oracle)
+### Backend Structure (Spring Boot 3.2 + MyBatis + PostgreSQL)
 - **Controllers** (`controller/`): REST endpoints under `/api` prefix
 - **Services** (`service/`): Business logic layer
 - **DAOs** (`dao/`): MyBatis mapper interfaces
@@ -78,5 +75,5 @@ JWT-based authentication with tokens stored client-side. Configured in `Security
 ## Key Configuration
 - Backend port: 8081 (application.properties)
 - Frontend proxy: http://localhost:8081 (package.json)
-- DB credentials: flow/flow123@localhost:1521:xe
+- DB credentials: flow/flow123@localhost:5432/flowtask
 - Java version: 17
