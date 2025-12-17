@@ -6,11 +6,17 @@ import {
     tasklistByTeam, taskwrite, taskupdate, taskdelete, taskposition
 } from '../api/boardApi';
 import { getTeamMembers } from '../api/teamApi';
+import {
+    getColumnAssignees, setColumnAssignees as setColumnAssigneesApi,
+    toggleColumnFavorite, checkColumnFavorite,
+    archiveColumn
+} from '../api/columnApi';
 import websocketService from '../api/websocketService';
 import Sidebar from '../components/Sidebar';
 import TaskModal from '../components/TaskModal';
 import FilterBar from '../components/FilterBar';
 import ChatPanel from '../components/ChatPanel';
+import NotificationBell from '../components/NotificationBell';
 import './Board.css';
 
 // 우선순위 색상 맵
@@ -64,6 +70,14 @@ function Board() {
     });
     const [showTeamCode, setShowTeamCode] = useState(false);
     const [codeCopySuccess, setCodeCopySuccess] = useState(false);
+
+    // 컬럼 기능 관련 상태
+    const [columnAssignees, setColumnAssignees] = useState({});  // { columnId: [assignees] }
+    const [columnFavorites, setColumnFavoritesState] = useState({});  // { columnId: boolean }
+    const [columnMenuOpen, setColumnMenuOpen] = useState(null);  // 열린 컬럼 메뉴의 columnId
+    const [assigneeModalColumn, setAssigneeModalColumn] = useState(null);  // 담당자 모달이 열린 컬럼
+    const [archiveModalColumn, setArchiveModalColumn] = useState(null);  // 아카이브 모달이 열린 컬럼
+    const [archiveNote, setArchiveNote] = useState('');
 
     // 스크롤 관련
     const columnsContainerRef = useRef(null);
@@ -246,6 +260,10 @@ function Board() {
             setColumns(columnsData || []);
             setTasks(tasksData || []);
             setTeamMembers(membersData || []);
+            // 컬럼 담당자/즐겨찾기 로드
+            if (columnsData && columnsData.length > 0) {
+                loadColumnExtras(columnsData);
+            }
         } catch (error) {
             console.error('데이터 로드 실패:', error);
         } finally {
@@ -255,6 +273,75 @@ function Board() {
 
     const handleSelectTeam = (team) => {
         setCurrentTeam(team);
+    };
+
+    // 컬럼 담당자/즐겨찾기 로드
+    const loadColumnExtras = async (columnList) => {
+        if (!loginMember) return;
+
+        const assigneesMap = {};
+        const favoritesMap = {};
+
+        await Promise.all(columnList.map(async (column) => {
+            try {
+                const [assignees, favoriteResult] = await Promise.all([
+                    getColumnAssignees(column.columnId),
+                    checkColumnFavorite(column.columnId, loginMember.no)
+                ]);
+                assigneesMap[column.columnId] = assignees || [];
+                favoritesMap[column.columnId] = favoriteResult?.isFavorite || false;
+            } catch (e) {
+                assigneesMap[column.columnId] = [];
+                favoritesMap[column.columnId] = false;
+            }
+        }));
+
+        setColumnAssignees(assigneesMap);
+        setColumnFavoritesState(favoritesMap);
+    };
+
+    // 컬럼 즐겨찾기 토글
+    const handleToggleFavorite = async (columnId) => {
+        if (!loginMember) return;
+        try {
+            const result = await toggleColumnFavorite(columnId, loginMember.no);
+            setColumnFavoritesState(prev => ({
+                ...prev,
+                [columnId]: result.isFavorite
+            }));
+        } catch (error) {
+            console.error('즐겨찾기 토글 실패:', error);
+        }
+    };
+
+    // 컬럼 담당자 저장
+    const handleSaveAssignees = async (columnId, memberNos) => {
+        try {
+            // loginMember가 있으면 senderNo를 전달하여 알림 발송
+            await setColumnAssigneesApi(columnId, memberNos, loginMember?.no);
+            const assignees = await getColumnAssignees(columnId);
+            setColumnAssignees(prev => ({
+                ...prev,
+                [columnId]: assignees || []
+            }));
+            setAssigneeModalColumn(null);
+        } catch (error) {
+            console.error('담당자 저장 실패:', error);
+        }
+    };
+
+    // 컬럼 아카이브
+    const handleArchiveColumn = async (columnId) => {
+        if (!loginMember) return;
+        try {
+            await archiveColumn(columnId, loginMember.no, archiveNote);
+            alert('컬럼이 아카이브되었습니다.');
+            setArchiveModalColumn(null);
+            setArchiveNote('');
+        } catch (error) {
+            console.error('아카이브 실패:', error);
+            alert('아카이브에 실패했습니다.');
+        }
     };
 
     const handleLogout = () => {
@@ -415,7 +502,9 @@ function Board() {
                 teamId: currentTeam.teamId
             });
             setNewColumnTitle('');
-            // WebSocket이 상태를 업데이트하므로 fetchData() 제거
+            // 컬럼 목록 새로 가져오기
+            const columnsData = await columnlistByTeam(currentTeam.teamId);
+            setColumns(columnsData || []);
         } catch (error) {
             console.error('컬럼 추가 실패:', error);
         }
@@ -425,8 +514,11 @@ function Board() {
     const handleUpdateColumn = async (columnId, newTitle) => {
         try {
             await columnupdate({ columnId, title: newTitle });
+            // 즉시 로컬 상태 업데이트
+            setColumns(prev => prev.map(col =>
+                col.columnId === columnId ? { ...col, title: newTitle } : col
+            ));
             setEditingColumn(null);
-            // WebSocket이 상태를 업데이트
         } catch (error) {
             console.error('컬럼 수정 실패:', error);
         }
@@ -438,7 +530,9 @@ function Board() {
 
         try {
             await columndelete(columnId);
-            // WebSocket이 상태를 업데이트
+            // 즉시 로컬 상태 업데이트
+            setColumns(prev => prev.filter(col => col.columnId !== columnId));
+            setTasks(prev => prev.filter(task => task.columnId !== columnId));
         } catch (error) {
             console.error('컬럼 삭제 실패:', error);
         }
@@ -452,7 +546,9 @@ function Board() {
         try {
             await taskwrite({ columnId, title });
             setNewTaskTitle({ ...newTaskTitle, [columnId]: '' });
-            // WebSocket이 상태를 업데이트
+            // 태스크 목록 새로 가져오기 (생성된 태스크 포함)
+            const tasksData = await tasklistByTeam(currentTeam.teamId);
+            setTasks(tasksData || []);
         } catch (error) {
             console.error('태스크 추가 실패:', error);
         }
@@ -463,8 +559,11 @@ function Board() {
         try {
             const task = tasks.find(t => t.taskId === taskId);
             await taskupdate({ taskId, title: newTitle, description: task?.description || '' });
+            // 즉시 로컬 상태 업데이트
+            setTasks(prev => prev.map(t =>
+                t.taskId === taskId ? { ...t, title: newTitle } : t
+            ));
             setEditingTask(null);
-            // WebSocket이 상태를 업데이트
         } catch (error) {
             console.error('태스크 수정 실패:', error);
         }
@@ -474,7 +573,8 @@ function Board() {
     const handleDeleteTask = async (taskId) => {
         try {
             await taskdelete(taskId);
-            // WebSocket이 상태를 업데이트
+            // 즉시 로컬 상태 업데이트
+            setTasks(prev => prev.filter(t => t.taskId !== taskId));
         } catch (error) {
             console.error('태스크 삭제 실패:', error);
         }
@@ -521,6 +621,7 @@ function Board() {
                         )}
                     </div>
                     <div className="header-right">
+                        {loginMember && <NotificationBell memberNo={loginMember.no} />}
                         <button className="logout-btn" onClick={handleLogout}>로그아웃</button>
                     </div>
                 </header>
@@ -605,15 +706,72 @@ function Board() {
                                                                     />
                                                                 ) : (
                                                                     <>
-                                                                        <h3 onClick={() => setEditingColumn(column.columnId)}>
-                                                                            {column.title}
-                                                                        </h3>
-                                                                        <button
-                                                                            className="delete-btn"
-                                                                            onClick={() => handleDeleteColumn(column.columnId)}
-                                                                        >
-                                                                            ×
-                                                                        </button>
+                                                                        <div className="column-title-row">
+                                                                            <button
+                                                                                className={`favorite-btn ${columnFavorites[column.columnId] ? 'active' : ''}`}
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    handleToggleFavorite(column.columnId);
+                                                                                }}
+                                                                                title={columnFavorites[column.columnId] ? '즐겨찾기 해제' : '즐겨찾기'}
+                                                                            >
+                                                                                {columnFavorites[column.columnId] ? '★' : '☆'}
+                                                                            </button>
+                                                                            <h3 onClick={() => setEditingColumn(column.columnId)}>
+                                                                                {column.title}
+                                                                            </h3>
+                                                                            <div className="column-menu-wrapper">
+                                                                                <button
+                                                                                    className="column-menu-btn"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        setColumnMenuOpen(columnMenuOpen === column.columnId ? null : column.columnId);
+                                                                                    }}
+                                                                                >
+                                                                                    ⋮
+                                                                                </button>
+                                                                                {columnMenuOpen === column.columnId && (
+                                                                                    <div className="column-menu-dropdown">
+                                                                                        <button onClick={() => {
+                                                                                            setAssigneeModalColumn(column.columnId);
+                                                                                            setColumnMenuOpen(null);
+                                                                                        }}>
+                                                                                            👥 담당자 설정
+                                                                                        </button>
+                                                                                        <button onClick={() => {
+                                                                                            setArchiveModalColumn(column.columnId);
+                                                                                            setColumnMenuOpen(null);
+                                                                                        }}>
+                                                                                            📦 아카이브
+                                                                                        </button>
+                                                                                        <button
+                                                                                            className="menu-delete-btn"
+                                                                                            onClick={() => {
+                                                                                                handleDeleteColumn(column.columnId);
+                                                                                                setColumnMenuOpen(null);
+                                                                                            }}
+                                                                                        >
+                                                                                            🗑️ 삭제
+                                                                                        </button>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                        {/* 컬럼 담당자 표시 */}
+                                                                        {columnAssignees[column.columnId]?.length > 0 && (
+                                                                            <div className="column-assignees">
+                                                                                {columnAssignees[column.columnId].slice(0, 3).map(assignee => (
+                                                                                    <span key={assignee.memberNo} className="column-assignee-badge" title={assignee.memberName}>
+                                                                                        {assignee.memberName?.charAt(0) || '?'}
+                                                                                    </span>
+                                                                                ))}
+                                                                                {columnAssignees[column.columnId].length > 3 && (
+                                                                                    <span className="column-assignee-more">
+                                                                                        +{columnAssignees[column.columnId].length - 3}
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
                                                                     </>
                                                                 )}
                                                             </div>
@@ -639,15 +797,10 @@ function Board() {
                                                                                         {...provided.dragHandleProps}
                                                                                         onClick={() => setSelectedTask(task)}
                                                                                     >
-                                                                                        <div className="task-card-header">
-                                                                                            {task.priority && (
-                                                                                                <span
-                                                                                                    className="priority-badge"
-                                                                                                    style={{ backgroundColor: PRIORITY_COLORS[task.priority] }}
-                                                                                                >
-                                                                                                    {task.priority}
-                                                                                                </span>
-                                                                                            )}
+                                                                                        <div className="task-card-top">
+                                                                                            <div className="task-card-title">
+                                                                                                {task.title}
+                                                                                            </div>
                                                                                             <button
                                                                                                 className="delete-btn"
                                                                                                 onClick={(e) => {
@@ -658,23 +811,32 @@ function Board() {
                                                                                                 ×
                                                                                             </button>
                                                                                         </div>
-                                                                                        <div className="task-card-title">
-                                                                                            {task.title}
-                                                                                        </div>
-                                                                                        <div className="task-card-meta">
-                                                                                            {task.assigneeName && (
-                                                                                                <span className="assignee">
-                                                                                                    <span className="icon">👤</span>
-                                                                                                    {task.assigneeName}
+                                                                                        {task.priority && (
+                                                                                            <div className="task-card-priority">
+                                                                                                <span
+                                                                                                    className="priority-badge"
+                                                                                                    style={{ backgroundColor: PRIORITY_COLORS[task.priority] }}
+                                                                                                >
+                                                                                                    {task.priority}
                                                                                                 </span>
-                                                                                            )}
-                                                                                            {task.dueDate && (
-                                                                                                <span className={`due-date ${new Date(task.dueDate) < new Date() ? 'overdue' : ''}`}>
-                                                                                                    <span className="icon">📅</span>
-                                                                                                    {new Date(task.dueDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
-                                                                                                </span>
-                                                                                            )}
-                                                                                        </div>
+                                                                                            </div>
+                                                                                        )}
+                                                                                        {(task.assigneeName || task.dueDate) && (
+                                                                                            <div className="task-card-meta">
+                                                                                                {task.assigneeName && (
+                                                                                                    <span className="assignee">
+                                                                                                        <span className="icon">👤</span>
+                                                                                                        {task.assigneeName}
+                                                                                                    </span>
+                                                                                                )}
+                                                                                                {task.dueDate && (
+                                                                                                    <span className={`due-date ${new Date(task.dueDate) < new Date() ? 'overdue' : ''}`}>
+                                                                                                        <span className="icon">📅</span>
+                                                                                                        {new Date(task.dueDate).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                                                                    </span>
+                                                                                                )}
+                                                                                            </div>
+                                                                                        )}
                                                                                         {task.tags && task.tags.length > 0 && (
                                                                                             <div className="task-card-tags">
                                                                                                 {task.tags.slice(0, 3).map(tag => (
@@ -793,11 +955,119 @@ function Board() {
                     teamId={currentTeam?.teamId}
                     loginMember={loginMember}
                     onClose={() => setSelectedTask(null)}
-                    onSave={() => {
-                        // WebSocket이 업데이트를 처리하므로 별도 리프레시 불필요
+                    onSave={(updatedTaskData) => {
+                        // 즉시 로컬 상태 업데이트
+                        setTasks(prev => prev.map(task => {
+                            if (task.taskId === updatedTaskData.taskId) {
+                                // assigneeName 찾기
+                                const assignee = teamMembers.find(m => m.memberNo === updatedTaskData.assigneeNo);
+                                return {
+                                    ...task,
+                                    ...updatedTaskData,
+                                    assigneeName: assignee?.memberName || null
+                                };
+                            }
+                            return task;
+                        }));
                         setSelectedTask(null);
                     }}
                 />
+            )}
+
+            {/* 컬럼 담당자 설정 모달 */}
+            {assigneeModalColumn && (
+                <div className="modal-overlay" onClick={() => setAssigneeModalColumn(null)}>
+                    <div className="modal-content assignee-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>컬럼 담당자 설정</h3>
+                            <button className="close-btn" onClick={() => setAssigneeModalColumn(null)}>×</button>
+                        </div>
+                        <div className="modal-body">
+                            <p className="modal-description">담당자를 선택하세요 (복수 선택 가능)</p>
+                            <div className="assignee-list">
+                                {teamMembers.map(member => {
+                                    const isSelected = columnAssignees[assigneeModalColumn]?.some(
+                                        a => a.memberNo === member.memberNo
+                                    );
+                                    return (
+                                        <label key={member.memberNo} className="assignee-checkbox">
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={(e) => {
+                                                    const currentAssignees = columnAssignees[assigneeModalColumn] || [];
+                                                    let newAssignees;
+                                                    if (e.target.checked) {
+                                                        newAssignees = [...currentAssignees, { memberNo: member.memberNo, memberName: member.memberName }];
+                                                    } else {
+                                                        newAssignees = currentAssignees.filter(a => a.memberNo !== member.memberNo);
+                                                    }
+                                                    setColumnAssignees(prev => ({
+                                                        ...prev,
+                                                        [assigneeModalColumn]: newAssignees
+                                                    }));
+                                                }}
+                                            />
+                                            <span className="assignee-name">{member.memberName}</span>
+                                            <span className="assignee-userid">@{member.memberUserid}</span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="cancel-btn" onClick={() => setAssigneeModalColumn(null)}>취소</button>
+                            <button
+                                className="save-btn"
+                                onClick={() => {
+                                    const memberNos = (columnAssignees[assigneeModalColumn] || []).map(a => a.memberNo);
+                                    handleSaveAssignees(assigneeModalColumn, memberNos);
+                                }}
+                            >
+                                저장
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* 컬럼 아카이브 모달 */}
+            {archiveModalColumn && (
+                <div className="modal-overlay" onClick={() => setArchiveModalColumn(null)}>
+                    <div className="modal-content archive-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>컬럼 아카이브</h3>
+                            <button className="close-btn" onClick={() => setArchiveModalColumn(null)}>×</button>
+                        </div>
+                        <div className="modal-body">
+                            <p className="modal-description">
+                                이 컬럼과 모든 태스크를 아카이브합니다.
+                                아카이브된 컬럼은 마이페이지에서 확인할 수 있습니다.
+                            </p>
+                            <div className="archive-note-section">
+                                <label>메모 (선택사항)</label>
+                                <textarea
+                                    value={archiveNote}
+                                    onChange={(e) => setArchiveNote(e.target.value)}
+                                    placeholder="이 컬럼을 아카이브하는 이유나 목적을 기록하세요..."
+                                    rows={3}
+                                />
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="cancel-btn" onClick={() => {
+                                setArchiveModalColumn(null);
+                                setArchiveNote('');
+                            }}>취소</button>
+                            <button
+                                className="save-btn archive-btn"
+                                onClick={() => handleArchiveColumn(archiveModalColumn)}
+                            >
+                                아카이브
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

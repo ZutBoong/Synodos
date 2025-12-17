@@ -207,3 +207,332 @@
     font-size: 18px;
     color: white;
 }
+
+/* ===== 즐겨찾기 스타일 ===== */
+.favorites-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.favorite-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: #fffbeb;
+    border-radius: 12px;
+    border: 1px solid #fde68a;
+    transition: all 0.2s;
+}
+
+.favorite-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.favorite-info h4 {
+    margin: 0 0 6px 0;
+    font-size: 16px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.star-icon {
+    color: #f5a623;
+    font-size: 18px;
+}
+
+.favorite-meta {
+    font-size: 13px;
+    color: #666;
+}
+
+.team-name {
+    font-weight: 500;
+}
+
+.project-name {
+    color: #888;
+}
+
+/* ===== 아카이브 스타일 ===== */
+.archives-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.archive-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 16px 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #e0e0e0;
+    transition: all 0.2s;
+}
+
+.archive-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.archive-info {
+    flex: 1;
+    cursor: pointer;
+}
+
+.archive-info h4 {
+    margin: 0 0 6px 0;
+    font-size: 16px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.archive-icon {
+    font-size: 16px;
+}
+
+.archive-meta {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.archive-date {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 4px;
+}
+
+.archive-note {
+    font-size: 12px;
+    color: #666;
+    background: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin-top: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.archive-actions,
+.favorite-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.15s;
+}
+
+.btn-small.btn-secondary {
+    background: #e0e0e0;
+    color: #333;
+}
+
+.btn-small.btn-secondary:hover {
+    background: #d0d0d0;
+}
+
+.btn-small.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-small.btn-danger:hover {
+    background: #c82333;
+}
+
+/* ===== 아카이브 모달 스타일 ===== */
+.archive-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.archive-modal-content {
+    background: white;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.archive-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.archive-modal-header h3 {
+    margin: 0;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.archive-modal-header .close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    line-height: 1;
+}
+
+.archive-modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.archive-detail-section {
+    margin-bottom: 24px;
+}
+
+.archive-detail-section:last-child {
+    margin-bottom: 0;
+}
+
+.archive-detail-section h4 {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    color: #333;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.detail-row {
+    display: flex;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.detail-row .label {
+    width: 100px;
+    color: #666;
+    flex-shrink: 0;
+}
+
+.detail-row .value {
+    color: #333;
+}
+
+.archived-tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.archived-task-item {
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.archived-task-item .task-title {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.archived-task-item .task-description {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.archived-task-item .task-meta {
+    display: flex;
+    gap: 8px;
+}
+
+.archived-task-item .task-meta span {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.archived-task-item .priority {
+    background: #e0e0e0;
+    color: #333;
+}
+
+.archived-task-item .priority.critical {
+    background: #dc3545;
+    color: white;
+}
+
+.archived-task-item .priority.high {
+    background: #fd7e14;
+    color: white;
+}
+
+.archived-task-item .priority.medium {
+    background: #0d6efd;
+    color: white;
+}
+
+.archived-task-item .priority.low {
+    background: #6c757d;
+    color: white;
+}
+
+.archived-task-item .status {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.empty-tasks {
+    text-align: center;
+    color: #999;
+    padding: 20px;
+}
+
+.archive-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.archive-modal-footer .btn {
+    width: auto;
+    padding: 10px 20px;
+}
+
+.archive-modal-footer .btn-danger {
+    background: #dc3545;
+}
+
+.archive-modal-footer .btn-danger:hover {
+    background: #c82333;
+}

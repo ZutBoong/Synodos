@@ -1,38 +1,14 @@
--- Flowtask PostgreSQL 스키마
--- PostgreSQL 15+ 호환
+-- =============================================
+-- Flowtask - Complete Database Schema
+-- PostgreSQL 15+ Compatible
+-- For Docker initialization
+-- =============================================
 
--- ========================================
--- 기존 테이블/시퀀스 삭제 (필요시 주석 해제)
--- ========================================
--- DROP TABLE IF EXISTS flowtask_task_commit CASCADE;
--- DROP TABLE IF EXISTS flowtask_git_repo CASCADE;
--- DROP TABLE IF EXISTS flowtask_chat_message CASCADE;
--- DROP TABLE IF EXISTS flowtask_comment CASCADE;
--- DROP TABLE IF EXISTS flowtask_task_tag CASCADE;
--- DROP TABLE IF EXISTS flowtask_tag CASCADE;
--- DROP TABLE IF EXISTS flowtask_task CASCADE;
--- DROP TABLE IF EXISTS flowtask_column CASCADE;
--- DROP TABLE IF EXISTS flowtask_project CASCADE;
--- DROP TABLE IF EXISTS flowtask_team_member CASCADE;
--- DROP TABLE IF EXISTS flowtask_team CASCADE;
--- DROP TABLE IF EXISTS flowtask_member CASCADE;
-
--- ========================================
--- 시퀀스 생성
--- ========================================
+-- =============================================
+-- 1. Member Table
+-- =============================================
 CREATE SEQUENCE IF NOT EXISTS flowtask_member_seq START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE IF NOT EXISTS flowtask_team_seq START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE IF NOT EXISTS flowtask_project_seq START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE IF NOT EXISTS flowtask_column_seq START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE IF NOT EXISTS flowtask_task_seq START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE IF NOT EXISTS flowtask_tag_seq START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE IF NOT EXISTS flowtask_comment_seq START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE IF NOT EXISTS flowtask_chat_seq START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE IF NOT EXISTS flowtask_git_repo_seq START WITH 1 INCREMENT BY 1;
 
--- ========================================
--- 회원 테이블
--- ========================================
 CREATE TABLE IF NOT EXISTS flowtask_member (
     no INTEGER PRIMARY KEY,
     userid VARCHAR(50) NOT NULL UNIQUE,
@@ -46,9 +22,12 @@ CREATE TABLE IF NOT EXISTS flowtask_member (
 CREATE INDEX IF NOT EXISTS idx_flowtask_member_userid ON flowtask_member(userid);
 CREATE INDEX IF NOT EXISTS idx_flowtask_member_email ON flowtask_member(email);
 
--- ========================================
--- 팀 테이블
--- ========================================
+-- =============================================
+-- 2. Team & Project Tables
+-- =============================================
+CREATE SEQUENCE IF NOT EXISTS flowtask_team_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE IF NOT EXISTS flowtask_project_seq START WITH 1 INCREMENT BY 1;
+
 CREATE TABLE IF NOT EXISTS flowtask_team (
     team_id INTEGER PRIMARY KEY,
     team_name VARCHAR(100) NOT NULL,
@@ -60,9 +39,6 @@ CREATE TABLE IF NOT EXISTS flowtask_team (
 CREATE INDEX IF NOT EXISTS idx_team_leader ON flowtask_team(leader_no);
 CREATE INDEX IF NOT EXISTS idx_team_code ON flowtask_team(team_code);
 
--- ========================================
--- 팀 멤버 테이블
--- ========================================
 CREATE TABLE IF NOT EXISTS flowtask_team_member (
     team_id INTEGER NOT NULL REFERENCES flowtask_team(team_id) ON DELETE CASCADE,
     member_no INTEGER NOT NULL REFERENCES flowtask_member(no) ON DELETE CASCADE,
@@ -74,9 +50,6 @@ CREATE TABLE IF NOT EXISTS flowtask_team_member (
 CREATE INDEX IF NOT EXISTS idx_teammember_team ON flowtask_team_member(team_id);
 CREATE INDEX IF NOT EXISTS idx_teammember_member ON flowtask_team_member(member_no);
 
--- ========================================
--- 프로젝트 테이블
--- ========================================
 CREATE TABLE IF NOT EXISTS flowtask_project (
     project_id INTEGER PRIMARY KEY,
     team_id INTEGER NOT NULL REFERENCES flowtask_team(team_id) ON DELETE CASCADE,
@@ -86,9 +59,12 @@ CREATE TABLE IF NOT EXISTS flowtask_project (
 
 CREATE INDEX IF NOT EXISTS idx_project_team ON flowtask_project(team_id);
 
--- ========================================
--- 컬럼 테이블
--- ========================================
+-- =============================================
+-- 3. Board (Column & Task) Tables
+-- =============================================
+CREATE SEQUENCE IF NOT EXISTS flowtask_column_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE IF NOT EXISTS flowtask_task_seq START WITH 1 INCREMENT BY 1;
+
 CREATE TABLE IF NOT EXISTS flowtask_column (
     column_id INTEGER PRIMARY KEY,
     title VARCHAR(100) NOT NULL,
@@ -101,9 +77,6 @@ CREATE INDEX IF NOT EXISTS idx_flowtask_column_position ON flowtask_column(posit
 CREATE INDEX IF NOT EXISTS idx_flowtask_column_team ON flowtask_column(team_id);
 CREATE INDEX IF NOT EXISTS idx_flowtask_column_project ON flowtask_column(project_id);
 
--- ========================================
--- 태스크 테이블
--- ========================================
 CREATE TABLE IF NOT EXISTS flowtask_task (
     task_id INTEGER PRIMARY KEY,
     column_id INTEGER NOT NULL REFERENCES flowtask_column(column_id) ON DELETE CASCADE,
@@ -114,7 +87,7 @@ CREATE TABLE IF NOT EXISTS flowtask_task (
     -- Issue tracker fields
     assignee_no INTEGER REFERENCES flowtask_member(no) ON DELETE SET NULL,
     priority VARCHAR(20) DEFAULT 'MEDIUM',
-    due_date DATE,
+    due_date TIMESTAMP,
     status VARCHAR(30) DEFAULT 'OPEN',
     -- Verifier fields
     verifier_no INTEGER REFERENCES flowtask_member(no) ON DELETE SET NULL,
@@ -132,9 +105,11 @@ CREATE INDEX IF NOT EXISTS idx_task_due_date ON flowtask_task(due_date);
 CREATE INDEX IF NOT EXISTS idx_task_verifier ON flowtask_task(verifier_no);
 CREATE INDEX IF NOT EXISTS idx_task_verif_status ON flowtask_task(verification_status);
 
--- ========================================
--- 태그 테이블
--- ========================================
+-- =============================================
+-- 4. Tag Tables
+-- =============================================
+CREATE SEQUENCE IF NOT EXISTS flowtask_tag_seq START WITH 1 INCREMENT BY 1;
+
 CREATE TABLE IF NOT EXISTS flowtask_tag (
     tag_id INTEGER PRIMARY KEY,
     team_id INTEGER NOT NULL REFERENCES flowtask_team(team_id) ON DELETE CASCADE,
@@ -146,9 +121,6 @@ CREATE TABLE IF NOT EXISTS flowtask_tag (
 
 CREATE INDEX IF NOT EXISTS idx_tag_team ON flowtask_tag(team_id);
 
--- ========================================
--- 태스크-태그 매핑 테이블
--- ========================================
 CREATE TABLE IF NOT EXISTS flowtask_task_tag (
     task_id INTEGER NOT NULL REFERENCES flowtask_task(task_id) ON DELETE CASCADE,
     tag_id INTEGER NOT NULL REFERENCES flowtask_tag(tag_id) ON DELETE CASCADE,
@@ -158,9 +130,11 @@ CREATE TABLE IF NOT EXISTS flowtask_task_tag (
 CREATE INDEX IF NOT EXISTS idx_tasktag_task ON flowtask_task_tag(task_id);
 CREATE INDEX IF NOT EXISTS idx_tasktag_tag ON flowtask_task_tag(tag_id);
 
--- ========================================
--- 댓글 테이블
--- ========================================
+-- =============================================
+-- 5. Comment Table
+-- =============================================
+CREATE SEQUENCE IF NOT EXISTS flowtask_comment_seq START WITH 1 INCREMENT BY 1;
+
 CREATE TABLE IF NOT EXISTS flowtask_comment (
     comment_id INTEGER PRIMARY KEY,
     task_id INTEGER NOT NULL REFERENCES flowtask_task(task_id) ON DELETE CASCADE,
@@ -173,9 +147,11 @@ CREATE TABLE IF NOT EXISTS flowtask_comment (
 CREATE INDEX IF NOT EXISTS idx_comment_task ON flowtask_comment(task_id);
 CREATE INDEX IF NOT EXISTS idx_comment_created ON flowtask_comment(created_at DESC);
 
--- ========================================
--- 채팅 메시지 테이블
--- ========================================
+-- =============================================
+-- 6. Chat Message Table
+-- =============================================
+CREATE SEQUENCE IF NOT EXISTS flowtask_chat_seq START WITH 1 INCREMENT BY 1;
+
 CREATE TABLE IF NOT EXISTS flowtask_chat_message (
     message_id INTEGER PRIMARY KEY,
     team_id INTEGER NOT NULL REFERENCES flowtask_team(team_id) ON DELETE CASCADE,
@@ -187,9 +163,11 @@ CREATE TABLE IF NOT EXISTS flowtask_chat_message (
 CREATE INDEX IF NOT EXISTS idx_chat_team ON flowtask_chat_message(team_id);
 CREATE INDEX IF NOT EXISTS idx_chat_sent ON flowtask_chat_message(sent_at DESC);
 
--- ========================================
--- Git 저장소 테이블
--- ========================================
+-- =============================================
+-- 7. Git Integration Tables
+-- =============================================
+CREATE SEQUENCE IF NOT EXISTS flowtask_git_repo_seq START WITH 1 INCREMENT BY 1;
+
 CREATE TABLE IF NOT EXISTS flowtask_git_repo (
     repo_id INTEGER PRIMARY KEY,
     team_id INTEGER NOT NULL UNIQUE REFERENCES flowtask_team(team_id) ON DELETE CASCADE,
@@ -202,9 +180,6 @@ CREATE TABLE IF NOT EXISTS flowtask_git_repo (
 
 CREATE INDEX IF NOT EXISTS idx_gitrepo_team ON flowtask_git_repo(team_id);
 
--- ========================================
--- 태스크-커밋 연결 테이블
--- ========================================
 CREATE TABLE IF NOT EXISTS flowtask_task_commit (
     task_id INTEGER NOT NULL REFERENCES flowtask_task(task_id) ON DELETE CASCADE,
     commit_sha VARCHAR(40) NOT NULL,
@@ -217,3 +192,72 @@ CREATE TABLE IF NOT EXISTS flowtask_task_commit (
 );
 
 CREATE INDEX IF NOT EXISTS idx_taskcommit_task ON flowtask_task_commit(task_id);
+
+-- =============================================
+-- 8. Column Features Tables
+-- (Assignee, Favorite, Archive)
+-- =============================================
+CREATE SEQUENCE IF NOT EXISTS flowtask_column_archive_seq START WITH 1 INCREMENT BY 1;
+
+CREATE TABLE IF NOT EXISTS flowtask_column_assignee (
+    column_id INTEGER NOT NULL REFERENCES flowtask_column(column_id) ON DELETE CASCADE,
+    member_no INTEGER NOT NULL REFERENCES flowtask_member(no) ON DELETE CASCADE,
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (column_id, member_no)
+);
+
+CREATE INDEX IF NOT EXISTS idx_column_assignee_column ON flowtask_column_assignee(column_id);
+CREATE INDEX IF NOT EXISTS idx_column_assignee_member ON flowtask_column_assignee(member_no);
+
+CREATE TABLE IF NOT EXISTS flowtask_column_favorite (
+    column_id INTEGER NOT NULL REFERENCES flowtask_column(column_id) ON DELETE CASCADE,
+    member_no INTEGER NOT NULL REFERENCES flowtask_member(no) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (column_id, member_no)
+);
+
+CREATE INDEX IF NOT EXISTS idx_column_favorite_column ON flowtask_column_favorite(column_id);
+CREATE INDEX IF NOT EXISTS idx_column_favorite_member ON flowtask_column_favorite(member_no);
+
+CREATE TABLE IF NOT EXISTS flowtask_column_archive (
+    archive_id INTEGER PRIMARY KEY,
+    member_no INTEGER NOT NULL REFERENCES flowtask_member(no) ON DELETE CASCADE,
+    original_column_id INTEGER NOT NULL,
+    team_id INTEGER,
+    team_name VARCHAR(100),
+    project_id INTEGER,
+    project_name VARCHAR(100),
+    column_title VARCHAR(100) NOT NULL,
+    column_position INTEGER,
+    tasks_snapshot JSONB,
+    archive_note VARCHAR(500),
+    archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_column_archive_member ON flowtask_column_archive(member_no);
+CREATE INDEX IF NOT EXISTS idx_column_archive_team ON flowtask_column_archive(team_id);
+CREATE INDEX IF NOT EXISTS idx_column_archive_archived ON flowtask_column_archive(archived_at DESC);
+
+-- =============================================
+-- 9. Notification Table
+-- =============================================
+CREATE SEQUENCE IF NOT EXISTS flowtask_notification_seq START WITH 1 INCREMENT BY 1;
+
+CREATE TABLE IF NOT EXISTS flowtask_notification (
+    notification_id INTEGER PRIMARY KEY,
+    recipient_no INTEGER NOT NULL REFERENCES flowtask_member(no) ON DELETE CASCADE,
+    sender_no INTEGER REFERENCES flowtask_member(no) ON DELETE SET NULL,
+    notification_type VARCHAR(50) NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    message VARCHAR(500),
+    team_id INTEGER REFERENCES flowtask_team(team_id) ON DELETE CASCADE,
+    column_id INTEGER REFERENCES flowtask_column(column_id) ON DELETE CASCADE,
+    task_id INTEGER REFERENCES flowtask_task(task_id) ON DELETE CASCADE,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_notification_recipient ON flowtask_notification(recipient_no);
+CREATE INDEX IF NOT EXISTS idx_notification_type ON flowtask_notification(notification_type);
+CREATE INDEX IF NOT EXISTS idx_notification_read ON flowtask_notification(is_read);
+CREATE INDEX IF NOT EXISTS idx_notification_created ON flowtask_notification(created_at DESC);

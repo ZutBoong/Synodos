@@ -128,9 +128,12 @@ export const updateTaskStatus = async (taskId, status) => {
     return response.data;
 };
 
-// 태스크 담당자 변경
-export const updateTaskAssignee = async (taskId, assigneeNo) => {
-    const response = await axiosInstance.put(`${API_PATH}/task/${taskId}/assignee`, { assigneeNo });
+// 태스크 담당자 변경 (senderNo가 있으면 알림 발송)
+export const updateTaskAssignee = async (taskId, assigneeNo, senderNo = null) => {
+    const url = senderNo
+        ? `${API_PATH}/task/${taskId}/assignee?senderNo=${senderNo}`
+        : `${API_PATH}/task/${taskId}/assignee`;
+    const response = await axiosInstance.put(url, { assigneeNo });
     return response.data;
 };
 

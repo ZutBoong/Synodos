@@ -134,10 +134,17 @@ public class TaskController {
 	@PutMapping("task/{taskId}/assignee")
 	public Integer updateTaskAssignee(
 			@PathVariable("taskId") int taskId,
-			@RequestBody Task task) {
+			@RequestBody Task task,
+			@RequestParam(value = "senderNo", required = false) Integer senderNo) {
 		task.setTaskId(taskId);
 		System.out.println("task assignee update: " + task);
-		int result = service.updateAssignee(task);
+		int result;
+		if (senderNo != null) {
+			// senderNo가 있으면 알림 포함
+			result = service.updateAssigneeWithNotification(task, senderNo);
+		} else {
+			result = service.updateAssignee(task);
+		}
 		if (result == 1)
 			System.out.println("태스크 담당자 변경 성공");
 		return result;

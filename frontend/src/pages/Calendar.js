@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { tasklistByDateRange } from '../api/boardApi';
 import Sidebar from '../components/Sidebar';
 import TaskModal from '../components/TaskModal';
+import NotificationBell from '../components/NotificationBell';
 import './Calendar.css';
 
 // 우선순위 색상 맵
@@ -210,6 +211,7 @@ function Calendar() {
                                 주간
                             </button>
                         </div>
+                        {loginMember && <NotificationBell memberNo={loginMember.no} />}
                         <button className="logout-btn" onClick={handleLogout}>로그아웃</button>
                     </div>
                 </header>
@@ -257,7 +259,7 @@ function Calendar() {
                                                             backgroundColor: PRIORITY_COLORS[task.priority] || '#6c757d'
                                                         }}
                                                         onClick={() => setSelectedTask(task)}
-                                                        title={task.title}
+                                                        title={`${task.title}${task.dueDate ? ' - ' + new Date(task.dueDate).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : ''}`}
                                                     >
                                                         {task.title}
                                                     </div>

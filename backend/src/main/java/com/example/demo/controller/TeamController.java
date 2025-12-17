@@ -177,7 +177,8 @@ public class TeamController {
 		member.setMemberNo(memberNo);
 		member.setRole("MEMBER");
 
-		int insertResult = service.addMember(member);
+		// 알림이 포함된 멤버 추가
+		int insertResult = service.addMemberWithNotification(member, leaderNo);
 		if (insertResult == 1) {
 			result.put("success", true);
 			result.put("message", "팀원이 초대되었습니다.");

@@ -27,6 +27,9 @@ public class TaskService {
 	@Autowired
 	private BoardNotificationService notificationService;
 
+	@Autowired
+	private NotificationService persistentNotificationService;
+
 	// Helper method to populate tags for a single task
 	private void populateTags(Task task) {
 		if (task != null) {
@@ -103,6 +106,34 @@ public class TaskService {
 		return result;
 	}
 
+	// 태스크 업데이트 + 담당자에게 알림 발송
+	public int updateWithNotification(Task task, int senderNo, String changeDescription) {
+		int result = dao.update(task);
+		if (result == 1) {
+			Task updated = dao.content(task.getTaskId());
+			if (updated != null) {
+				FlowtaskColumn column = columnDao.content(updated.getColumnId());
+				if (column != null) {
+					// WebSocket 알림
+					notificationService.notifyTaskUpdated(updated, column.getTeamId());
+
+					// 담당자에게 영구 알림 (본인 제외)
+					Integer assignee = updated.getAssigneeNo();
+					if (assignee != null && assignee != senderNo) {
+						persistentNotificationService.notifyTaskUpdated(
+							assignee,
+							senderNo,
+							updated.getTaskId(),
+							updated.getTitle(),
+							changeDescription
+						);
+					}
+				}
+			}
+		}
+		return result;
+	}
+
 	public int delete(int taskId) {
 		Task task = dao.content(taskId);
 		int result = dao.delete(taskId);
@@ -164,6 +195,34 @@ public class TaskService {
 		return result;
 	}
 
+	// 상태 변경 + 담당자에게 알림 발송
+	public int updateStatusWithNotification(Task task, int senderNo) {
+		int result = dao.updateStatus(task);
+		if (result == 1) {
+			Task updated = dao.content(task.getTaskId());
+			if (updated != null) {
+				FlowtaskColumn column = columnDao.content(updated.getColumnId());
+				if (column != null) {
+					// WebSocket 알림
+					notificationService.notifyTaskUpdated(updated, column.getTeamId());
+
+					// 담당자에게 영구 알림 (본인 제외)
+					Integer assignee = updated.getAssigneeNo();
+					if (assignee != null && assignee != senderNo) {
+						persistentNotificationService.notifyTaskUpdated(
+							assignee,
+							senderNo,
+							updated.getTaskId(),
+							updated.getTitle(),
+							"상태가 " + updated.getStatus() + "(으)로 변경되었습니다"
+						);
+					}
+				}
+			}
+		}
+		return result;
+	}
+
 	public int updateAssignee(Task task) {
 		int result = dao.updateAssignee(task);
 		if (result == 1) {
@@ -172,6 +231,39 @@ public class TaskService {
 				FlowtaskColumn column = columnDao.content(updated.getColumnId());
 				if (column != null) {
 					notificationService.notifyTaskUpdated(updated, column.getTeamId());
+				}
+			}
+		}
+		return result;
+	}
+
+	// 담당자 지정 + 알림 발송
+	public int updateAssigneeWithNotification(Task task, int senderNo) {
+		// 기존 담당자 확인
+		Task existingTask = dao.content(task.getTaskId());
+		Integer previousAssignee = existingTask != null ? existingTask.getAssigneeNo() : null;
+
+		int result = dao.updateAssignee(task);
+		if (result == 1) {
+			Task updated = dao.content(task.getTaskId());
+			if (updated != null) {
+				FlowtaskColumn column = columnDao.content(updated.getColumnId());
+				if (column != null) {
+					// WebSocket 알림
+					notificationService.notifyTaskUpdated(updated, column.getTeamId());
+
+					// 새로 지정된 담당자에게 영구 알림 (본인 제외, 기존 담당자와 다른 경우)
+					Integer newAssignee = updated.getAssigneeNo();
+					if (newAssignee != null && newAssignee != senderNo &&
+						(previousAssignee == null || !previousAssignee.equals(newAssignee))) {
+						persistentNotificationService.notifyTaskAssignee(
+							newAssignee,
+							senderNo,
+							updated.getTaskId(),
+							updated.getTitle(),
+							column.getTeamId()
+						);
+					}
 				}
 			}
 		}

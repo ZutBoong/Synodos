@@ -14,6 +14,9 @@ public class TeamService {
 	@Autowired
 	private TeamDao dao;
 
+	@Autowired
+	private NotificationService notificationService;
+
 	// 팀 생성
 	public int createTeam(Team team) {
 		// 팀 코드 자동 생성
@@ -25,6 +28,23 @@ public class TeamService {
 	// 팀 멤버 추가
 	public int addMember(TeamMember member) {
 		return dao.insertMember(member);
+	}
+
+	// 팀 멤버 추가 + 알림 발송
+	public int addMemberWithNotification(TeamMember member, int inviterNo) {
+		int result = dao.insertMember(member);
+		if (result > 0) {
+			Team team = dao.findById(member.getTeamId());
+			if (team != null) {
+				notificationService.notifyTeamInvite(
+					member.getMemberNo(),
+					inviterNo,
+					team.getTeamId(),
+					team.getTeamName()
+				);
+			}
+		}
+		return result;
 	}
 
 	// 팀 코드로 팀 조회
