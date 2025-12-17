@@ -39,14 +39,7 @@ public class SecurityConfig {
 			.csrf(csrf -> csrf.disable())
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
-				// Public endpoints
-				.requestMatchers("/member/login", "/member/register").permitAll()
-				.requestMatchers("/member/check-userid", "/member/check-email").permitAll()
-				.requestMatchers("/member/find-userid", "/member/find-password", "/member/reset-password").permitAll()
-				// WebSocket endpoint
-				.requestMatchers("/ws/**").permitAll()
-				// All other endpoints require authentication
-				.anyRequest().authenticated()
+				.anyRequest().permitAll()
 			)
 			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -83,6 +83,17 @@ docker-compose down -v
 | Backend API | http://localhost:8081 |
 | PostgreSQL | localhost:5432 |
 
+### 테스트 계정
+
+샘플 데이터가 자동으로 생성됩니다. (비밀번호는 모두 `1234`)
+
+| 아이디 | 이름 | 역할 |
+|--------|------|------|
+| admin | 관리자 | 팀 소유자 |
+| user1 | 홍길동 | 팀 멤버 |
+| user2 | 김철수 | 팀 멤버 |
+| user3 | 이영희 | 팀 멤버 |
+
 ## 로컬 개발 환경 (Docker 없이)
 
 ### 필수 요구사항

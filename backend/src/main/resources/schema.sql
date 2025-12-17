@@ -1,6 +1,6 @@
 -- =============================================
--- Flowtask Project - PostgreSQL Schema
--- Spring Boot Auto Initialize
+-- Flowtask - PostgreSQL Schema
+-- Docker + Spring Boot 공용
 -- =============================================
 
 -- ========================================

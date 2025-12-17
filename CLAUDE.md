@@ -29,10 +29,37 @@ npm test                        # Run tests
 ### Database
 PostgreSQL running on localhost:5432. Main schema file: `database/postgresql_schema.sql`
 
-Initialize database:
+Setup from scratch:
+```sql
+CREATE DATABASE flowtask;
+CREATE USER flow WITH PASSWORD 'flow123';
+GRANT ALL PRIVILEGES ON DATABASE flowtask TO flow;
+\c flowtask
+GRANT ALL ON SCHEMA public TO flow;
+```
+
+Initialize schema:
 ```bash
 psql -U flow -d flowtask -f database/postgresql_schema.sql
 ```
+
+### Docker (Full Stack)
+```bash
+docker-compose up --build              # Start all services
+docker-compose up -d --build           # Start in background
+docker-compose down                    # Stop all services
+docker-compose down -v                 # Stop and remove volumes
+docker-compose logs -f                 # View logs
+```
+
+### Test Accounts
+Sample data is auto-generated. All passwords are `1234`.
+| userid | name | role |
+|--------|------|------|
+| admin | 관리자 | Team owner |
+| user1 | 홍길동 | Team member |
+| user2 | 김철수 | Team member |
+| user3 | 이영희 | Team member |
 
 ## Architecture
 
@@ -74,6 +101,16 @@ JWT-based authentication with tokens stored client-side. Configured in `Security
 
 ## Key Configuration
 - Backend port: 8081 (application.properties)
-- Frontend proxy: http://localhost:8081 (package.json)
+- Frontend dev port: 3000, proxies to 8081 (package.json)
+- Frontend Docker port: 80 via Nginx
 - DB credentials: flow/flow123@localhost:5432/flowtask
 - Java version: 17
+- Node version: 18+
+
+## Deployment
+For AWS EC2 deployment, use `docker-compose.aws.yml` with environment file:
+```bash
+cp .env.aws.example .env.aws
+docker-compose -f docker-compose.aws.yml --env-file .env.aws up -d --build
+```
+See `AWS_DEPLOY.md` for detailed instructions.

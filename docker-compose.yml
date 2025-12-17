@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:16-alpine
@@ -10,7 +8,8 @@ services:
       POSTGRES_PASSWORD: flow123
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/postgresql_schema.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/postgresql_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./database/seed_data.sql:/docker-entrypoint-initdb.d/02_seed.sql
     ports:
       - "5432:5432"
     healthcheck:
@@ -26,6 +25,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/flowtask
       SPRING_DATASOURCE_USERNAME: flow
       SPRING_DATASOURCE_PASSWORD: flow123
+      SPRING_SQL_INIT_MODE: never
     ports:
       - "8081:8081"
     depends_on:

@@ -8,7 +8,8 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-flow123}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/postgresql_schema.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/postgresql_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./database/seed_data.sql:/docker-entrypoint-initdb.d/02_seed.sql
     ports:
       - "5432:5432"
     healthcheck:
@@ -26,6 +27,7 @@ services:
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-flow}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-flow123}
       JWT_SECRET: ${JWT_SECRET:-your-secret-key}
+      SPRING_SQL_INIT_MODE: never
     ports:
       - "8081:8081"
     depends_on:
