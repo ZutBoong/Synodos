@@ -14,13 +14,6 @@ const VERIFICATION_STATUSES = {
     REJECTED: { label: '반려됨', color: '#dc3545' }
 };
 
-const PRIORITIES = [
-    { value: 'CRITICAL', label: '긴급', color: '#dc3545' },
-    { value: 'HIGH', label: '높음', color: '#fd7e14' },
-    { value: 'MEDIUM', label: '보통', color: '#0d6efd' },
-    { value: 'LOW', label: '낮음', color: '#6c757d' }
-];
-
 const STATUSES = [
     { value: 'OPEN', label: '열림' },
     { value: 'IN_PROGRESS', label: '진행중' },
@@ -36,7 +29,6 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
         title: task?.title || '',
         description: task?.description || '',
         assigneeNo: task?.assigneeNo || null,
-        priority: task?.priority || 'MEDIUM',
         dueDate: task?.dueDate || '',
         status: task?.status || 'OPEN',
         verifierNo: task?.verifierNo || null,
@@ -291,76 +283,59 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
                         />
                     </div>
 
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label>담당자</label>
-                            <div className="multi-select-dropdown" ref={assigneeDropdownRef}>
-                                <div
-                                    className="multi-select-trigger"
-                                    onClick={() => setAssigneeDropdownOpen(!assigneeDropdownOpen)}
-                                >
-                                    <span className={selectedAssignees.length === 0 ? 'placeholder' : ''}>
-                                        {getSelectedAssigneeNames()}
-                                    </span>
-                                    <span className="dropdown-arrow">{assigneeDropdownOpen ? '▲' : '▼'}</span>
-                                </div>
-                                {assigneeDropdownOpen && (
-                                    <div className="multi-select-options">
-                                        {teamMembers.length === 0 ? (
-                                            <div className="no-options">팀 멤버가 없습니다</div>
-                                        ) : (
-                                            teamMembers.map(member => (
-                                                <label key={member.memberNo} className="multi-select-option">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedAssignees.includes(member.memberNo)}
-                                                        onChange={() => toggleAssignee(member.memberNo)}
-                                                    />
-                                                    <span className="member-info">
-                                                        <span className="member-name">{member.memberName}</span>
-                                                        <span className="member-userid">({member.memberUserid})</span>
-                                                    </span>
-                                                </label>
-                                            ))
-                                        )}
-                                    </div>
-                                )}
+                    <div className="form-group">
+                        <label>담당자</label>
+                        <div className="multi-select-dropdown" ref={assigneeDropdownRef}>
+                            <div
+                                className="multi-select-trigger"
+                                onClick={() => setAssigneeDropdownOpen(!assigneeDropdownOpen)}
+                            >
+                                <span className={selectedAssignees.length === 0 ? 'placeholder' : ''}>
+                                    {getSelectedAssigneeNames()}
+                                </span>
+                                <span className="dropdown-arrow">{assigneeDropdownOpen ? '▲' : '▼'}</span>
                             </div>
-                            {selectedAssignees.length > 0 && (
-                                <div className="selected-assignees-chips">
-                                    {selectedAssignees.map(no => {
-                                        const member = teamMembers.find(m => m.memberNo === no);
-                                        return member ? (
-                                            <span key={no} className="assignee-chip">
-                                                {member.memberName}
-                                                <button
-                                                    type="button"
-                                                    className="chip-remove"
-                                                    onClick={() => toggleAssignee(no)}
-                                                >
-                                                    ×
-                                                </button>
-                                            </span>
-                                        ) : null;
-                                    })}
+                            {assigneeDropdownOpen && (
+                                <div className="multi-select-options">
+                                    {teamMembers.length === 0 ? (
+                                        <div className="no-options">팀 멤버가 없습니다</div>
+                                    ) : (
+                                        teamMembers.map(member => (
+                                            <label key={member.memberNo} className="multi-select-option">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedAssignees.includes(member.memberNo)}
+                                                    onChange={() => toggleAssignee(member.memberNo)}
+                                                />
+                                                <span className="member-info">
+                                                    <span className="member-name">{member.memberName}</span>
+                                                    <span className="member-userid">({member.memberUserid})</span>
+                                                </span>
+                                            </label>
+                                        ))
+                                    )}
                                 </div>
                             )}
                         </div>
-
-                        <div className="form-group">
-                            <label>우선순위</label>
-                            <select
-                                name="priority"
-                                value={form.priority || 'MEDIUM'}
-                                onChange={handleChange}
-                            >
-                                {PRIORITIES.map(p => (
-                                    <option key={p.value} value={p.value}>
-                                        {p.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                        {selectedAssignees.length > 0 && (
+                            <div className="selected-assignees-chips">
+                                {selectedAssignees.map(no => {
+                                    const member = teamMembers.find(m => m.memberNo === no);
+                                    return member ? (
+                                        <span key={no} className="assignee-chip">
+                                            {member.memberName}
+                                            <button
+                                                type="button"
+                                                className="chip-remove"
+                                                onClick={() => toggleAssignee(no)}
+                                            >
+                                                ×
+                                            </button>
+                                        </span>
+                                    ) : null;
+                                })}
+                            </div>
+                        )}
                     </div>
 
                     <div className="form-row">

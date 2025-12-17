@@ -6,14 +6,6 @@ import TaskModal from '../components/TaskModal';
 import NotificationBell from '../components/NotificationBell';
 import './Calendar.css';
 
-// 우선순위 색상 맵
-const PRIORITY_COLORS = {
-    CRITICAL: '#dc3545',
-    HIGH: '#fd7e14',
-    MEDIUM: '#0d6efd',
-    LOW: '#6c757d'
-};
-
 // 요일 이름
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -255,9 +247,6 @@ function Calendar() {
                                                     <div
                                                         key={task.taskId}
                                                         className="task-item"
-                                                        style={{
-                                                            backgroundColor: PRIORITY_COLORS[task.priority] || '#6c757d'
-                                                        }}
                                                         onClick={() => setSelectedTask(task)}
                                                         title={`${task.title}${task.dueDate ? ' - ' + new Date(task.dueDate).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : ''}`}
                                                     >

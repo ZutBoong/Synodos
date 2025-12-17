@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import {
     columnlistByTeam, columnwrite, columnupdate, columndelete, columnposition,
-    tasklistByTeam, taskwrite, taskupdate, taskdelete, taskposition
+    tasklistByTeam, taskwrite, taskupdate, taskdelete, taskposition,
+    updateTaskAssignees
 } from '../api/boardApi';
 import { getTeamMembers } from '../api/teamApi';
 import {
@@ -11,6 +12,8 @@ import {
     toggleColumnFavorite, checkColumnFavorite,
     archiveColumn
 } from '../api/columnApi';
+import { updateTaskTags } from '../api/tagApi';
+import TagInput from '../components/TagInput';
 import websocketService from '../api/websocketService';
 import Sidebar from '../components/Sidebar';
 import TaskModal from '../components/TaskModal';
@@ -18,14 +21,6 @@ import FilterBar from '../components/FilterBar';
 import ChatPanel from '../components/ChatPanel';
 import NotificationBell from '../components/NotificationBell';
 import './Board.css';
-
-// 우선순위 색상 맵
-const PRIORITY_COLORS = {
-    CRITICAL: '#dc3545',
-    HIGH: '#fd7e14',
-    MEDIUM: '#0d6efd',
-    LOW: '#6c757d'
-};
 
 // 상태 라벨 맵
 const STATUS_LABELS = {
@@ -58,6 +53,8 @@ function Board() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [wsConnected, setWsConnected] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);  // 모달용 선택된 태스크
+    const [expandedTaskId, setExpandedTaskId] = useState(null);  // 인라인 확장된 태스크
+    const [expandedTaskForm, setExpandedTaskForm] = useState({});  // 확장된 태스크 폼 데이터
     const [teamMembers, setTeamMembers] = useState([]);
     const [chatOpen, setChatOpen] = useState(false);  // 채팅 패널 열림/닫힘
     const [filters, setFilters] = useState({
@@ -199,7 +196,7 @@ function Board() {
         }
     }, []);
 
-    // 로그인 정보 확인
+    // 로그인 정보 확인 및 저장된 팀 불러오기
     useEffect(() => {
         const token = localStorage.getItem('token');
         const member = localStorage.getItem('member');
@@ -209,6 +206,12 @@ function Board() {
             return;
         }
         setLoginMember(JSON.parse(member));
+
+        // 저장된 현재 팀 불러오기
+        const storedTeam = localStorage.getItem('currentTeam');
+        if (storedTeam) {
+            setCurrentTeam(JSON.parse(storedTeam));
+        }
     }, [navigate]);
 
     // WebSocket 연결
@@ -361,11 +364,6 @@ function Board() {
                 const matchTitle = task.title?.toLowerCase().includes(query);
                 const matchDesc = task.description?.toLowerCase().includes(query);
                 if (!matchTitle && !matchDesc) return false;
-            }
-
-            // 우선순위 필터
-            if (filters.priorities?.length > 0) {
-                if (!filters.priorities.includes(task.priority)) return false;
             }
 
             // 상태 필터
@@ -582,6 +580,98 @@ function Board() {
         }
     };
 
+    // 태스크 확장 토글
+    const handleToggleExpand = (task) => {
+        if (expandedTaskId === task.taskId) {
+            setExpandedTaskId(null);
+            setExpandedTaskForm({});
+        } else {
+            setExpandedTaskId(task.taskId);
+            setExpandedTaskForm({
+                taskId: task.taskId,
+                title: task.title || '',
+                description: task.description || '',
+                status: task.status || 'OPEN',
+                dueDate: task.dueDate || '',
+                tags: task.tags || [],
+                assignees: task.assignees?.map(a => a.memberNo) || (task.assigneeNo ? [task.assigneeNo] : [])
+            });
+        }
+    };
+
+    // 확장된 태스크 폼 변경
+    const handleExpandedFormChange = (field, value) => {
+        setExpandedTaskForm(prev => ({ ...prev, [field]: value }));
+    };
+
+    // 확장된 태스크 저장
+    const handleSaveExpandedTask = async () => {
+        if (!expandedTaskForm.title?.trim()) {
+            alert('제목을 입력해주세요.');
+            return;
+        }
+
+        try {
+            const taskData = {
+                taskId: expandedTaskForm.taskId,
+                title: expandedTaskForm.title,
+                description: expandedTaskForm.description,
+                status: expandedTaskForm.status,
+                dueDate: expandedTaskForm.dueDate || null,
+                assigneeNo: expandedTaskForm.assignees?.length > 0 ? expandedTaskForm.assignees[0] : null
+            };
+
+            await taskupdate(taskData);
+
+            // 태그 저장
+            if (expandedTaskForm.taskId) {
+                const tagIds = expandedTaskForm.tags.map(t => t.tagId);
+                await updateTaskTags(expandedTaskForm.taskId, tagIds);
+
+                // 담당자 저장
+                if (expandedTaskForm.assignees) {
+                    await updateTaskAssignees(expandedTaskForm.taskId, expandedTaskForm.assignees, loginMember?.no);
+                }
+            }
+
+            // 로컬 상태 업데이트
+            setTasks(prev => prev.map(t => {
+                if (t.taskId === expandedTaskForm.taskId) {
+                    const assignee = teamMembers.find(m => m.memberNo === taskData.assigneeNo);
+                    return {
+                        ...t,
+                        ...taskData,
+                        tags: expandedTaskForm.tags,
+                        assigneeName: assignee?.memberName || null,
+                        assignees: expandedTaskForm.assignees.map(no => {
+                            const member = teamMembers.find(m => m.memberNo === no);
+                            return { memberNo: no, memberName: member?.memberName || '' };
+                        })
+                    };
+                }
+                return t;
+            }));
+
+            setExpandedTaskId(null);
+            setExpandedTaskForm({});
+        } catch (error) {
+            console.error('태스크 저장 실패:', error);
+            alert('저장에 실패했습니다.');
+        }
+    };
+
+    // 마감일 포맷팅
+    const formatDateTimeForInput = (dateStr) => {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+
     return (
         <div className="board-page">
             <Sidebar
@@ -793,86 +883,172 @@ function Board() {
                                                                             >
                                                                                 {(provided, snapshot) => (
                                                                                     <div
-                                                                                        className={`task-card ${snapshot.isDragging ? 'dragging' : ''} ${task.status === 'CLOSED' ? 'closed' : ''}`}
+                                                                                        className={`task-card ${snapshot.isDragging ? 'dragging' : ''} ${task.status === 'CLOSED' ? 'closed' : ''} ${expandedTaskId === task.taskId ? 'expanded' : ''}`}
                                                                                         ref={provided.innerRef}
                                                                                         {...provided.draggableProps}
                                                                                         {...provided.dragHandleProps}
-                                                                                        onClick={() => setSelectedTask(task)}
+                                                                                        onClick={() => !expandedTaskId && handleToggleExpand(task)}
                                                                                     >
-                                                                                        <div className="task-card-top">
-                                                                                            <div className="task-card-title">
-                                                                                                {task.title}
-                                                                                            </div>
-                                                                                            <button
-                                                                                                className="delete-btn"
-                                                                                                onClick={(e) => {
-                                                                                                    e.stopPropagation();
-                                                                                                    handleDeleteTask(task.taskId);
-                                                                                                }}
-                                                                                            >
-                                                                                                ×
-                                                                                            </button>
-                                                                                        </div>
-                                                                                        {task.priority && (
-                                                                                            <div className="task-card-priority">
-                                                                                                <span
-                                                                                                    className="priority-badge"
-                                                                                                    style={{ backgroundColor: PRIORITY_COLORS[task.priority] }}
-                                                                                                >
-                                                                                                    {task.priority}
-                                                                                                </span>
-                                                                                            </div>
-                                                                                        )}
-                                                                                        {((task.assignees && task.assignees.length > 0) || task.assigneeName || task.dueDate) && (
-                                                                                            <div className="task-card-meta">
-                                                                                                {task.assignees && task.assignees.length > 0 ? (
-                                                                                                    <span className="assignee multi-assignees">
-                                                                                                        <span className="icon">👥</span>
-                                                                                                        {task.assignees.slice(0, 2).map(a => a.memberName).join(', ')}
-                                                                                                        {task.assignees.length > 2 && ` 외 ${task.assignees.length - 2}명`}
-                                                                                                    </span>
-                                                                                                ) : task.assigneeName && (
-                                                                                                    <span className="assignee">
-                                                                                                        <span className="icon">👤</span>
-                                                                                                        {task.assigneeName}
-                                                                                                    </span>
-                                                                                                )}
-                                                                                                {task.dueDate && (
-                                                                                                    <span className={`due-date ${new Date(task.dueDate) < new Date() ? 'overdue' : ''}`}>
-                                                                                                        <span className="icon">📅</span>
-                                                                                                        {new Date(task.dueDate).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                                                                                    </span>
-                                                                                                )}
-                                                                                            </div>
-                                                                                        )}
-                                                                                        {task.tags && task.tags.length > 0 && (
-                                                                                            <div className="task-card-tags">
-                                                                                                {task.tags.slice(0, 3).map(tag => (
-                                                                                                    <span
-                                                                                                        key={tag.tagId}
-                                                                                                        className="task-tag"
-                                                                                                        style={{ backgroundColor: tag.color }}
+                                                                                        {expandedTaskId === task.taskId ? (
+                                                                                            /* 확장된 태스크 뷰 */
+                                                                                            <div className="task-expanded" onClick={(e) => e.stopPropagation()}>
+                                                                                                <div className="task-expanded-header">
+                                                                                                    <input
+                                                                                                        type="text"
+                                                                                                        className="task-expanded-title"
+                                                                                                        value={expandedTaskForm.title}
+                                                                                                        onChange={(e) => handleExpandedFormChange('title', e.target.value)}
+                                                                                                        placeholder="제목"
+                                                                                                    />
+                                                                                                    <button
+                                                                                                        className="task-expanded-close"
+                                                                                                        onClick={() => { setExpandedTaskId(null); setExpandedTaskForm({}); }}
                                                                                                     >
-                                                                                                        {tag.tagName}
-                                                                                                    </span>
-                                                                                                ))}
-                                                                                                {task.tags.length > 3 && (
-                                                                                                    <span className="task-tag-more">+{task.tags.length - 3}</span>
+                                                                                                        ×
+                                                                                                    </button>
+                                                                                                </div>
+
+                                                                                                <div className="task-expanded-body">
+                                                                                                    <div className="task-expanded-field">
+                                                                                                        <label>설명</label>
+                                                                                                        <textarea
+                                                                                                            value={expandedTaskForm.description || ''}
+                                                                                                            onChange={(e) => handleExpandedFormChange('description', e.target.value)}
+                                                                                                            placeholder="설명을 입력하세요..."
+                                                                                                            rows={3}
+                                                                                                        />
+                                                                                                    </div>
+
+                                                                                                    <div className="task-expanded-row">
+                                                                                                        <div className="task-expanded-field">
+                                                                                                            <label>상태</label>
+                                                                                                            <select
+                                                                                                                value={expandedTaskForm.status}
+                                                                                                                onChange={(e) => handleExpandedFormChange('status', e.target.value)}
+                                                                                                            >
+                                                                                                                <option value="OPEN">열림</option>
+                                                                                                                <option value="IN_PROGRESS">진행중</option>
+                                                                                                                <option value="RESOLVED">해결됨</option>
+                                                                                                                <option value="CLOSED">닫힘</option>
+                                                                                                                <option value="CANNOT_REPRODUCE">재현불가</option>
+                                                                                                                <option value="DUPLICATE">중복</option>
+                                                                                                            </select>
+                                                                                                        </div>
+
+                                                                                                        <div className="task-expanded-field">
+                                                                                                            <label>마감일</label>
+                                                                                                            <input
+                                                                                                                type="datetime-local"
+                                                                                                                value={formatDateTimeForInput(expandedTaskForm.dueDate)}
+                                                                                                                onChange={(e) => handleExpandedFormChange('dueDate', e.target.value)}
+                                                                                                            />
+                                                                                                        </div>
+                                                                                                    </div>
+
+                                                                                                    <div className="task-expanded-field">
+                                                                                                        <label>담당자</label>
+                                                                                                        <div className="task-expanded-assignees">
+                                                                                                            {teamMembers.map(member => (
+                                                                                                                <label key={member.memberNo} className="assignee-option">
+                                                                                                                    <input
+                                                                                                                        type="checkbox"
+                                                                                                                        checked={expandedTaskForm.assignees?.includes(member.memberNo) || false}
+                                                                                                                        onChange={(e) => {
+                                                                                                                            const current = expandedTaskForm.assignees || [];
+                                                                                                                            if (e.target.checked) {
+                                                                                                                                handleExpandedFormChange('assignees', [...current, member.memberNo]);
+                                                                                                                            } else {
+                                                                                                                                handleExpandedFormChange('assignees', current.filter(no => no !== member.memberNo));
+                                                                                                                            }
+                                                                                                                        }}
+                                                                                                                    />
+                                                                                                                    <span>{member.memberName}</span>
+                                                                                                                </label>
+                                                                                                            ))}
+                                                                                                        </div>
+                                                                                                    </div>
+
+                                                                                                    <div className="task-expanded-field">
+                                                                                                        <label>태그</label>
+                                                                                                        <TagInput
+                                                                                                            teamId={currentTeam?.teamId}
+                                                                                                            selectedTags={expandedTaskForm.tags || []}
+                                                                                                            onChange={(tags) => handleExpandedFormChange('tags', tags)}
+                                                                                                        />
+                                                                                                    </div>
+                                                                                                </div>
+
+                                                                                                <div className="task-expanded-footer">
+                                                                                                    <button
+                                                                                                        className="btn-cancel"
+                                                                                                        onClick={() => { setExpandedTaskId(null); setExpandedTaskForm({}); }}
+                                                                                                    >
+                                                                                                        취소
+                                                                                                    </button>
+                                                                                                    <button
+                                                                                                        className="btn-save"
+                                                                                                        onClick={handleSaveExpandedTask}
+                                                                                                    >
+                                                                                                        저장
+                                                                                                    </button>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        ) : (
+                                                                                            /* 기본 태스크 카드 뷰 */
+                                                                                            <>
+                                                                                                {task.tags && task.tags.length > 0 && (
+                                                                                                    <div className="task-card-tags">
+                                                                                                        {task.tags.slice(0, 3).map(tag => (
+                                                                                                            <span
+                                                                                                                key={tag.tagId}
+                                                                                                                className="task-tag"
+                                                                                                                style={{ backgroundColor: tag.color }}
+                                                                                                            >
+                                                                                                                {tag.tagName}
+                                                                                                            </span>
+                                                                                                        ))}
+                                                                                                        {task.tags.length > 3 && (
+                                                                                                            <span className="task-tag-more">+{task.tags.length - 3}</span>
+                                                                                                        )}
+                                                                                                    </div>
                                                                                                 )}
-                                                                                            </div>
-                                                                                        )}
-                                                                                        {task.status && task.status !== 'OPEN' && (
-                                                                                            <div className={`task-card-status status-${task.status?.toLowerCase().replace('_', '-')}`}>
-                                                                                                {STATUS_LABELS[task.status] || task.status}
-                                                                                            </div>
-                                                                                        )}
-                                                                                        {task.verificationStatus && task.verificationStatus !== 'NONE' && VERIFICATION_LABELS[task.verificationStatus] && (
-                                                                                            <div
-                                                                                                className="task-card-verification"
-                                                                                                style={{ backgroundColor: VERIFICATION_LABELS[task.verificationStatus].color }}
-                                                                                            >
-                                                                                                {VERIFICATION_LABELS[task.verificationStatus].label}
-                                                                                            </div>
+                                                                                                <div className="task-card-top">
+                                                                                                    <div className="task-card-title">
+                                                                                                        {task.title}
+                                                                                                    </div>
+                                                                                                    <button
+                                                                                                        className="delete-btn"
+                                                                                                        onClick={(e) => {
+                                                                                                            e.stopPropagation();
+                                                                                                            handleDeleteTask(task.taskId);
+                                                                                                        }}
+                                                                                                    >
+                                                                                                        ×
+                                                                                                    </button>
+                                                                                                </div>
+                                                                                                {(task.dueDate || (task.status && task.status !== 'OPEN')) && (
+                                                                                                    <div className="task-card-meta">
+                                                                                                        {task.dueDate && (
+                                                                                                            <span className={`due-date ${new Date(task.dueDate) < new Date() ? 'overdue' : ''}`}>
+                                                                                                                {new Date(task.dueDate).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
+                                                                                                            </span>
+                                                                                                        )}
+                                                                                                        {task.status && task.status !== 'OPEN' && (
+                                                                                                            <span className={`task-card-status status-${task.status?.toLowerCase().replace('_', '-')}`}>
+                                                                                                                {STATUS_LABELS[task.status] || task.status}
+                                                                                                            </span>
+                                                                                                        )}
+                                                                                                    </div>
+                                                                                                )}
+                                                                                                {task.verificationStatus && task.verificationStatus !== 'NONE' && VERIFICATION_LABELS[task.verificationStatus] && (
+                                                                                                    <div
+                                                                                                        className="task-card-verification"
+                                                                                                        style={{ backgroundColor: VERIFICATION_LABELS[task.verificationStatus].color }}
+                                                                                                    >
+                                                                                                        {VERIFICATION_LABELS[task.verificationStatus].label}
+                                                                                                    </div>
+                                                                                                )}
+                                                                                            </>
                                                                                         )}
                                                                                     </div>
                                                                                 )}

@@ -33,7 +33,7 @@ function Login() {
                 localStorage.setItem('token', result.token);
                 localStorage.setItem('member', JSON.stringify(result.member));
                 alert(`${result.member.name}님, 환영합니다!`);
-                navigate('/board');
+                navigate('/activity');
             } else {
                 setError(result.message);
             }

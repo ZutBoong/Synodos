@@ -387,40 +387,21 @@
     flex: 1;
 }
 
-/* 우선순위 영역 */
-.task-card-priority {
-    margin-top: 8px;
-}
-
-/* 우선순위 배지 */
-.priority-badge {
-    font-size: 10px;
-    font-weight: 600;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 3px;
-    text-transform: uppercase;
-}
-
-/* 태스크 메타 정보 (담당자, 마감일) */
+/* 태스크 메타 정보 (마감일, 상태) */
 .task-card-meta {
     display: flex;
-    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
     gap: 8px;
     margin-top: 6px;
     font-size: 12px;
     color: #5e6c84;
 }
 
-.task-card-meta .assignee,
 .task-card-meta .due-date {
     display: flex;
     align-items: center;
     gap: 4px;
-}
-
-.task-card-meta .icon {
-    font-size: 11px;
 }
 
 .task-card-meta .due-date.overdue {
@@ -430,12 +411,14 @@
 
 /* 태스크 상태 배지 */
 .task-card-status {
-    margin-top: 8px;
-    font-size: 11px;
-    padding: 3px 8px;
+    font-size: 12px;
+    padding: 4px 8px;
     border-radius: 3px;
-    display: inline-block;
-    width: fit-content;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    font-weight: 500;
 }
 
 .task-card-status.status-in-progress {
@@ -463,7 +446,7 @@
     color: white;
 }
 
-.task-card span {
+.task-card span:not(.task-card-status):not(.task-tag):not(.task-tag-more):not(.due-date) {
     flex: 1;
     font-size: 14px;
     color: #172b4d;
@@ -558,14 +541,14 @@
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
-    margin-top: 8px;
+    margin-bottom: 6px;
 }
 
 .task-tag {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 500;
     color: white;
-    padding: 2px 6px;
+    padding: 4px 8px;
     border-radius: 3px;
     white-space: nowrap;
 }
@@ -927,4 +910,186 @@
 .archive-note-section textarea:focus {
     outline: none;
     border-color: #026aa7;
+}
+
+/* ===== 확장된 태스크 카드 스타일 ===== */
+.task-card.expanded {
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    cursor: default;
+    z-index: 10;
+}
+
+.task-expanded {
+    animation: expandTask 0.2s ease-out;
+}
+
+@keyframes expandTask {
+    from {
+        opacity: 0.8;
+        transform: scaleY(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scaleY(1);
+    }
+}
+
+.task-expanded-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.task-expanded-title {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 600;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 10px;
+    outline: none;
+}
+
+.task-expanded-title:focus {
+    border-color: #0079bf;
+}
+
+.task-expanded-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #666;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.task-expanded-close:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.task-expanded-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.task-expanded-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.task-expanded-field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #5e6c84;
+}
+
+.task-expanded-field textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+    resize: vertical;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.task-expanded-field textarea:focus {
+    outline: none;
+    border-color: #0079bf;
+}
+
+.task-expanded-field select,
+.task-expanded-field input[type="datetime-local"] {
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+    background: white;
+}
+
+.task-expanded-field select:focus,
+.task-expanded-field input[type="datetime-local"]:focus {
+    outline: none;
+    border-color: #0079bf;
+}
+
+.task-expanded-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.task-expanded-assignees {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.assignee-option {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    background: #f5f5f5;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.assignee-option:hover {
+    background: #e8e8e8;
+}
+
+.assignee-option input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+
+.task-expanded-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e5e5;
+}
+
+.task-expanded-footer .btn-cancel {
+    padding: 8px 16px;
+    background: #f0f0f0;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.task-expanded-footer .btn-cancel:hover {
+    background: #e0e0e0;
+}
+
+.task-expanded-footer .btn-save {
+    padding: 8px 16px;
+    background: #0079bf;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.task-expanded-footer .btn-save:hover {
+    background: #026aa7;
 }

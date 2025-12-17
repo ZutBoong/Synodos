@@ -8,6 +8,7 @@ import FindPassword from './pages/FindPassword';
 import Board from './pages/Board';
 import Calendar from './pages/Calendar';
 import MyPage from './pages/MyPage';
+import MyActivity from './pages/MyActivity';
 import './App.css';
 
 function AppContent() {
@@ -15,9 +16,10 @@ function AppContent() {
   const isBoardPage = location.pathname === '/board';
   const isCalendarPage = location.pathname === '/calendar';
   const isMyPage = location.pathname === '/mypage';
+  const isMyActivity = location.pathname === '/activity';
   const hideHeader = ['/', '/login', '/register', '/find-id', '/find-password'].includes(location.pathname);
 
-  // Board, Calendar, MyPage 페이지는 독립적인 레이아웃 사용
+  // Board, Calendar, MyPage, MyActivity 페이지는 독립적인 레이아웃 사용
   if (isBoardPage) {
     return <Board />;
   }
@@ -26,6 +28,9 @@ function AppContent() {
   }
   if (isMyPage) {
     return <MyPage />;
+  }
+  if (isMyActivity) {
+    return <MyActivity />;
   }
 
   return (

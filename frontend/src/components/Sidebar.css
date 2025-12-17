@@ -301,16 +301,6 @@
     margin: 0;
 }
 
-/* 하단 사용자 정보 */
-.sidebar-footer {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px;
-    border-top: 1px solid #e5e5e5;
-    margin-top: auto;
-}
-
 .user-avatar {
     width: 32px;
     height: 32px;
@@ -646,4 +636,83 @@
 
 .kick-btn:hover {
     background: #c82333;
+}
+
+/* ===== 사용자 메뉴 팝업 ===== */
+.sidebar-footer-wrapper {
+    position: relative;
+    margin-top: auto;
+}
+
+.sidebar-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-top: 1px solid #e5e5e5;
+    transition: background 0.15s ease;
+}
+
+.sidebar-footer:hover {
+    background: #e8e8e8;
+}
+
+.user-menu-arrow {
+    margin-left: auto;
+    color: #888;
+    transition: transform 0.2s ease;
+}
+
+.sidebar-footer:hover .user-menu-arrow {
+    color: #555;
+}
+
+.user-menu-popup {
+    position: absolute;
+    bottom: 100%;
+    left: 12px;
+    right: 12px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    z-index: 200;
+    margin-bottom: 8px;
+}
+
+.user-menu-popup.collapsed {
+    left: 52px;
+    right: auto;
+    width: 160px;
+    bottom: 0;
+    margin-bottom: 0;
+}
+
+.user-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    color: #333;
+    font-size: 14px;
+    transition: background 0.15s ease;
+}
+
+.user-menu-item:hover {
+    background: #f0f0f0;
+}
+
+.user-menu-item svg {
+    color: #666;
+    flex-shrink: 0;
+}
+
+.user-menu-item:first-child {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+/* 접힌 사이드바 푸터 */
+.collapsed-footer-wrapper {
+    position: relative;
 }
