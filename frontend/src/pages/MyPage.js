@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getProfile, updateProfile, changePassword } from '../api/memberApi';
 import Sidebar from '../components/Sidebar';
-import NotificationBell from '../components/NotificationBell';
+import Header from '../components/Header';
 import './MyPage.css';
 
 function MyPage() {
@@ -71,13 +71,6 @@ function MyPage() {
     const handleSelectTeam = (team) => {
         setCurrentTeam(team);
         localStorage.setItem('currentTeam', JSON.stringify(team));
-    };
-
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('member');
-        localStorage.removeItem('currentTeam');
-        navigate('/');
     };
 
     const handleProfileChange = (e) => {
@@ -189,15 +182,10 @@ function MyPage() {
 
             <div className={`mypage-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
                 {/* 헤더 */}
-                <header className="mypage-header">
-                    <div className="header-left">
-                        <h1>마이페이지</h1>
-                    </div>
-                    <div className="header-right">
-                        {loginMember && <NotificationBell memberNo={loginMember.no} />}
-                        <button className="logout-btn" onClick={handleLogout}>로그아웃</button>
-                    </div>
-                </header>
+                <Header
+                    title="마이페이지"
+                    loginMember={loginMember}
+                />
 
                 {/* 메인 콘텐츠 */}
                 <div className="mypage-content">

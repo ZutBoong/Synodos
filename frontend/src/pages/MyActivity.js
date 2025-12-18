@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getMyTeams } from '../api/teamApi';
 import { getColumnFavorites, getColumnArchives, deleteColumnArchive, removeColumnFavorite } from '../api/columnApi';
 import Sidebar from '../components/Sidebar';
-import NotificationBell from '../components/NotificationBell';
+import Header from '../components/Header';
 import './MyActivity.css';
 
 function MyActivity() {
@@ -60,13 +60,6 @@ function MyActivity() {
         localStorage.setItem('currentTeam', JSON.stringify(team));
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('member');
-        localStorage.removeItem('currentTeam');
-        navigate('/');
-    };
-
     // 즐겨찾기 해제
     const handleRemoveFavorite = async (columnId) => {
         if (!window.confirm('즐겨찾기를 해제하시겠습니까?')) return;
@@ -102,15 +95,10 @@ function MyActivity() {
 
             <div className={`myactivity-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
                 {/* 헤더 */}
-                <header className="myactivity-header">
-                    <div className="header-left">
-                        <h1>내 활동</h1>
-                    </div>
-                    <div className="header-right">
-                        {loginMember && <NotificationBell memberNo={loginMember.no} />}
-                        <button className="logout-btn" onClick={handleLogout}>로그아웃</button>
-                    </div>
-                </header>
+                <Header
+                    title="내 활동"
+                    loginMember={loginMember}
+                />
 
                 {/* 메인 콘텐츠 */}
                 <div className="myactivity-content">

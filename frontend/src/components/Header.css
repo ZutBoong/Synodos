@@ -1,0 +1,197 @@
+/* ===== 공통 헤더 스타일 ===== */
+.common-header {
+    height: 56px;
+    min-height: 56px;
+    background: white;
+    border-bottom: 1px solid #e5e5e5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    flex-shrink: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.common-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.common-header .header-left h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.common-header .header-center {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.common-header .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.common-header .logout-btn {
+    padding: 8px 16px;
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #666;
+    transition: all 0.15s ease;
+}
+
+.common-header .logout-btn:hover {
+    background: #f5f5f5;
+    border-color: #ccc;
+    color: #333;
+}
+
+/* ===== 팀 코드 섹션 (Board용) ===== */
+.common-header .team-code-section {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.common-header .team-code-badge {
+    font-size: 12px;
+    font-family: monospace;
+    background: #f0f0f0;
+    color: #666;
+    padding: 4px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+}
+
+.common-header .code-toggle-btn,
+.common-header .code-copy-btn {
+    padding: 4px 8px;
+    font-size: 11px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.common-header .code-toggle-btn {
+    background: #e0e0e0;
+    color: #666;
+}
+
+.common-header .code-toggle-btn:hover {
+    background: #d0d0d0;
+}
+
+.common-header .code-copy-btn {
+    background: #026aa7;
+    color: white;
+}
+
+.common-header .code-copy-btn:hover {
+    background: #0079bf;
+}
+
+.common-header .ws-status {
+    font-size: 10px;
+    margin-left: 8px;
+}
+
+.common-header .ws-status.connected {
+    color: #22c55e;
+}
+
+/* ===== 캘린더용 네비게이션 ===== */
+.common-header .nav-btn {
+    padding: 8px 12px;
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #666;
+    transition: all 0.15s ease;
+}
+
+.common-header .nav-btn:hover {
+    background: #f5f5f5;
+    border-color: #ccc;
+}
+
+.common-header .today-btn {
+    padding: 6px 12px;
+    background: #026aa7;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.15s ease;
+}
+
+.common-header .today-btn:hover {
+    background: #0079bf;
+}
+
+.common-header .team-name {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
+/* ===== 뷰 토글 (캘린더용) ===== */
+.common-header .view-toggle {
+    display: flex;
+    gap: 4px;
+    background: #f0f0f0;
+    padding: 3px;
+    border-radius: 6px;
+}
+
+.common-header .view-toggle button {
+    padding: 6px 12px;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #666;
+    transition: all 0.15s ease;
+}
+
+.common-header .view-toggle button:hover {
+    color: #333;
+}
+
+.common-header .view-toggle button.active {
+    background: white;
+    color: #026aa7;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== 반응형 ===== */
+@media (max-width: 768px) {
+    .common-header {
+        padding: 12px 16px;
+    }
+
+    .common-header .header-left h1 {
+        font-size: 16px;
+    }
+
+    .common-header .team-code-section {
+        display: none;
+    }
+
+    .common-header .header-center {
+        display: none;
+    }
+}

@@ -9,15 +9,16 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    transition: margin-left 0.3s ease;
+    margin-left: 52px;
+    transition: margin-left 0.2s ease;
 }
 
 .mypage-layout.sidebar-open {
-    margin-left: 280px;
+    margin-left: 260px;
 }
 
 .mypage-layout.sidebar-closed {
-    margin-left: 60px;
+    margin-left: 52px;
 }
 
 /* 헤더 */

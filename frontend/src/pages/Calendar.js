@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { tasklistByDateRange } from '../api/boardApi';
 import Sidebar from '../components/Sidebar';
 import TaskModal from '../components/TaskModal';
-import NotificationBell from '../components/NotificationBell';
+import Header from '../components/Header';
 import './Calendar.css';
 
 // 요일 이름
@@ -90,13 +90,6 @@ function Calendar() {
         localStorage.setItem('currentTeam', JSON.stringify(team));
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('member');
-        localStorage.removeItem('currentTeam');
-        navigate('/');
-    };
-
     // 이전/다음 네비게이션
     const goToPrevious = () => {
         const newDate = new Date(currentDate);
@@ -176,19 +169,21 @@ function Calendar() {
 
             <div className={`calendar-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
                 {/* 헤더 */}
-                <header className="calendar-header">
-                    <div className="header-left">
-                        <button className="nav-btn" onClick={goToPrevious}>&lt;</button>
-                        <h1>{formatMonthYear()}</h1>
-                        <button className="nav-btn" onClick={goToNext}>&gt;</button>
-                        <button className="today-btn" onClick={goToToday}>오늘</button>
-                    </div>
-                    <div className="header-center">
-                        {currentTeam && (
-                            <span className="team-name">{currentTeam.teamName}</span>
-                        )}
-                    </div>
-                    <div className="header-right">
+                <Header
+                    title={formatMonthYear()}
+                    loginMember={loginMember}
+                    leftContent={
+                        <>
+                            <button className="nav-btn" onClick={goToPrevious}>&lt;</button>
+                            <h1>{formatMonthYear()}</h1>
+                            <button className="nav-btn" onClick={goToNext}>&gt;</button>
+                            <button className="today-btn" onClick={goToToday}>오늘</button>
+                        </>
+                    }
+                    centerContent={currentTeam && (
+                        <span className="team-name">{currentTeam.teamName}</span>
+                    )}
+                    rightContent={
                         <div className="view-toggle">
                             <button
                                 className={viewMode === 'month' ? 'active' : ''}
@@ -203,10 +198,8 @@ function Calendar() {
                                 주간
                             </button>
                         </div>
-                        {loginMember && <NotificationBell memberNo={loginMember.no} />}
-                        <button className="logout-btn" onClick={handleLogout}>로그아웃</button>
-                    </div>
-                </header>
+                    }
+                />
 
                 {/* 캘린더 콘텐츠 */}
                 <div className="calendar-content">

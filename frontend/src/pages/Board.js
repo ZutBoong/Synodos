@@ -16,10 +16,10 @@ import { updateTaskTags } from '../api/tagApi';
 import TagInput from '../components/TagInput';
 import websocketService from '../api/websocketService';
 import Sidebar from '../components/Sidebar';
+import Header from '../components/Header';
 import TaskModal from '../components/TaskModal';
 import FilterBar from '../components/FilterBar';
 import ChatPanel from '../components/ChatPanel';
-import NotificationBell from '../components/NotificationBell';
 import './Board.css';
 
 // 상태 라벨 맵
@@ -345,14 +345,6 @@ function Board() {
             console.error('아카이브 실패:', error);
             alert('아카이브에 실패했습니다.');
         }
-    };
-
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('member');
-        localStorage.removeItem('currentTeam');
-        websocketService.disconnect();
-        navigate('/');
     };
 
     // 필터 적용 함수
@@ -684,39 +676,36 @@ function Board() {
 
             <div className={`board-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'} ${chatOpen ? 'chat-open' : ''}`}>
                 {/* 헤더 */}
-                <header className="board-page-header">
-                    <div className="header-left">
-                        {currentTeam && (
-                            <>
-                                <h1>{currentTeam.teamName}</h1>
-                                <div className="team-code-section">
-                                    <span className="team-code-badge">
-                                        {showTeamCode ? currentTeam.teamCode : '••••••••'}
-                                    </span>
-                                    <button
-                                        className="code-toggle-btn"
-                                        onClick={() => setShowTeamCode(!showTeamCode)}
-                                        title={showTeamCode ? '코드 숨기기' : '코드 보기'}
-                                    >
-                                        {showTeamCode ? '숨김' : '보기'}
-                                    </button>
-                                    <button
-                                        className="code-copy-btn"
-                                        onClick={handleCopyTeamCode}
-                                        title="코드 복사"
-                                    >
-                                        {codeCopySuccess ? '복사됨!' : '복사'}
-                                    </button>
-                                </div>
-                                {wsConnected && <span className="ws-status connected" title="실시간 연결됨">●</span>}
-                            </>
-                        )}
-                    </div>
-                    <div className="header-right">
-                        {loginMember && <NotificationBell memberNo={loginMember.no} />}
-                        <button className="logout-btn" onClick={handleLogout}>로그아웃</button>
-                    </div>
-                </header>
+                <Header
+                    title={currentTeam?.teamName || 'Flowtask'}
+                    loginMember={loginMember}
+                    onLogout={() => websocketService.disconnect()}
+                    leftContent={currentTeam && (
+                        <>
+                            <h1>{currentTeam.teamName}</h1>
+                            <div className="team-code-section">
+                                <span className="team-code-badge">
+                                    {showTeamCode ? currentTeam.teamCode : '••••••••'}
+                                </span>
+                                <button
+                                    className="code-toggle-btn"
+                                    onClick={() => setShowTeamCode(!showTeamCode)}
+                                    title={showTeamCode ? '코드 숨기기' : '코드 보기'}
+                                >
+                                    {showTeamCode ? '숨김' : '보기'}
+                                </button>
+                                <button
+                                    className="code-copy-btn"
+                                    onClick={handleCopyTeamCode}
+                                    title="코드 복사"
+                                >
+                                    {codeCopySuccess ? '복사됨!' : '복사'}
+                                </button>
+                            </div>
+                            {wsConnected && <span className="ws-status connected" title="실시간 연결됨">●</span>}
+                        </>
+                    )}
+                />
 
                 {/* 메인 콘텐츠 */}
                 <div className="board-content">
