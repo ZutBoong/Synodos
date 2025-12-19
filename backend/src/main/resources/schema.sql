@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS flowtask_task (
     due_date TIMESTAMP,
     -- Section for list/timeline grouping
     section_id INTEGER REFERENCES flowtask_section(section_id) ON DELETE SET NULL,
-    -- Workflow fields
+    -- Workflow fields (NEW)
     workflow_status VARCHAR(20) DEFAULT 'WAITING',
     rejection_reason TEXT,
     rejected_at TIMESTAMP,
@@ -239,6 +239,19 @@ CREATE INDEX IF NOT EXISTS idx_column_favorite_column ON flowtask_column_favorit
 CREATE INDEX IF NOT EXISTS idx_column_favorite_member ON flowtask_column_favorite(member_no);
 
 -- ========================================
+-- 태스크 즐겨찾기 테이블
+-- ========================================
+CREATE TABLE IF NOT EXISTS flowtask_task_favorite (
+    task_id INTEGER NOT NULL REFERENCES flowtask_task(task_id) ON DELETE CASCADE,
+    member_no INTEGER NOT NULL REFERENCES flowtask_member(no) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (task_id, member_no)
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_favorite_task ON flowtask_task_favorite(task_id);
+CREATE INDEX IF NOT EXISTS idx_task_favorite_member ON flowtask_task_favorite(member_no);
+
+-- ========================================
 -- 컬럼 아카이브 테이블 (삭제된 컬럼 스냅샷 저장)
 -- ========================================
 CREATE TABLE IF NOT EXISTS flowtask_column_archive (
@@ -292,7 +305,7 @@ CREATE TABLE IF NOT EXISTS flowtask_task_assignee (
     member_no INTEGER NOT NULL REFERENCES flowtask_member(no) ON DELETE CASCADE,
     assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     assigned_by INTEGER REFERENCES flowtask_member(no) ON DELETE SET NULL,
-    -- Workflow fields
+    -- Workflow fields (NEW)
     accepted BOOLEAN DEFAULT FALSE,
     accepted_at TIMESTAMP,
     completed BOOLEAN DEFAULT FALSE,
@@ -304,7 +317,7 @@ CREATE INDEX IF NOT EXISTS idx_task_assignee_task ON flowtask_task_assignee(task
 CREATE INDEX IF NOT EXISTS idx_task_assignee_member ON flowtask_task_assignee(member_no);
 
 -- ========================================
--- 태스크 검증자 테이블 (복수 검증자 지원)
+-- 태스크 검증자 테이블 (복수 검증자 지원) - NEW
 -- ========================================
 CREATE TABLE IF NOT EXISTS flowtask_task_verifier (
     task_id INTEGER NOT NULL REFERENCES flowtask_task(task_id) ON DELETE CASCADE,
@@ -340,76 +353,3 @@ CREATE INDEX IF NOT EXISTS idx_file_task ON flowtask_file(task_id);
 CREATE INDEX IF NOT EXISTS idx_file_uploader ON flowtask_file(uploader_no);
 CREATE INDEX IF NOT EXISTS idx_file_uploaded ON flowtask_file(uploaded_at DESC);
 
--- ========================================
--- 마이그레이션: 기존 테이블에 새 컬럼 추가
--- (이미 존재하는 DB에서 실행 시 필요)
--- ========================================
-DO $$
-BEGIN
-    -- flowtask_team에 description 추가
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'flowtask_team' AND column_name = 'description') THEN
-        ALTER TABLE flowtask_team ADD COLUMN description TEXT;
-    END IF;
-
-    -- flowtask_task에 start_date 추가
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'flowtask_task' AND column_name = 'start_date') THEN
-        ALTER TABLE flowtask_task ADD COLUMN start_date TIMESTAMP;
-    END IF;
-
-    -- flowtask_task에 section_id 추가
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'flowtask_task' AND column_name = 'section_id') THEN
-        ALTER TABLE flowtask_task ADD COLUMN section_id INTEGER REFERENCES flowtask_section(section_id) ON DELETE SET NULL;
-    END IF;
-
-    -- ========================================
-    -- 워크플로우 시스템 마이그레이션
-    -- ========================================
-
-    -- flowtask_task에 workflow_status 추가
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'flowtask_task' AND column_name = 'workflow_status') THEN
-        ALTER TABLE flowtask_task ADD COLUMN workflow_status VARCHAR(20) DEFAULT 'WAITING';
-    END IF;
-
-    -- flowtask_task에 rejection_reason 추가
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'flowtask_task' AND column_name = 'rejection_reason') THEN
-        ALTER TABLE flowtask_task ADD COLUMN rejection_reason TEXT;
-    END IF;
-
-    -- flowtask_task에 rejected_at 추가
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'flowtask_task' AND column_name = 'rejected_at') THEN
-        ALTER TABLE flowtask_task ADD COLUMN rejected_at TIMESTAMP;
-    END IF;
-
-    -- flowtask_task에 rejected_by 추가
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'flowtask_task' AND column_name = 'rejected_by') THEN
-        ALTER TABLE flowtask_task ADD COLUMN rejected_by INTEGER REFERENCES flowtask_member(no) ON DELETE SET NULL;
-    END IF;
-
-    -- flowtask_task_assignee에 워크플로우 컬럼 추가
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'flowtask_task_assignee' AND column_name = 'accepted') THEN
-        ALTER TABLE flowtask_task_assignee ADD COLUMN accepted BOOLEAN DEFAULT FALSE;
-    END IF;
-
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'flowtask_task_assignee' AND column_name = 'accepted_at') THEN
-        ALTER TABLE flowtask_task_assignee ADD COLUMN accepted_at TIMESTAMP;
-    END IF;
-
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'flowtask_task_assignee' AND column_name = 'completed') THEN
-        ALTER TABLE flowtask_task_assignee ADD COLUMN completed BOOLEAN DEFAULT FALSE;
-    END IF;
-
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'flowtask_task_assignee' AND column_name = 'completed_at') THEN
-        ALTER TABLE flowtask_task_assignee ADD COLUMN completed_at TIMESTAMP;
-    END IF;
-
-    -- 기존 status 값을 workflow_status로 마이그레이션
-    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'flowtask_task' AND column_name = 'status') THEN
-        UPDATE flowtask_task SET workflow_status = 'WAITING' WHERE status IN ('OPEN', 'CANNOT_REPRODUCE', 'DUPLICATE') AND (workflow_status IS NULL OR workflow_status = 'WAITING');
-        UPDATE flowtask_task SET workflow_status = 'IN_PROGRESS' WHERE status = 'IN_PROGRESS';
-        UPDATE flowtask_task SET workflow_status = 'DONE' WHERE status IN ('RESOLVED', 'CLOSED');
-    END IF;
-
-    -- workflow_status가 NULL인 경우 기본값 설정
-    UPDATE flowtask_task SET workflow_status = 'WAITING' WHERE workflow_status IS NULL;
-
-END $$;

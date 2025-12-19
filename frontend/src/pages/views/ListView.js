@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { taskwrite, taskupdate, taskdelete, taskposition, columnposition } from '../../api/boardApi';
+import { taskwrite, taskupdate, taskdelete, taskposition, columnposition, tasklistByTeam } from '../../api/boardApi';
 import TaskModal from '../../components/TaskModal';
+import TaskCreateModal from '../../components/TaskCreateModal';
 import './ListView.css';
 
 // 워크플로우 상태
@@ -47,6 +48,7 @@ function ListView({
     const [newTaskTitle, setNewTaskTitle] = useState({});
     const [selectedTask, setSelectedTask] = useState(null);
     const [addingColumnTask, setAddingColumnTask] = useState(null);
+    const [createTaskModalColumnId, setCreateTaskModalColumnId] = useState(null);
 
     // props 동기화
     useEffect(() => {
@@ -137,22 +139,56 @@ function ListView({
         return applyFilters(columnTasks);
     };
 
-    // 태스크 추가
-    const handleAddTask = async (columnId) => {
-        const title = newTaskTitle[columnId];
-        if (!title?.trim()) return;
-
+    // 태스크 추가 (모달에서)
+    const handleCreateTask = async (taskData) => {
         try {
+            // 기본 태스크 생성
             await taskwrite({
-                columnId,
-                title: title.trim()
+                columnId: taskData.columnId,
+                title: taskData.title,
+                description: taskData.description,
+                workflowStatus: taskData.status,
+                priority: taskData.priority,
+                dueDate: taskData.dueDate,
+                assigneeNo: taskData.assignees?.length > 0 ? taskData.assignees[0] : null
             });
-            setNewTaskTitle(prev => ({ ...prev, [columnId]: '' }));
-            setAddingColumnTask(null);
+
+            // 태스크 목록 새로 가져오기
+            const tasksData = await tasklistByTeam(team.teamId);
+            setTasks(tasksData || []);
+
+            // 생성된 태스크 찾기
+            const newTask = tasksData.reduce((latest, task) => {
+                if (task.columnId === taskData.columnId) {
+                    if (!latest || task.taskId > latest.taskId) {
+                        return task;
+                    }
+                }
+                return latest;
+            }, null);
+
+            if (newTask) {
+                // 담당자 저장 (복수)
+                if (taskData.assignees?.length > 0) {
+                    const { updateTaskAssignees } = await import('../../api/boardApi');
+                    await updateTaskAssignees(newTask.taskId, taskData.assignees, loginMember?.no);
+                }
+
+                // 검증자 저장 (복수)
+                if (taskData.verifiers?.length > 0) {
+                    const { updateTaskVerifiers } = await import('../../api/boardApi');
+                    await updateTaskVerifiers(newTask.taskId, taskData.verifiers, loginMember?.no);
+                }
+
+                // 최종 업데이트된 태스크 목록 가져오기
+                const finalTasksData = await tasklistByTeam(team.teamId);
+                setTasks(finalTasksData || []);
+            }
+
             if (refreshData) refreshData();
         } catch (error) {
             console.error('태스크 추가 실패:', error);
-            alert('태스크 추가에 실패했습니다.');
+            alert('태스크 생성에 실패했습니다.');
         }
     };
 
@@ -384,32 +420,12 @@ function ListView({
                                 </table>
 
                                 {/* 태스크 추가 */}
-                                {addingColumnTask === column.columnId ? (
-                                    <div className="add-task-inline">
-                                        <input
-                                            type="text"
-                                            placeholder="태스크 제목 입력..."
-                                            value={newTaskTitle[column.columnId] || ''}
-                                            onChange={(e) => setNewTaskTitle(prev => ({
-                                                ...prev,
-                                                [column.columnId]: e.target.value
-                                            }))}
-                                            onKeyPress={(e) => {
-                                                if (e.key === 'Enter') handleAddTask(column.columnId);
-                                            }}
-                                            autoFocus
-                                        />
-                                        <button onClick={() => handleAddTask(column.columnId)}>추가</button>
-                                        <button onClick={() => setAddingColumnTask(null)}>취소</button>
-                                    </div>
-                                ) : (
-                                    <button
-                                        className="add-task-btn"
-                                        onClick={() => setAddingColumnTask(column.columnId)}
-                                    >
-                                        + 작업 추가
-                                    </button>
-                                )}
+                                <button
+                                    className="add-task-btn"
+                                    onClick={() => setCreateTaskModalColumnId(column.columnId)}
+                                >
+                                    + 새 작업 추가
+                                </button>
                             </div>
                         )}
                     </div>
@@ -453,6 +469,17 @@ function ListView({
                             if (refreshData) refreshData();
                             setSelectedTask(null);
                         }}
+                    />
+                )}
+
+                {/* 태스크 생성 모달 */}
+                {createTaskModalColumnId && (
+                    <TaskCreateModal
+                        columnId={createTaskModalColumnId}
+                        teamId={team?.teamId}
+                        teamMembers={teamMembers}
+                        onClose={() => setCreateTaskModalColumnId(null)}
+                        onCreate={handleCreateTask}
                     />
                 )}
             </div>

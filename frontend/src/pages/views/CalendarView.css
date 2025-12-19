@@ -225,44 +225,37 @@
 
 .task-item {
     padding: 6px 10px;
-    background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%);
     border-radius: 8px;
     font-size: 12px;
     font-weight: 500;
-    color: #1e293b;
+    color: white !important;
     cursor: pointer;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     transition: all 0.15s ease;
-    border-left: 3px solid #667eea;
+    border: none;
+}
+
+.task-item.priority-critical {
+    background: #dc2626 !important;
+}
+
+.task-item.priority-high {
+    background: #f59e0b !important;
+}
+
+.task-item.priority-medium {
+    background: #3b82f6 !important;
+}
+
+.task-item.priority-low {
+    background: #6b7280 !important;
 }
 
 .task-item:hover {
-    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    opacity: 0.85;
     transform: translateX(2px);
-}
-
-.task-item.status-in-progress {
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-    border-left-color: #3b82f6;
-}
-
-.task-item.status-resolved {
-    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-    border-left-color: #10b981;
-}
-
-.task-item.status-closed {
-    background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
-    border-left-color: #8b5cf6;
-    text-decoration: line-through;
-    opacity: 0.6;
-}
-
-.task-item.status-open {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    border-left-color: #f59e0b;
 }
 
 .more-tasks {

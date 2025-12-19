@@ -27,7 +27,7 @@ npm test                        # Run tests
 ```
 
 ### Database
-PostgreSQL running on localhost:5432. Schema files in `database/` directory (organized by feature: member, team, board, tag, comment, chat, git, etc.)
+PostgreSQL running on localhost:5432. Main schema file: `database/postgresql_schema.sql`
 
 Setup from scratch:
 ```sql
@@ -74,11 +74,30 @@ Sample data is auto-generated. All passwords are `1234`.
 
 Key entities: Member, Team, TeamMember, Project, FlowtaskColumn, Task, Tag, Comment, ChatMessage, GitRepo, TaskCommit, Section, Notification, TaskAssignee, ColumnArchive, ColumnAssignee, ColumnFavorite, ProjectFile
 
+### MyBatis Mapping Conventions
+- Mapper XMLs in `resources/mapper/` (one per entity, e.g., `task.xml`, `team.xml`)
+- Standard method names: `insert`, `listAll`, `listByColumn`, `content`, `update`, `delete`
+- Column naming: Database uses `snake_case`, Java uses `camelCase` (auto-mapped by MyBatis)
+- Complex queries use `<resultMap>` for entity relations (e.g., Task with assignees/tags)
+- Use `@Param` annotations in DAO interfaces for named parameters
+
+### Service Layer Patterns
+Services follow consistent patterns:
+- **Populate relations after DAO fetch:** `task = dao.content(id); populateRelations(task);`
+- **Trigger notifications after mutations:** `dao.update(task); notificationService.notify(...);`
+- **Return fully populated entities** for API responses with all related data loaded
+
 ### Frontend Structure (React 18 + React Router)
 - **Pages** (`pages/`): Route components (Board, Login, Register, Calendar, etc.)
 - **Components** (`components/`): Reusable UI (Sidebar, Header, TaskModal, CommentSection, ChatPanel, TagInput, FilterBar, GitRepoSettings, TaskCommits, NotificationBell)
 - **API** (`api/`): Axios API client functions for backend communication (axiosInstance, boardApi, teamApi, memberApi, etc.)
 - **Views** (`pages/views/`): Sub-views for Board page (BoardView, ListView, CalendarView, TimelineView, FilesView, AdminView, OverviewView)
+
+### Frontend State Management
+- Component-level state with React Hooks (no Redux/Context API)
+- WebSocket updates sync state across connected users in real-time
+- Persistent state via localStorage: JWT token, current team, member info
+- Axios interceptors handle automatic token injection and 401 redirects to login
 
 ### Data Flow
 1. Teams contain Projects
@@ -89,9 +108,15 @@ Key entities: Member, Team, TeamMember, Project, FlowtaskColumn, Task, Tag, Comm
 
 ### Real-Time Communication
 - WebSocket endpoint: `/ws` (STOMP over SockJS)
-- Topic prefix: `/topic` for subscriptions
+- Topic prefix: `/topic` for subscriptions (e.g., `/topic/team/{teamId}`)
 - App prefix: `/app` for client-to-server messages
 - Frontend uses `@stomp/stompjs` and `sockjs-client`
+- Event types: `TASK_CREATED`, `TASK_UPDATED`, `TASK_MOVED`, `TASK_DELETED`, `COLUMN_CREATED`, etc.
+
+### Notification System (Dual-Channel)
+**Real-time (WebSocket):** `BoardNotificationService` sends events to `/topic/team/{teamId}` for online users
+**Persistent (Database):** `NotificationService` stores notifications in `flowtask_notification` table for offline users
+Services trigger both channels when creating/updating tasks with assignees or verifiers.
 
 ### API Patterns
 Backend endpoints follow pattern: `/api/{resource}{action}` (e.g., `/api/taskwrite`, `/api/tasklist`)
@@ -108,7 +133,7 @@ JWT-based authentication with tokens stored client-side. Configured in `Security
 - Java version: 17
 - Node version: 18+
 - MyBatis: Maps underscore to camelCase automatically
-- Database init: Schema loaded from `reset.sql`, `schema.sql`, `data.sql` on startup (local mode)
+- Spring Boot init mode: `spring.sql.init.mode=always` (local dev), `never` (Docker/production)
 
 ## Deployment
 For AWS EC2 deployment, use `docker-compose.aws.yml` with environment file:

@@ -262,3 +262,35 @@ export const updateTaskDates = async (taskId, startDate, dueDate) => {
     const response = await axiosInstance.put(`${API_PATH}/task/${taskId}/dates`, { startDate, dueDate });
     return response.data;
 };
+
+// ========== Task Favorites API ==========
+
+// 태스크 즐겨찾기 추가
+export const addTaskFavorite = async (taskId, memberNo) => {
+    const response = await axiosInstance.post(`${API_PATH}/task/${taskId}/favorite/${memberNo}`);
+    return response.data;
+};
+
+// 태스크 즐겨찾기 삭제
+export const removeTaskFavorite = async (taskId, memberNo) => {
+    const response = await axiosInstance.delete(`${API_PATH}/task/${taskId}/favorite/${memberNo}`);
+    return response.data;
+};
+
+// 태스크 즐겨찾기 토글
+export const toggleTaskFavorite = async (taskId, memberNo) => {
+    const response = await axiosInstance.post(`${API_PATH}/task/${taskId}/favorite/${memberNo}/toggle`);
+    return response.data;
+};
+
+// 태스크 즐겨찾기 여부 확인
+export const checkTaskFavorite = async (taskId, memberNo) => {
+    const response = await axiosInstance.get(`${API_PATH}/task/${taskId}/favorite/${memberNo}`);
+    return response.data;
+};
+
+// 멤버별 즐겨찾기한 태스크 목록
+export const getTaskFavorites = async (memberNo) => {
+    const response = await axiosInstance.get(`${API_PATH}/task/favorites/member/${memberNo}`);
+    return response.data;
+};

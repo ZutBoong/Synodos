@@ -262,9 +262,8 @@
 .task-item {
     padding: 4px 8px;
     border-radius: 4px;
-    font-size: 11px;
-    color: white;
-    background-color: #5aac44;
+    font-size: 110px;
+    color: white !important;
     cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
@@ -272,8 +271,24 @@
     transition: opacity 0.15s;
 }
 
+.task-item.priority-critical {
+    background: #dc2626 !important;
+}
+
+.task-item.priority-high {
+    background: #f59e0b !important;
+}
+
+.task-item.priority-medium {
+    background: #3b82f6 !important;
+}
+
+.task-item.priority-low {
+    background: #6b7280 !important;
+}
+
 .task-item:hover {
-    opacity: 0.9;
+    opacity: 0.85;
 }
 
 .more-tasks {

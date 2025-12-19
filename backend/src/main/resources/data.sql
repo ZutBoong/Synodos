@@ -1,188 +1,173 @@
 -- =============================================
 -- Flowtask 샘플 데이터
--- 워크플로우 시스템 (WAITING → IN_PROGRESS → REVIEW → DONE)
+-- 작업 단위별 컬럼 구조 (프론트엔드, 백엔드, 데이터베이스, DevOps, 디자인/UI)
 -- =============================================
 
 -- 1. 회원 (비밀번호: 1234)
 INSERT INTO flowtask_member (no, userid, password, name, email, phone, register)
 VALUES
-    (nextval('flowtask_member_seq'), 'admin', '$2a$10$yXU9hNrs4xJPAZ/RdnpxzuaXH4aNT7f1RyW7FCJ3GPDVbGksO4u6W', '관리자', 'admin@flowtask.com', '010-1234-5678', CURRENT_TIMESTAMP),
-    (nextval('flowtask_member_seq'), 'user1', '$2a$10$yXU9hNrs4xJPAZ/RdnpxzuaXH4aNT7f1RyW7FCJ3GPDVbGksO4u6W', '홍길동', 'hong@flowtask.com', '010-2222-3333', CURRENT_TIMESTAMP),
-    (nextval('flowtask_member_seq'), 'user2', '$2a$10$yXU9hNrs4xJPAZ/RdnpxzuaXH4aNT7f1RyW7FCJ3GPDVbGksO4u6W', '김철수', 'kim@flowtask.com', '010-3333-4444', CURRENT_TIMESTAMP),
-    (nextval('flowtask_member_seq'), 'user3', '$2a$10$yXU9hNrs4xJPAZ/RdnpxzuaXH4aNT7f1RyW7FCJ3GPDVbGksO4u6W', '이영희', 'lee@flowtask.com', '010-4444-5555', CURRENT_TIMESTAMP),
-    (nextval('flowtask_member_seq'), 'user4', '$2a$10$yXU9hNrs4xJPAZ/RdnpxzuaXH4aNT7f1RyW7FCJ3GPDVbGksO4u6W', '박민수', 'park@flowtask.com', '010-5555-6666', CURRENT_TIMESTAMP);
+    (nextval('flowtask_member_seq'), 'admin', '$2a$10$yXU9hNrs4xJPAZ/RdnpxzuaXH4aNT7f1RyW7FCJ3GPDVbGksO4u6W', '김팀장', 'admin@flowtask.com', '010-1111-1111', CURRENT_TIMESTAMP),
+    (nextval('flowtask_member_seq'), 'user1', '$2a$10$yXU9hNrs4xJPAZ/RdnpxzuaXH4aNT7f1RyW7FCJ3GPDVbGksO4u6W', '이프론트', 'frontend@flowtask.com', '010-2222-2222', CURRENT_TIMESTAMP),
+    (nextval('flowtask_member_seq'), 'user2', '$2a$10$yXU9hNrs4xJPAZ/RdnpxzuaXH4aNT7f1RyW7FCJ3GPDVbGksO4u6W', '박백엔드', 'backend@flowtask.com', '010-3333-3333', CURRENT_TIMESTAMP),
+    (nextval('flowtask_member_seq'), 'user3', '$2a$10$yXU9hNrs4xJPAZ/RdnpxzuaXH4aNT7f1RyW7FCJ3GPDVbGksO4u6W', '최데브옵스', 'devops@flowtask.com', '010-4444-4444', CURRENT_TIMESTAMP),
+    (nextval('flowtask_member_seq'), 'user4', '$2a$10$yXU9hNrs4xJPAZ/RdnpxzuaXH4aNT7f1RyW7FCJ3GPDVbGksO4u6W', '정디자이너', 'designer@flowtask.com', '010-5555-5555', CURRENT_TIMESTAMP);
 
 -- 2. 팀
 INSERT INTO flowtask_team (team_id, team_name, team_code, leader_no, description, created_at)
 VALUES
-    (nextval('flowtask_team_seq'), 'Flowtask 개발팀', 'FLOW2024', 1, '칸반 보드 프로젝트 메인 개발팀', CURRENT_TIMESTAMP),
-    (nextval('flowtask_team_seq'), '디자인팀', 'DESIGN24', 1, 'UI/UX 디자인 담당', CURRENT_TIMESTAMP);
+    (nextval('flowtask_team_seq'), 'Flowtask 개발팀', 'TEAM2024', 1, '칸반 보드 협업 툴 개발 프로젝트', CURRENT_TIMESTAMP);
 
 -- 3. 팀 멤버
 INSERT INTO flowtask_team_member (team_id, member_no, role, joined_at)
 VALUES
-    -- Flowtask 개발팀
-    (1, 1, 'OWNER', CURRENT_TIMESTAMP),
+    (1, 1, 'LEADER', CURRENT_TIMESTAMP),
     (1, 2, 'MEMBER', CURRENT_TIMESTAMP),
     (1, 3, 'MEMBER', CURRENT_TIMESTAMP),
     (1, 4, 'MEMBER', CURRENT_TIMESTAMP),
-    (1, 5, 'MEMBER', CURRENT_TIMESTAMP),
-    -- 디자인팀
-    (2, 1, 'OWNER', CURRENT_TIMESTAMP),
-    (2, 4, 'MEMBER', CURRENT_TIMESTAMP);
+    (1, 5, 'MEMBER', CURRENT_TIMESTAMP);
 
 -- 4. 프로젝트
 INSERT INTO flowtask_project (project_id, team_id, project_name, created_at)
 VALUES
-    (nextval('flowtask_project_seq'), 1, '웹 애플리케이션', CURRENT_TIMESTAMP),
-    (nextval('flowtask_project_seq'), 1, '모바일 앱', CURRENT_TIMESTAMP);
+    (nextval('flowtask_project_seq'), 1, 'Flowtask v1.0', CURRENT_TIMESTAMP);
 
 -- 5. 섹션 (타임라인/목록 그룹핑용)
 INSERT INTO flowtask_section (section_id, team_id, section_name, position, color, created_at)
 VALUES
-    (nextval('flowtask_section_seq'), 1, '백엔드', 1, '#3b82f6', CURRENT_TIMESTAMP),
-    (nextval('flowtask_section_seq'), 1, '프론트엔드', 2, '#10b981', CURRENT_TIMESTAMP),
-    (nextval('flowtask_section_seq'), 1, '인프라', 3, '#f59e0b', CURRENT_TIMESTAMP);
+    (nextval('flowtask_section_seq'), 1, '인증/보안', 0, '#e74c3c', CURRENT_TIMESTAMP),
+    (nextval('flowtask_section_seq'), 1, '핵심 기능', 1, '#3498db', CURRENT_TIMESTAMP),
+    (nextval('flowtask_section_seq'), 1, '부가 기능', 2, '#2ecc71', CURRENT_TIMESTAMP),
+    (nextval('flowtask_section_seq'), 1, '인프라', 3, '#f39c12', CURRENT_TIMESTAMP);
 
--- 6. 컬럼 (칸반 보드)
+-- 6. 컬럼 (작업 단위별)
 INSERT INTO flowtask_column (column_id, team_id, project_id, title, position)
 VALUES
-    (nextval('flowtask_column_seq'), 1, 1, '할 일', 1),
-    (nextval('flowtask_column_seq'), 1, 1, '진행 중', 2),
-    (nextval('flowtask_column_seq'), 1, 1, '검토 중', 3),
-    (nextval('flowtask_column_seq'), 1, 1, '완료', 4);
+    (nextval('flowtask_column_seq'), 1, 1, '프론트엔드', 0),
+    (nextval('flowtask_column_seq'), 1, 1, '백엔드', 1),
+    (nextval('flowtask_column_seq'), 1, 1, '데이터베이스', 2),
+    (nextval('flowtask_column_seq'), 1, 1, 'DevOps', 3),
+    (nextval('flowtask_column_seq'), 1, 1, '디자인/UI', 4);
 
--- 7. 태그
-INSERT INTO flowtask_tag (tag_id, team_id, tag_name, color, created_at)
+-- 7. 태스크 (프론트엔드)
+INSERT INTO flowtask_task (task_id, column_id, title, description, position, assignee_no, priority, start_date, due_date, section_id, workflow_status, created_at)
 VALUES
-    (nextval('flowtask_tag_seq'), 1, '버그', '#ef4444', CURRENT_TIMESTAMP),
-    (nextval('flowtask_tag_seq'), 1, '기능', '#22c55e', CURRENT_TIMESTAMP),
-    (nextval('flowtask_tag_seq'), 1, '개선', '#3b82f6', CURRENT_TIMESTAMP),
-    (nextval('flowtask_tag_seq'), 1, '문서', '#6b7280', CURRENT_TIMESTAMP),
-    (nextval('flowtask_tag_seq'), 1, '긴급', '#f97316', CURRENT_TIMESTAMP);
+    (nextval('flowtask_task_seq'), 1, '로그인 페이지 UI 구현', 'React로 로그인 폼 컴포넌트 개발', 0, 2, 'HIGH', CURRENT_DATE - INTERVAL '5 days', CURRENT_DATE + INTERVAL '2 days', 1, 'IN_PROGRESS', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 1, '회원가입 폼 유효성 검사', '이메일, 비밀번호 형식 검증 로직 추가', 1, 2, 'MEDIUM', CURRENT_DATE - INTERVAL '3 days', CURRENT_DATE + INTERVAL '4 days', 1, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 1, '칸반 보드 드래그 앤 드롭 구현', 'react-beautiful-dnd 라이브러리 활용', 2, 2, 'HIGH', CURRENT_DATE - INTERVAL '7 days', CURRENT_DATE + INTERVAL '1 day', 2, 'IN_PROGRESS', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 1, '태스크 카드 컴포넌트 디자인', '태스크 카드 레이아웃 및 스타일링', 3, 2, 'MEDIUM', CURRENT_DATE - INTERVAL '4 days', CURRENT_DATE + INTERVAL '3 days', 2, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 1, '컬럼 추가/삭제 기능', '컬럼 관리 UI 및 로직 구현', 4, 2, 'MEDIUM', CURRENT_DATE - INTERVAL '2 days', CURRENT_DATE + INTERVAL '5 days', 2, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 1, '태스크 상세 모달 개선', '댓글, 첨부파일 UI 추가', 5, 2, 'LOW', CURRENT_DATE, CURRENT_DATE + INTERVAL '7 days', 2, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 1, '팀 멤버 초대 UI', '멤버 초대 폼 및 팀 코드 입력', 6, 2, 'MEDIUM', CURRENT_DATE - INTERVAL '1 day', CURRENT_DATE + INTERVAL '6 days', 3, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 1, '알림 센터 구현', '실시간 알림 표시 컴포넌트', 7, 2, 'LOW', CURRENT_DATE, CURRENT_DATE + INTERVAL '10 days', 3, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 1, '다크모드 지원', '테마 전환 기능 추가', 8, 2, 'LOW', CURRENT_DATE, CURRENT_DATE + INTERVAL '14 days', 3, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 1, '반응형 디자인 적용', '모바일 화면 대응', 9, 2, 'MEDIUM', CURRENT_DATE, CURRENT_DATE + INTERVAL '8 days', 3, 'WAITING', CURRENT_TIMESTAMP);
 
--- 8. 태스크 (워크플로우 상태: WAITING, IN_PROGRESS, REVIEW, DONE, REJECTED)
-INSERT INTO flowtask_task (task_id, column_id, title, description, position, priority, workflow_status, assignee_no, section_id, start_date, due_date, created_at)
+-- 8. 태스크 (백엔드)
+INSERT INTO flowtask_task (task_id, column_id, title, description, position, assignee_no, priority, start_date, due_date, section_id, workflow_status, created_at)
 VALUES
-    -- 할 일 컬럼 (WAITING 상태)
-    (nextval('flowtask_task_seq'), 1, '사용자 프로필 페이지 구현', '프로필 조회/수정 기능 개발', 1, 'MEDIUM', 'WAITING', 2, 2, CURRENT_DATE, CURRENT_DATE + INTERVAL '7 days', CURRENT_TIMESTAMP),
-    (nextval('flowtask_task_seq'), 1, '알림 설정 기능', '이메일/푸시 알림 설정 UI', 2, 'LOW', 'WAITING', NULL, 2, CURRENT_DATE, CURRENT_DATE + INTERVAL '14 days', CURRENT_TIMESTAMP),
-    (nextval('flowtask_task_seq'), 1, 'API 문서화', 'Swagger로 REST API 문서 작성', 3, 'LOW', 'WAITING', 3, 1, CURRENT_DATE, CURRENT_DATE + INTERVAL '10 days', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 2, 'JWT 인증 시스템 구축', 'Spring Security + JWT 토큰 기반 인증', 0, 3, 'HIGH', CURRENT_DATE - INTERVAL '6 days', CURRENT_DATE + INTERVAL '1 day', 1, 'IN_PROGRESS', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 2, '회원가입 API 개발', '회원가입 엔드포인트 및 비밀번호 암호화', 1, 3, 'HIGH', CURRENT_DATE - INTERVAL '5 days', CURRENT_DATE + INTERVAL '2 days', 1, 'IN_PROGRESS', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 2, '권한 관리 시스템', 'ROLE 기반 권한 체크 로직', 2, 3, 'MEDIUM', CURRENT_DATE - INTERVAL '3 days', CURRENT_DATE + INTERVAL '4 days', 1, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 2, '태스크 CRUD API', '태스크 생성/조회/수정/삭제 엔드포인트', 3, 3, 'HIGH', CURRENT_DATE - INTERVAL '8 days', CURRENT_DATE, 2, 'IN_PROGRESS', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 2, '컬럼 관리 API', '컬럼 CRUD 및 순서 변경 API', 4, 3, 'HIGH', CURRENT_DATE - INTERVAL '4 days', CURRENT_DATE + INTERVAL '2 days', 2, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 2, '드래그 앤 드롭 위치 저장', '태스크 위치 업데이트 API', 5, 3, 'MEDIUM', CURRENT_DATE - INTERVAL '2 days', CURRENT_DATE + INTERVAL '5 days', 2, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 2, '댓글 시스템 API', '댓글 작성/수정/삭제 엔드포인트', 6, 3, 'MEDIUM', CURRENT_DATE - INTERVAL '3 days', CURRENT_DATE + INTERVAL '3 days', 2, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 2, '팀 생성 및 관리 API', '팀 CRUD 및 멤버 관리', 7, 3, 'HIGH', CURRENT_DATE - INTERVAL '7 days', CURRENT_DATE + INTERVAL '1 day', 2, 'IN_PROGRESS', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 2, 'WebSocket 실시간 통신', 'STOMP 프로토콜로 실시간 업데이트', 8, 3, 'HIGH', CURRENT_DATE - INTERVAL '5 days', CURRENT_DATE + INTERVAL '2 days', 3, 'IN_PROGRESS', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 2, '파일 업로드 API', '이미지 및 파일 첨부 기능', 9, 3, 'MEDIUM', CURRENT_DATE, CURRENT_DATE + INTERVAL '6 days', 3, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 2, '검색 및 필터링 API', '태스크 검색, 필터링 엔드포인트', 10, 3, 'LOW', CURRENT_DATE, CURRENT_DATE + INTERVAL '9 days', 3, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 2, '알림 발송 시스템', '이벤트 기반 알림 생성 및 전송', 11, 3, 'MEDIUM', CURRENT_DATE, CURRENT_DATE + INTERVAL '7 days', 3, 'WAITING', CURRENT_TIMESTAMP);
 
-    -- 진행 중 컬럼 (IN_PROGRESS 상태)
-    (nextval('flowtask_task_seq'), 2, '워크플로우 시스템 개발', '태스크 상태 전환 시스템 구현', 1, 'CRITICAL', 'IN_PROGRESS', 2, 1, CURRENT_DATE - INTERVAL '3 days', CURRENT_DATE + INTERVAL '2 days', CURRENT_TIMESTAMP),
-    (nextval('flowtask_task_seq'), 2, '실시간 알림 기능', 'WebSocket 기반 실시간 알림', 2, 'HIGH', 'IN_PROGRESS', 3, 1, CURRENT_DATE - INTERVAL '2 days', CURRENT_DATE + INTERVAL '4 days', CURRENT_TIMESTAMP),
-    (nextval('flowtask_task_seq'), 2, '칸반 보드 드래그앤드롭', '태스크 이동 DnD 기능 개선', 3, 'HIGH', 'IN_PROGRESS', 4, 2, CURRENT_DATE - INTERVAL '1 day', CURRENT_DATE + INTERVAL '3 days', CURRENT_TIMESTAMP),
-
-    -- 검토 중 컬럼 (REVIEW 상태)
-    (nextval('flowtask_task_seq'), 3, '로그인 보안 강화', 'JWT 토큰 갱신 로직 개선', 1, 'HIGH', 'REVIEW', 2, 1, CURRENT_DATE - INTERVAL '7 days', CURRENT_DATE, CURRENT_TIMESTAMP),
-    (nextval('flowtask_task_seq'), 3, '검색 필터 기능', '태스크 검색 및 필터링 UI', 2, 'MEDIUM', 'REVIEW', 4, 2, CURRENT_DATE - INTERVAL '5 days', CURRENT_DATE + INTERVAL '1 day', CURRENT_TIMESTAMP),
-
-    -- 완료 컬럼 (DONE 상태)
-    (nextval('flowtask_task_seq'), 4, '프로젝트 초기 설정', 'Spring Boot + React 프로젝트 구조 설정', 1, 'HIGH', 'DONE', 1, 3, CURRENT_DATE - INTERVAL '21 days', CURRENT_DATE - INTERVAL '14 days', CURRENT_TIMESTAMP),
-    (nextval('flowtask_task_seq'), 4, 'DB 스키마 설계', 'PostgreSQL 테이블 구조 설계', 2, 'HIGH', 'DONE', 1, 1, CURRENT_DATE - INTERVAL '20 days', CURRENT_DATE - INTERVAL '13 days', CURRENT_TIMESTAMP),
-    (nextval('flowtask_task_seq'), 4, '회원가입/로그인 구현', 'JWT 인증 시스템 구현', 3, 'HIGH', 'DONE', 2, 1, CURRENT_DATE - INTERVAL '18 days', CURRENT_DATE - INTERVAL '10 days', CURRENT_TIMESTAMP),
-    (nextval('flowtask_task_seq'), 4, '팀 관리 기능', '팀 생성/초대/관리 기능', 4, 'MEDIUM', 'DONE', 3, 1, CURRENT_DATE - INTERVAL '15 days', CURRENT_DATE - INTERVAL '8 days', CURRENT_TIMESTAMP),
-
-    -- 반려된 태스크 (REJECTED 상태)
-    (nextval('flowtask_task_seq'), 2, '다크모드 구현', 'UI 다크모드 테마 적용', 4, 'LOW', 'REJECTED', 4, 2, CURRENT_DATE - INTERVAL '5 days', CURRENT_DATE + INTERVAL '5 days', CURRENT_TIMESTAMP);
-
--- 반려 사유 업데이트
-UPDATE flowtask_task
-SET rejection_reason = '디자인 시안이 아직 확정되지 않았습니다. 디자인팀 검토 후 재진행해주세요.',
-    rejected_at = CURRENT_TIMESTAMP,
-    rejected_by = 1
-WHERE task_id = 13;
-
--- 9. 태스크-태그 연결
-INSERT INTO flowtask_task_tag (task_id, tag_id)
+-- 9. 태스크 (데이터베이스)
+INSERT INTO flowtask_task (task_id, column_id, title, description, position, assignee_no, priority, start_date, due_date, section_id, workflow_status, created_at)
 VALUES
-    (1, 2),   -- 프로필 - 기능
-    (2, 2),   -- 알림설정 - 기능
-    (3, 4),   -- API문서 - 문서
-    (4, 2),   -- 워크플로우 - 기능
-    (4, 5),   -- 워크플로우 - 긴급
-    (5, 2),   -- 실시간알림 - 기능
-    (6, 3),   -- DnD - 개선
-    (7, 3),   -- 로그인보안 - 개선
-    (8, 2),   -- 검색필터 - 기능
-    (9, 2),   -- 초기설정 - 기능
-    (10, 4),  -- DB스키마 - 문서
-    (11, 2),  -- 회원가입 - 기능
-    (12, 2),  -- 팀관리 - 기능
-    (13, 2);  -- 다크모드 - 기능
+    (nextval('flowtask_task_seq'), 3, 'ERD 설계 및 정규화', '데이터베이스 스키마 설계', 0, 3, 'HIGH', CURRENT_DATE - INTERVAL '10 days', CURRENT_DATE - INTERVAL '3 days', 1, 'DONE', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 3, '회원 테이블 생성', 'flowtask_member 테이블 및 인덱스', 1, 3, 'HIGH', CURRENT_DATE - INTERVAL '9 days', CURRENT_DATE - INTERVAL '4 days', 1, 'DONE', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 3, '팀/프로젝트 테이블 생성', 'flowtask_team, flowtask_project 테이블', 2, 3, 'HIGH', CURRENT_DATE - INTERVAL '8 days', CURRENT_DATE - INTERVAL '3 days', 2, 'DONE', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 3, '태스크 관련 테이블 생성', 'flowtask_task, flowtask_column 테이블', 3, 3, 'HIGH', CURRENT_DATE - INTERVAL '7 days', CURRENT_DATE - INTERVAL '2 days', 2, 'DONE', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 3, '댓글/태그 테이블 생성', 'flowtask_comment, flowtask_tag 테이블', 4, 3, 'MEDIUM', CURRENT_DATE - INTERVAL '6 days', CURRENT_DATE - INTERVAL '1 day', 2, 'DONE', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 3, '인덱스 최적화', '자주 조회되는 컬럼에 인덱스 추가', 5, 3, 'MEDIUM', CURRENT_DATE - INTERVAL '3 days', CURRENT_DATE + INTERVAL '3 days', 2, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 3, '쿼리 성능 튜닝', 'N+1 문제 해결 및 쿼리 최적화', 6, 3, 'LOW', CURRENT_DATE, CURRENT_DATE + INTERVAL '8 days', 3, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 3, '백업 전략 수립', '데이터베이스 자동 백업 설정', 7, 4, 'MEDIUM', CURRENT_DATE, CURRENT_DATE + INTERVAL '10 days', 4, 'WAITING', CURRENT_TIMESTAMP);
 
--- 10. 태스크 담당자 (워크플로우 상태 포함)
-INSERT INTO flowtask_task_assignee (task_id, member_no, assigned_at, assigned_by, accepted, accepted_at, completed, completed_at)
+-- 10. 태스크 (DevOps)
+INSERT INTO flowtask_task (task_id, column_id, title, description, position, assignee_no, priority, start_date, due_date, section_id, workflow_status, created_at)
 VALUES
-    -- WAITING 상태 태스크 (아직 수락 안함)
-    (1, 2, CURRENT_TIMESTAMP, 1, false, NULL, false, NULL),
-    (3, 3, CURRENT_TIMESTAMP, 1, false, NULL, false, NULL),
+    (nextval('flowtask_task_seq'), 4, 'Docker 컨테이너화', 'Dockerfile 및 docker-compose 설정', 0, 4, 'HIGH', CURRENT_DATE - INTERVAL '8 days', CURRENT_DATE - INTERVAL '1 day', 4, 'DONE', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 4, 'AWS EC2 인스턴스 설정', '프로덕션 서버 환경 구축', 1, 4, 'HIGH', CURRENT_DATE - INTERVAL '5 days', CURRENT_DATE + INTERVAL '2 days', 4, 'IN_PROGRESS', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 4, 'Nginx 리버스 프록시 설정', 'SSL 인증서 및 도메인 연결', 2, 4, 'HIGH', CURRENT_DATE - INTERVAL '3 days', CURRENT_DATE + INTERVAL '4 days', 4, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 4, 'CI/CD 파이프라인 구축', 'GitHub Actions 자동 배포', 3, 4, 'MEDIUM', CURRENT_DATE - INTERVAL '2 days', CURRENT_DATE + INTERVAL '5 days', 4, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 4, '모니터링 시스템 구축', 'Prometheus + Grafana 설정', 4, 4, 'MEDIUM', CURRENT_DATE, CURRENT_DATE + INTERVAL '7 days', 4, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 4, '로그 수집 시스템', 'ELK Stack 구성', 5, 4, 'LOW', CURRENT_DATE, CURRENT_DATE + INTERVAL '10 days', 4, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 4, '부하 테스트 수행', 'JMeter로 성능 테스트', 6, 4, 'MEDIUM', CURRENT_DATE, CURRENT_DATE + INTERVAL '8 days', 4, 'WAITING', CURRENT_TIMESTAMP);
 
-    -- IN_PROGRESS 상태 태스크 (수락함, 진행중)
-    (4, 2, CURRENT_TIMESTAMP, 1, true, CURRENT_TIMESTAMP - INTERVAL '3 days', false, NULL),
-    (4, 3, CURRENT_TIMESTAMP, 1, true, CURRENT_TIMESTAMP - INTERVAL '3 days', false, NULL),
-    (5, 3, CURRENT_TIMESTAMP, 1, true, CURRENT_TIMESTAMP - INTERVAL '2 days', false, NULL),
-    (5, 5, CURRENT_TIMESTAMP, 1, true, CURRENT_TIMESTAMP - INTERVAL '2 days', false, NULL),
-    (6, 4, CURRENT_TIMESTAMP, 1, true, CURRENT_TIMESTAMP - INTERVAL '1 day', false, NULL),
-
-    -- REVIEW 상태 태스크 (수락함, 완료함 - 검토 대기)
-    (7, 2, CURRENT_TIMESTAMP, 1, true, CURRENT_TIMESTAMP - INTERVAL '7 days', true, CURRENT_TIMESTAMP - INTERVAL '1 day'),
-    (8, 4, CURRENT_TIMESTAMP, 1, true, CURRENT_TIMESTAMP - INTERVAL '5 days', true, CURRENT_TIMESTAMP - INTERVAL '2 days'),
-    (8, 5, CURRENT_TIMESTAMP, 1, true, CURRENT_TIMESTAMP - INTERVAL '5 days', true, CURRENT_TIMESTAMP - INTERVAL '2 days'),
-
-    -- DONE 상태 태스크 (전부 완료)
-    (9, 1, CURRENT_TIMESTAMP, 1, true, CURRENT_TIMESTAMP - INTERVAL '21 days', true, CURRENT_TIMESTAMP - INTERVAL '14 days'),
-    (10, 1, CURRENT_TIMESTAMP, 1, true, CURRENT_TIMESTAMP - INTERVAL '20 days', true, CURRENT_TIMESTAMP - INTERVAL '13 days'),
-    (11, 2, CURRENT_TIMESTAMP, 1, true, CURRENT_TIMESTAMP - INTERVAL '18 days', true, CURRENT_TIMESTAMP - INTERVAL '10 days'),
-    (12, 3, CURRENT_TIMESTAMP, 1, true, CURRENT_TIMESTAMP - INTERVAL '15 days', true, CURRENT_TIMESTAMP - INTERVAL '8 days'),
-
-    -- REJECTED 상태 태스크
-    (13, 4, CURRENT_TIMESTAMP, 1, true, CURRENT_TIMESTAMP - INTERVAL '5 days', true, CURRENT_TIMESTAMP - INTERVAL '3 days');
-
--- 11. 태스크 검증자
-INSERT INTO flowtask_task_verifier (task_id, member_no, assigned_at, approved, approved_at, rejection_reason)
+-- 11. 태스크 (디자인/UI)
+INSERT INTO flowtask_task (task_id, column_id, title, description, position, assignee_no, priority, start_date, due_date, section_id, workflow_status, created_at)
 VALUES
-    -- REVIEW 상태 (검토 대기중)
-    (7, 1, CURRENT_TIMESTAMP, false, NULL, NULL),  -- 로그인보안 - 관리자가 검토
-    (7, 3, CURRENT_TIMESTAMP, false, NULL, NULL),  -- 로그인보안 - 김철수도 검토
-    (8, 1, CURRENT_TIMESTAMP, false, NULL, NULL),  -- 검색필터 - 관리자가 검토
-
-    -- DONE 상태 (검토 승인됨)
-    (9, 2, CURRENT_TIMESTAMP - INTERVAL '14 days', true, CURRENT_TIMESTAMP - INTERVAL '14 days', NULL),
-    (10, 2, CURRENT_TIMESTAMP - INTERVAL '13 days', true, CURRENT_TIMESTAMP - INTERVAL '13 days', NULL),
-    (11, 1, CURRENT_TIMESTAMP - INTERVAL '10 days', true, CURRENT_TIMESTAMP - INTERVAL '10 days', NULL),
-    (12, 1, CURRENT_TIMESTAMP - INTERVAL '8 days', true, CURRENT_TIMESTAMP - INTERVAL '8 days', NULL),
-
-    -- REJECTED 상태 (검토 반려됨)
-    (13, 1, CURRENT_TIMESTAMP - INTERVAL '2 days', false, NULL, '디자인 시안이 아직 확정되지 않았습니다. 디자인팀 검토 후 재진행해주세요.');
+    (nextval('flowtask_task_seq'), 5, '와이어프레임 제작', 'Figma로 전체 화면 와이어프레임', 0, 5, 'HIGH', CURRENT_DATE - INTERVAL '12 days', CURRENT_DATE - INTERVAL '5 days', 1, 'DONE', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 5, 'UI/UX 디자인 시스템', '컬러, 타이포그래피, 컴포넌트 정의', 1, 5, 'HIGH', CURRENT_DATE - INTERVAL '10 days', CURRENT_DATE - INTERVAL '3 days', 1, 'DONE', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 5, '로고 및 브랜딩', 'Flowtask 로고 디자인', 2, 5, 'MEDIUM', CURRENT_DATE - INTERVAL '8 days', CURRENT_DATE - INTERVAL '2 days', 1, 'DONE', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 5, '칸반 보드 UI 디자인', '보드 화면 상세 디자인', 3, 5, 'HIGH', CURRENT_DATE - INTERVAL '6 days', CURRENT_DATE, 2, 'IN_PROGRESS', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 5, '태스크 카드 디자인', '카드 레이아웃 및 상태 표시', 4, 5, 'HIGH', CURRENT_DATE - INTERVAL '4 days', CURRENT_DATE + INTERVAL '2 days', 2, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 5, '아이콘 세트 제작', 'SVG 아이콘 라이브러리', 5, 5, 'MEDIUM', CURRENT_DATE - INTERVAL '3 days', CURRENT_DATE + INTERVAL '3 days', 2, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 5, '모바일 UI 디자인', '반응형 디자인 가이드', 6, 5, 'MEDIUM', CURRENT_DATE, CURRENT_DATE + INTERVAL '6 days', 3, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 5, '인터랙션 프로토타입', 'Figma 인터랙티브 프로토타입', 7, 5, 'LOW', CURRENT_DATE, CURRENT_DATE + INTERVAL '9 days', 3, 'WAITING', CURRENT_TIMESTAMP),
+    (nextval('flowtask_task_seq'), 5, '사용성 테스트', '유저 테스트 및 피드백 수집', 8, 5, 'LOW', CURRENT_DATE, CURRENT_DATE + INTERVAL '12 days', 3, 'WAITING', CURRENT_TIMESTAMP);
 
 -- 12. 댓글
 INSERT INTO flowtask_comment (comment_id, task_id, author_no, content, created_at, updated_at)
 VALUES
-    (nextval('flowtask_comment_seq'), 4, 1, '워크플로우 상태 전환 로직 설계 문서 공유드립니다. 확인 부탁드려요.', CURRENT_TIMESTAMP - INTERVAL '3 days', CURRENT_TIMESTAMP - INTERVAL '3 days'),
-    (nextval('flowtask_comment_seq'), 4, 2, '네, 확인했습니다. 상태 전환시 알림 발송도 추가하면 좋을 것 같습니다.', CURRENT_TIMESTAMP - INTERVAL '2 days', CURRENT_TIMESTAMP - INTERVAL '2 days'),
-    (nextval('flowtask_comment_seq'), 4, 3, '동의합니다. 알림 기능과 연동하면 좋겠네요.', CURRENT_TIMESTAMP - INTERVAL '2 days', CURRENT_TIMESTAMP - INTERVAL '2 days'),
-    (nextval('flowtask_comment_seq'), 5, 3, 'WebSocket 연결 테스트 완료했습니다. STOMP 프로토콜 사용합니다.', CURRENT_TIMESTAMP - INTERVAL '1 day', CURRENT_TIMESTAMP - INTERVAL '1 day'),
-    (nextval('flowtask_comment_seq'), 5, 5, '실시간 알림 UI 컴포넌트 작업 중입니다.', CURRENT_TIMESTAMP - INTERVAL '12 hours', CURRENT_TIMESTAMP - INTERVAL '12 hours'),
-    (nextval('flowtask_comment_seq'), 7, 2, '토큰 갱신 로직 구현 완료했습니다. 리뷰 부탁드립니다.', CURRENT_TIMESTAMP - INTERVAL '1 day', CURRENT_TIMESTAMP - INTERVAL '1 day'),
-    (nextval('flowtask_comment_seq'), 7, 1, 'LGTM! 보안 테스트 진행 후 승인하겠습니다.', CURRENT_TIMESTAMP - INTERVAL '12 hours', CURRENT_TIMESTAMP - INTERVAL '12 hours'),
-    (nextval('flowtask_comment_seq'), 13, 1, '디자인 시안이 아직 확정되지 않아서 반려합니다. 디자인팀과 협의 후 재진행해주세요.', CURRENT_TIMESTAMP - INTERVAL '2 days', CURRENT_TIMESTAMP - INTERVAL '2 days'),
-    (nextval('flowtask_comment_seq'), 13, 4, '네, 알겠습니다. 디자인팀에 요청드리겠습니다.', CURRENT_TIMESTAMP - INTERVAL '1 day', CURRENT_TIMESTAMP - INTERVAL '1 day');
+    (nextval('flowtask_comment_seq'), 1, 1, 'JWT 토큰 처리 로직과 연동 필요합니다.', CURRENT_TIMESTAMP - INTERVAL '2 days', CURRENT_TIMESTAMP - INTERVAL '2 days'),
+    (nextval('flowtask_comment_seq'), 1, 2, '로그인 실패 시 에러 메시지 표시 완료했습니다.', CURRENT_TIMESTAMP - INTERVAL '1 day', CURRENT_TIMESTAMP - INTERVAL '1 day'),
+    (nextval('flowtask_comment_seq'), 3, 1, '드래그 앤 드롭 시 부드러운 애니메이션 추가해주세요.', CURRENT_TIMESTAMP - INTERVAL '3 days', CURRENT_TIMESTAMP - INTERVAL '3 days'),
+    (nextval('flowtask_comment_seq'), 3, 2, '라이브러리 버전 업데이트 후 문제 해결했습니다.', CURRENT_TIMESTAMP - INTERVAL '2 days', CURRENT_TIMESTAMP - INTERVAL '2 days'),
+    (nextval('flowtask_comment_seq'), 11, 3, 'JWT 토큰 검증 로직 추가 완료', CURRENT_TIMESTAMP - INTERVAL '4 days', CURRENT_TIMESTAMP - INTERVAL '4 days'),
+    (nextval('flowtask_comment_seq'), 11, 1, '테스트 케이스도 작성 부탁드립니다.', CURRENT_TIMESTAMP - INTERVAL '3 days', CURRENT_TIMESTAMP - INTERVAL '3 days'),
+    (nextval('flowtask_comment_seq'), 14, 3, '태스크 위치 저장 API 엔드포인트: POST /api/task/move', CURRENT_TIMESTAMP - INTERVAL '1 day', CURRENT_TIMESTAMP - INTERVAL '1 day'),
+    (nextval('flowtask_comment_seq'), 31, 4, 'Docker Compose로 PostgreSQL, Spring Boot, React 모두 통합했습니다.', CURRENT_TIMESTAMP - INTERVAL '5 days', CURRENT_TIMESTAMP - INTERVAL '5 days'),
+    (nextval('flowtask_comment_seq'), 31, 1, '잘 작동하는 것 확인했습니다!', CURRENT_TIMESTAMP - INTERVAL '4 days', CURRENT_TIMESTAMP - INTERVAL '4 days'),
+    (nextval('flowtask_comment_seq'), 38, 5, 'Figma 링크 공유드립니다: https://figma.com/...', CURRENT_TIMESTAMP - INTERVAL '6 days', CURRENT_TIMESTAMP - INTERVAL '6 days');
 
 -- 13. 채팅 메시지
 INSERT INTO flowtask_chat_message (message_id, team_id, sender_no, content, sent_at)
 VALUES
-    (nextval('flowtask_chat_seq'), 1, 1, '안녕하세요! Flowtask 개발팀 채팅방입니다.', CURRENT_TIMESTAMP - INTERVAL '7 days'),
-    (nextval('flowtask_chat_seq'), 1, 2, '반갑습니다! 오늘 워크플로우 시스템 개발 시작합니다.', CURRENT_TIMESTAMP - INTERVAL '3 days'),
-    (nextval('flowtask_chat_seq'), 1, 3, '저는 실시간 알림 기능 담당입니다. 같이 열심히 해봐요!', CURRENT_TIMESTAMP - INTERVAL '2 days'),
-    (nextval('flowtask_chat_seq'), 1, 4, '칸반 보드 DnD 개선 작업 진행중입니다.', CURRENT_TIMESTAMP - INTERVAL '1 day'),
-    (nextval('flowtask_chat_seq'), 1, 5, '프론트엔드 쪽 도움 필요하시면 말씀해주세요!', CURRENT_TIMESTAMP - INTERVAL '12 hours'),
-    (nextval('flowtask_chat_seq'), 1, 1, '다들 수고하셨습니다. 이번 주 목표 달성 화이팅!', CURRENT_TIMESTAMP - INTERVAL '1 hour');
+    (nextval('flowtask_chat_seq'), 1, 1, '안녕하세요! Flowtask 개발팀 채팅방입니다.', CURRENT_TIMESTAMP - INTERVAL '10 days'),
+    (nextval('flowtask_chat_seq'), 1, 2, '프론트엔드 개발 시작했습니다!', CURRENT_TIMESTAMP - INTERVAL '9 days'),
+    (nextval('flowtask_chat_seq'), 1, 3, '백엔드 JWT 인증 구현 중입니다.', CURRENT_TIMESTAMP - INTERVAL '8 days'),
+    (nextval('flowtask_chat_seq'), 1, 4, 'Docker 설정 완료했습니다.', CURRENT_TIMESTAMP - INTERVAL '7 days'),
+    (nextval('flowtask_chat_seq'), 1, 5, 'UI 디자인 시안 공유드립니다.', CURRENT_TIMESTAMP - INTERVAL '6 days'),
+    (nextval('flowtask_chat_seq'), 1, 1, '오늘 오후 3시에 스프린트 회의 진행하겠습니다.', CURRENT_TIMESTAMP - INTERVAL '5 days'),
+    (nextval('flowtask_chat_seq'), 1, 2, '칸반 보드 드래그 앤 드롭 기능 완성했습니다!', CURRENT_TIMESTAMP - INTERVAL '4 days'),
+    (nextval('flowtask_chat_seq'), 1, 3, 'API 문서 업데이트했으니 확인 부탁드립니다.', CURRENT_TIMESTAMP - INTERVAL '3 days'),
+    (nextval('flowtask_chat_seq'), 1, 4, 'AWS 배포 환경 구축 완료', CURRENT_TIMESTAMP - INTERVAL '2 days'),
+    (nextval('flowtask_chat_seq'), 1, 5, '사용성 테스트 일정 잡아봅시다.', CURRENT_TIMESTAMP - INTERVAL '1 day'),
+    (nextval('flowtask_chat_seq'), 1, 1, '다들 고생하셨습니다! 금주 목표 달성했습니다.', CURRENT_TIMESTAMP - INTERVAL '12 hours'),
+    (nextval('flowtask_chat_seq'), 1, 2, '다음 주 일정 논의가 필요할 것 같습니다.', CURRENT_TIMESTAMP - INTERVAL '6 hours'),
+    (nextval('flowtask_chat_seq'), 1, 3, 'WebSocket 실시간 업데이트 잘 작동하네요!', CURRENT_TIMESTAMP - INTERVAL '3 hours');
 
--- 14. 컬럼 즐겨찾기
-INSERT INTO flowtask_column_favorite (column_id, member_no, created_at)
+-- 14. 태스크 담당자
+INSERT INTO flowtask_task_assignee (task_id, member_no, assigned_at, assigned_by, accepted, completed)
 VALUES
-    (2, 2, CURRENT_TIMESTAMP),  -- 홍길동 - 진행 중
-    (2, 3, CURRENT_TIMESTAMP),  -- 김철수 - 진행 중
-    (3, 1, CURRENT_TIMESTAMP);  -- 관리자 - 검토 중
+    (1, 2, CURRENT_TIMESTAMP - INTERVAL '5 days', 1, true, false),
+    (2, 2, CURRENT_TIMESTAMP - INTERVAL '3 days', 1, true, false),
+    (3, 2, CURRENT_TIMESTAMP - INTERVAL '7 days', 1, true, false),
+    (11, 3, CURRENT_TIMESTAMP - INTERVAL '6 days', 1, true, false),
+    (12, 3, CURRENT_TIMESTAMP - INTERVAL '5 days', 1, true, false),
+    (14, 3, CURRENT_TIMESTAMP - INTERVAL '8 days', 1, true, true),
+    (23, 3, CURRENT_TIMESTAMP - INTERVAL '10 days', 1, true, true),
+    (24, 3, CURRENT_TIMESTAMP - INTERVAL '9 days', 1, true, true),
+    (31, 4, CURRENT_TIMESTAMP - INTERVAL '8 days', 1, true, true),
+    (32, 4, CURRENT_TIMESTAMP - INTERVAL '5 days', 1, true, false),
+    (38, 5, CURRENT_TIMESTAMP - INTERVAL '12 days', 1, true, true),
+    (39, 5, CURRENT_TIMESTAMP - INTERVAL '10 days', 1, true, true),
+    (41, 5, CURRENT_TIMESTAMP - INTERVAL '6 days', 1, true, false);
+
+-- 15. 태스크 즐겨찾기
+INSERT INTO flowtask_task_favorite (task_id, member_no, created_at)
+VALUES
+    (1, 1, CURRENT_TIMESTAMP - INTERVAL '2 days'),
+    (3, 1, CURRENT_TIMESTAMP - INTERVAL '3 days'),
+    (11, 1, CURRENT_TIMESTAMP - INTERVAL '4 days'),
+    (14, 3, CURRENT_TIMESTAMP - INTERVAL '1 day'),
+    (32, 4, CURRENT_TIMESTAMP - INTERVAL '2 days'),
+    (41, 5, CURRENT_TIMESTAMP - INTERVAL '1 day');

@@ -5,11 +5,10 @@ import {
     taskwrite, taskdelete, taskposition,
     tasklistByTeam, columnlistByTeam
 } from '../../api/boardApi';
-import {
-    toggleColumnFavorite, checkColumnFavorite,
-    archiveColumn
-} from '../../api/columnApi';
+import { archiveColumn } from '../../api/columnApi';
+import { addTaskFavorite, removeTaskFavorite, checkTaskFavorite, getTaskFavorites } from '../../api/boardApi';
 import TaskModal from '../../components/TaskModal';
+import TaskCreateModal from '../../components/TaskCreateModal';
 import './BoardView.css';
 
 // 워크플로우 상태
@@ -53,10 +52,13 @@ function BoardView({
     const [selectedTask, setSelectedTask] = useState(null);
 
     // 컬럼 기능 관련 상태
-    const [columnFavorites, setColumnFavoritesState] = useState({});
     const [columnMenuOpen, setColumnMenuOpen] = useState(null);
     const [archiveModalColumn, setArchiveModalColumn] = useState(null);
     const [archiveNote, setArchiveNote] = useState('');
+
+    // 태스크 즐겨찾기 관련 상태
+    const [taskFavorites, setTaskFavorites] = useState({});  // { taskId: boolean }
+    const [createTaskModalColumnId, setCreateTaskModalColumnId] = useState(null);
 
     // 스크롤 관련
     const columnsContainerRef = useRef(null);
@@ -72,28 +74,26 @@ function BoardView({
         setTasks(propTasks || []);
     }, [propTasks]);
 
-    // 컬럼 즐겨찾기 로드
+    // 태스크 즐겨찾기 로드
     useEffect(() => {
-        if (columns.length > 0 && loginMember) {
-            loadColumnFavorites(columns);
+        if (loginMember) {
+            loadTaskFavorites();
         }
-    }, [columns, loginMember]);
+    }, [loginMember]);
 
-    const loadColumnFavorites = async (columnList) => {
+    const loadTaskFavorites = async () => {
         if (!loginMember) return;
 
-        const favoritesMap = {};
-
-        await Promise.all(columnList.map(async (column) => {
-            try {
-                const favoriteResult = await checkColumnFavorite(column.columnId, loginMember.no);
-                favoritesMap[column.columnId] = favoriteResult?.isFavorite || false;
-            } catch (e) {
-                favoritesMap[column.columnId] = false;
-            }
-        }));
-
-        setColumnFavoritesState(favoritesMap);
+        try {
+            const favorites = await getTaskFavorites(loginMember.no);
+            const favoritesMap = {};
+            favorites.forEach(task => {
+                favoritesMap[task.taskId] = true;
+            });
+            setTaskFavorites(favoritesMap);
+        } catch (error) {
+            console.error('즐겨찾기 로드 실패:', error);
+        }
     };
 
     // 스크롤 상태 체크
@@ -131,14 +131,22 @@ function BoardView({
         }
     };
 
-    // 컬럼 즐겨찾기 토글
-    const handleToggleFavorite = async (columnId) => {
+    // 태스크 즐겨찾기 토글
+    const handleToggleTaskFavorite = async (taskId, e) => {
+        e.stopPropagation();
         if (!loginMember) return;
+
         try {
-            const result = await toggleColumnFavorite(columnId, loginMember.no);
-            setColumnFavoritesState(prev => ({
+            const isFavorited = taskFavorites[taskId];
+            if (isFavorited) {
+                await removeTaskFavorite(taskId, loginMember.no);
+            } else {
+                await addTaskFavorite(taskId, loginMember.no);
+            }
+
+            setTaskFavorites(prev => ({
                 ...prev,
-                [columnId]: result.isFavorite
+                [taskId]: !isFavorited
             }));
         } catch (error) {
             console.error('즐겨찾기 토글 실패:', error);
@@ -321,18 +329,54 @@ function BoardView({
         }
     };
 
-    // 태스크 추가
-    const handleAddTask = async (columnId) => {
-        const title = newTaskTitle[columnId];
-        if (!title?.trim()) return;
-
+    // 태스크 추가 (모달에서)
+    const handleCreateTask = async (taskData) => {
         try {
-            await taskwrite({ columnId, title });
-            setNewTaskTitle({ ...newTaskTitle, [columnId]: '' });
+            // 기본 태스크 생성
+            await taskwrite({
+                columnId: taskData.columnId,
+                title: taskData.title,
+                description: taskData.description,
+                workflowStatus: taskData.status,
+                priority: taskData.priority,
+                dueDate: taskData.dueDate,
+                assigneeNo: taskData.assignees?.length > 0 ? taskData.assignees[0] : null
+            });
+
+            // 태스크 목록 새로 가져오기
             const tasksData = await tasklistByTeam(team.teamId);
             setTasks(tasksData || []);
+
+            // 생성된 태스크 찾기
+            const newTask = tasksData.reduce((latest, task) => {
+                if (task.columnId === taskData.columnId) {
+                    if (!latest || task.taskId > latest.taskId) {
+                        return task;
+                    }
+                }
+                return latest;
+            }, null);
+
+            if (newTask) {
+                // 담당자 저장 (복수)
+                if (taskData.assignees?.length > 0) {
+                    const { updateTaskAssignees } = await import('../../api/boardApi');
+                    await updateTaskAssignees(newTask.taskId, taskData.assignees, loginMember?.no);
+                }
+
+                // 검증자 저장 (복수)
+                if (taskData.verifiers?.length > 0) {
+                    const { updateTaskVerifiers } = await import('../../api/boardApi');
+                    await updateTaskVerifiers(newTask.taskId, taskData.verifiers, loginMember?.no);
+                }
+
+                // 최종 업데이트된 태스크 목록 가져오기
+                const finalTasksData = await tasklistByTeam(team.teamId);
+                setTasks(finalTasksData || []);
+            }
         } catch (error) {
             console.error('태스크 추가 실패:', error);
+            alert('태스크 생성에 실패했습니다.');
         }
     };
 
@@ -416,16 +460,6 @@ function BoardView({
                                                     ) : (
                                                         <>
                                                             <div className="column-title-row">
-                                                                <button
-                                                                    className={`favorite-btn ${columnFavorites[column.columnId] ? 'active' : ''}`}
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleToggleFavorite(column.columnId);
-                                                                    }}
-                                                                    title={columnFavorites[column.columnId] ? '즐겨찾기 해제' : '즐겨찾기'}
-                                                                >
-                                                                    {columnFavorites[column.columnId] ? '★' : '☆'}
-                                                                </button>
                                                                 <h3 onClick={() => setEditingColumn(column.columnId)}>
                                                                     {column.title}
                                                                 </h3>
@@ -499,15 +533,24 @@ function BoardView({
                                                                                 <div className="task-card-title">
                                                                                     {task.title}
                                                                                 </div>
-                                                                                <button
-                                                                                    className="delete-btn"
-                                                                                    onClick={(e) => {
-                                                                                        e.stopPropagation();
-                                                                                        handleDeleteTask(task.taskId);
-                                                                                    }}
-                                                                                >
-                                                                                    ×
-                                                                                </button>
+                                                                                <div className="task-card-actions">
+                                                                                    <button
+                                                                                        className={`task-favorite-btn ${taskFavorites[task.taskId] ? 'active' : ''}`}
+                                                                                        onClick={(e) => handleToggleTaskFavorite(task.taskId, e)}
+                                                                                        title={taskFavorites[task.taskId] ? '즐겨찾기 해제' : '즐겨찾기'}
+                                                                                    >
+                                                                                        {taskFavorites[task.taskId] ? '★' : '☆'}
+                                                                                    </button>
+                                                                                    <button
+                                                                                        className="delete-btn"
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            handleDeleteTask(task.taskId);
+                                                                                        }}
+                                                                                    >
+                                                                                        ×
+                                                                                    </button>
+                                                                                </div>
                                                                             </div>
                                                                             <div className="task-card-meta">
                                                                                 {task.dueDate && (
@@ -534,22 +577,11 @@ function BoardView({
                                                 </Droppable>
 
                                                 <div className="add-task">
-                                                    <input
-                                                        type="text"
-                                                        placeholder="새 태스크 추가..."
-                                                        value={newTaskTitle[column.columnId] || ''}
-                                                        onChange={(e) => setNewTaskTitle({
-                                                            ...newTaskTitle,
-                                                            [column.columnId]: e.target.value
-                                                        })}
-                                                        onKeyPress={(e) => {
-                                                            if (e.key === 'Enter') {
-                                                                handleAddTask(column.columnId);
-                                                            }
-                                                        }}
-                                                    />
-                                                    <button onClick={() => handleAddTask(column.columnId)}>
-                                                        + 추가
+                                                    <button
+                                                        className="add-task-btn"
+                                                        onClick={() => setCreateTaskModalColumnId(column.columnId)}
+                                                    >
+                                                        + 새 태스크 추가
                                                     </button>
                                                 </div>
                                             </div>
@@ -628,6 +660,17 @@ function BoardView({
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* 태스크 생성 모달 */}
+            {createTaskModalColumnId && (
+                <TaskCreateModal
+                    columnId={createTaskModalColumnId}
+                    teamId={team?.teamId}
+                    teamMembers={teamMembers}
+                    onClose={() => setCreateTaskModalColumnId(null)}
+                    onCreate={handleCreateTask}
+                />
             )}
         </div>
     );

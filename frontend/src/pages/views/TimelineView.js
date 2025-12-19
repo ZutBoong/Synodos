@@ -3,12 +3,12 @@ import { updateTaskDates } from '../../api/boardApi';
 import TaskModal from '../../components/TaskModal';
 import './TimelineView.css';
 
-// 상태 색상
-const STATUS_COLORS = {
-    OPEN: '#ff9800',
-    IN_PROGRESS: '#2196f3',
-    RESOLVED: '#4caf50',
-    CLOSED: '#9c27b0'
+// 우선순위 색상
+const PRIORITY_COLORS = {
+    CRITICAL: '#dc2626',
+    HIGH: '#f59e0b',
+    MEDIUM: '#3b82f6',
+    LOW: '#6b7280'
 };
 
 function TimelineView({
@@ -105,7 +105,7 @@ function TimelineView({
         return {
             left: `${left}%`,
             width: `${Math.max(width, 2)}%`,
-            backgroundColor: STATUS_COLORS[task.status] || STATUS_COLORS.OPEN
+            backgroundColor: PRIORITY_COLORS[task.priority] || PRIORITY_COLORS.MEDIUM
         };
     };
 

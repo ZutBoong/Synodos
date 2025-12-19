@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getMyTeams, createTeam, joinTeam, deleteTeam, leaveTeam } from '../api/teamApi';
 import TeamSettingsModal from './TeamSettingsModal';
 import './Sidebar.css';
 
 function Sidebar({ isOpen, onToggle, currentTeam, onSelectTeam, loginMember }) {
     const navigate = useNavigate();
+    const location = useLocation();
     const [teams, setTeams] = useState([]);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showJoinModal, setShowJoinModal] = useState(false);
@@ -146,6 +147,17 @@ function Sidebar({ isOpen, onToggle, currentTeam, onSelectTeam, loginMember }) {
                             </button>
                         </div>
 
+                        {/* 홈 버튼 */}
+                        <div className="sidebar-home">
+                            <button className="home-btn" onClick={() => navigate('/activity')} title="내 활동">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                    <polyline points="9 22 9 12 15 12 15 22" />
+                                </svg>
+                                <span>홈</span>
+                            </button>
+                        </div>
+
                         {/* 액션 버튼들 */}
                         <div className="sidebar-actions">
                             <button className="action-btn primary" onClick={() => setShowCreateModal(true)} title="팀 생성">
@@ -170,7 +182,7 @@ function Sidebar({ isOpen, onToggle, currentTeam, onSelectTeam, loginMember }) {
                                 {teams.map(team => (
                                     <li
                                         key={team.teamId}
-                                        className={`team-item ${currentTeam?.teamId === team.teamId ? 'active' : ''}`}
+                                        className={`team-item ${currentTeam?.teamId === team.teamId && location.pathname.startsWith('/team/') ? 'active' : ''}`}
                                         onClick={() => {
                                             onSelectTeam(team);
                                             navigate(`/team/${team.teamId}?view=overview`);
@@ -242,6 +254,12 @@ function Sidebar({ isOpen, onToggle, currentTeam, onSelectTeam, loginMember }) {
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <rect x="3" y="3" width="18" height="18" rx="2" />
                             <line x1="9" y1="3" x2="9" y2="21" />
+                        </svg>
+                    </button>
+                    <button className="icon-btn" onClick={() => navigate('/activity')} title="홈 (내 활동)">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                            <polyline points="9 22 9 12 15 12 15 22" />
                         </svg>
                     </button>
                     <button className="icon-btn primary" onClick={() => setShowCreateModal(true)} title="팀 생성">

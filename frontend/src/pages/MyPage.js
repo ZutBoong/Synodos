@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getProfile, updateProfile, changePassword } from '../api/memberApi';
 import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
 import './MyPage.css';
 
 function MyPage() {
@@ -181,11 +180,20 @@ function MyPage() {
             />
 
             <div className={`mypage-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-                {/* 헤더 */}
-                <Header
-                    title="마이페이지"
-                    loginMember={loginMember}
-                />
+                {/* 통합 헤더 */}
+                <header className="team-header">
+                    <div className="team-header-left">
+                        <h1 className="team-name">마이페이지</h1>
+                    </div>
+                    <div className="team-header-right">
+                        <button className="logout-btn" onClick={() => {
+                            localStorage.removeItem('token');
+                            localStorage.removeItem('member');
+                            localStorage.removeItem('currentTeam');
+                            navigate('/login');
+                        }}>로그아웃</button>
+                    </div>
+                </header>
 
                 {/* 메인 콘텐츠 */}
                 <div className="mypage-content">

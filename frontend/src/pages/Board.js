@@ -7,16 +7,15 @@ import {
     updateTaskAssignees
 } from '../api/boardApi';
 import { getTeamMembers } from '../api/teamApi';
-import {
-    toggleColumnFavorite, checkColumnFavorite,
-    archiveColumn
-} from '../api/columnApi';
+import { archiveColumn } from '../api/columnApi';
 import { updateTaskTags } from '../api/tagApi';
+import { addTaskFavorite, removeTaskFavorite, checkTaskFavorite, getTaskFavorites } from '../api/boardApi';
 import TagInput from '../components/TagInput';
 import websocketService from '../api/websocketService';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import TaskModal from '../components/TaskModal';
+import TaskCreateModal from '../components/TaskCreateModal';
 import FilterBar from '../components/FilterBar';
 import ChatPanel from '../components/ChatPanel';
 import './Board.css';
@@ -56,6 +55,7 @@ function Board() {
     const [expandedTaskForm, setExpandedTaskForm] = useState({});  // 확장된 태스크 폼 데이터
     const [teamMembers, setTeamMembers] = useState([]);
     const [chatOpen, setChatOpen] = useState(false);  // 채팅 패널 열림/닫힘
+    const [createTaskModalColumnId, setCreateTaskModalColumnId] = useState(null);  // 태스크 생성 모달 열린 컬럼 ID
     const [filters, setFilters] = useState({
         searchQuery: '',
         priorities: [],
@@ -68,10 +68,12 @@ function Board() {
     const [codeCopySuccess, setCodeCopySuccess] = useState(false);
 
     // 컬럼 기능 관련 상태
-    const [columnFavorites, setColumnFavoritesState] = useState({});  // { columnId: boolean }
     const [columnMenuOpen, setColumnMenuOpen] = useState(null);  // 열린 컬럼 메뉴의 columnId
     const [archiveModalColumn, setArchiveModalColumn] = useState(null);  // 아카이브 모달이 열린 컬럼
     const [archiveNote, setArchiveNote] = useState('');
+
+    // 태스크 즐겨찾기 관련 상태
+    const [taskFavorites, setTaskFavorites] = useState({});  // { taskId: boolean }
 
     // 스크롤 관련
     const columnsContainerRef = useRef(null);
@@ -260,9 +262,9 @@ function Board() {
             setColumns(columnsData || []);
             setTasks(tasksData || []);
             setTeamMembers(membersData || []);
-            // 컬럼 즐겨찾기 로드
-            if (columnsData && columnsData.length > 0) {
-                loadColumnFavorites(columnsData);
+            // 태스크 즐겨찾기 로드
+            if (loginMember) {
+                loadTaskFavorites();
             }
         } catch (error) {
             console.error('데이터 로드 실패:', error);
@@ -275,32 +277,38 @@ function Board() {
         setCurrentTeam(team);
     };
 
-    // 컬럼 즐겨찾기 로드
-    const loadColumnFavorites = async (columnList) => {
+    // 태스크 즐겨찾기 로드
+    const loadTaskFavorites = async () => {
         if (!loginMember) return;
 
-        const favoritesMap = {};
-
-        await Promise.all(columnList.map(async (column) => {
-            try {
-                const favoriteResult = await checkColumnFavorite(column.columnId, loginMember.no);
-                favoritesMap[column.columnId] = favoriteResult?.isFavorite || false;
-            } catch (e) {
-                favoritesMap[column.columnId] = false;
-            }
-        }));
-
-        setColumnFavoritesState(favoritesMap);
+        try {
+            const favorites = await getTaskFavorites(loginMember.no);
+            const favoritesMap = {};
+            favorites.forEach(task => {
+                favoritesMap[task.taskId] = true;
+            });
+            setTaskFavorites(favoritesMap);
+        } catch (error) {
+            console.error('즐겨찾기 로드 실패:', error);
+        }
     };
 
-    // 컬럼 즐겨찾기 토글
-    const handleToggleFavorite = async (columnId) => {
+    // 태스크 즐겨찾기 토글
+    const handleToggleTaskFavorite = async (taskId, e) => {
+        e.stopPropagation();
         if (!loginMember) return;
+
         try {
-            const result = await toggleColumnFavorite(columnId, loginMember.no);
-            setColumnFavoritesState(prev => ({
+            const isFavorited = taskFavorites[taskId];
+            if (isFavorited) {
+                await removeTaskFavorite(taskId, loginMember.no);
+            } else {
+                await addTaskFavorite(taskId, loginMember.no);
+            }
+
+            setTaskFavorites(prev => ({
                 ...prev,
-                [columnId]: result.isFavorite
+                [taskId]: !isFavorited
             }));
         } catch (error) {
             console.error('즐겨찾기 토글 실패:', error);
@@ -504,19 +512,53 @@ function Board() {
         }
     };
 
-    // 태스크 추가
-    const handleAddTask = async (columnId) => {
-        const title = newTaskTitle[columnId];
-        if (!title?.trim()) return;
-
+    // 태스크 추가 (모달에서)
+    const handleCreateTask = async (taskData) => {
         try {
-            await taskwrite({ columnId, title });
-            setNewTaskTitle({ ...newTaskTitle, [columnId]: '' });
-            // 태스크 목록 새로 가져오기 (생성된 태스크 포함)
+            // 기본 태스크 생성
+            await taskwrite({
+                columnId: taskData.columnId,
+                title: taskData.title,
+                description: taskData.description,
+                status: taskData.status,
+                priority: taskData.priority,
+                dueDate: taskData.dueDate,
+                assigneeNo: taskData.assignees?.length > 0 ? taskData.assignees[0] : null
+            });
+
+            // 태스크 목록 새로 가져오기
             const tasksData = await tasklistByTeam(currentTeam.teamId);
             setTasks(tasksData || []);
+
+            // 생성된 태스크 찾기 (가장 최근에 생성된 태스크)
+            const newTask = tasksData.reduce((latest, task) => {
+                if (task.columnId === taskData.columnId) {
+                    if (!latest || task.taskId > latest.taskId) {
+                        return task;
+                    }
+                }
+                return latest;
+            }, null);
+
+            if (newTask) {
+                // 태그 저장
+                if (taskData.tags?.length > 0) {
+                    const tagIds = taskData.tags.map(t => t.tagId);
+                    await updateTaskTags(newTask.taskId, tagIds);
+                }
+
+                // 담당자 저장 (복수)
+                if (taskData.assignees?.length > 0) {
+                    await updateTaskAssignees(newTask.taskId, taskData.assignees, loginMember?.no);
+                }
+
+                // 최종 업데이트된 태스크 목록 가져오기
+                const finalTasksData = await tasklistByTeam(currentTeam.teamId);
+                setTasks(finalTasksData || []);
+            }
         } catch (error) {
             console.error('태스크 추가 실패:', error);
+            alert('태스크 생성에 실패했습니다.');
         }
     };
 
@@ -651,34 +693,9 @@ function Board() {
             <div className={`board-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'} ${chatOpen ? 'chat-open' : ''}`}>
                 {/* 헤더 */}
                 <Header
-                    title={currentTeam?.teamName || 'Flowtask'}
+                    title="Flowtask"
                     loginMember={loginMember}
                     onLogout={() => websocketService.disconnect()}
-                    leftContent={currentTeam && (
-                        <>
-                            <h1>{currentTeam.teamName}</h1>
-                            <div className="team-code-section">
-                                <span className="team-code-badge">
-                                    {showTeamCode ? currentTeam.teamCode : '••••••••'}
-                                </span>
-                                <button
-                                    className="code-toggle-btn"
-                                    onClick={() => setShowTeamCode(!showTeamCode)}
-                                    title={showTeamCode ? '코드 숨기기' : '코드 보기'}
-                                >
-                                    {showTeamCode ? '숨김' : '보기'}
-                                </button>
-                                <button
-                                    className="code-copy-btn"
-                                    onClick={handleCopyTeamCode}
-                                    title="코드 복사"
-                                >
-                                    {codeCopySuccess ? '복사됨!' : '복사'}
-                                </button>
-                            </div>
-                            {wsConnected && <span className="ws-status connected" title="실시간 연결됨">●</span>}
-                        </>
-                    )}
                 />
 
                 {/* 메인 콘텐츠 */}
@@ -762,16 +779,6 @@ function Board() {
                                                                 ) : (
                                                                     <>
                                                                         <div className="column-title-row">
-                                                                            <button
-                                                                                className={`favorite-btn ${columnFavorites[column.columnId] ? 'active' : ''}`}
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    handleToggleFavorite(column.columnId);
-                                                                                }}
-                                                                                title={columnFavorites[column.columnId] ? '즐겨찾기 해제' : '즐겨찾기'}
-                                                                            >
-                                                                                {columnFavorites[column.columnId] ? '★' : '☆'}
-                                                                            </button>
                                                                             <h3 onClick={() => setEditingColumn(column.columnId)}>
                                                                                 {column.title}
                                                                             </h3>
@@ -938,35 +945,28 @@ function Board() {
                                                                                         ) : (
                                                                                             /* 기본 태스크 카드 뷰 */
                                                                                             <>
-                                                                                                {task.tags && task.tags.length > 0 && (
-                                                                                                    <div className="task-card-tags">
-                                                                                                        {task.tags.slice(0, 3).map(tag => (
-                                                                                                            <span
-                                                                                                                key={tag.tagId}
-                                                                                                                className="task-tag"
-                                                                                                                style={{ backgroundColor: tag.color }}
-                                                                                                            >
-                                                                                                                {tag.tagName}
-                                                                                                            </span>
-                                                                                                        ))}
-                                                                                                        {task.tags.length > 3 && (
-                                                                                                            <span className="task-tag-more">+{task.tags.length - 3}</span>
-                                                                                                        )}
-                                                                                                    </div>
-                                                                                                )}
                                                                                                 <div className="task-card-top">
                                                                                                     <div className="task-card-title">
                                                                                                         {task.title}
                                                                                                     </div>
-                                                                                                    <button
-                                                                                                        className="delete-btn"
-                                                                                                        onClick={(e) => {
-                                                                                                            e.stopPropagation();
-                                                                                                            handleDeleteTask(task.taskId);
-                                                                                                        }}
-                                                                                                    >
-                                                                                                        ×
-                                                                                                    </button>
+                                                                                                    <div className="task-card-actions">
+                                                                                                        <button
+                                                                                                            className={`task-favorite-btn ${taskFavorites[task.taskId] ? 'active' : ''}`}
+                                                                                                            onClick={(e) => handleToggleTaskFavorite(task.taskId, e)}
+                                                                                                            title={taskFavorites[task.taskId] ? '즐겨찾기 해제' : '즐겨찾기'}
+                                                                                                        >
+                                                                                                            {taskFavorites[task.taskId] ? '★' : '☆'}
+                                                                                                        </button>
+                                                                                                        <button
+                                                                                                            className="delete-btn"
+                                                                                                            onClick={(e) => {
+                                                                                                                e.stopPropagation();
+                                                                                                                handleDeleteTask(task.taskId);
+                                                                                                            }}
+                                                                                                        >
+                                                                                                            ×
+                                                                                                        </button>
+                                                                                                    </div>
                                                                                                 </div>
                                                                                                 {(task.dueDate || (task.status && task.status !== 'OPEN')) && (
                                                                                                     <div className="task-card-meta">
@@ -1002,22 +1002,11 @@ function Board() {
                                                             </Droppable>
 
                                                             <div className="add-task">
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="새 태스크 추가..."
-                                                                    value={newTaskTitle[column.columnId] || ''}
-                                                                    onChange={(e) => setNewTaskTitle({
-                                                                        ...newTaskTitle,
-                                                                        [column.columnId]: e.target.value
-                                                                    })}
-                                                                    onKeyPress={(e) => {
-                                                                        if (e.key === 'Enter') {
-                                                                            handleAddTask(column.columnId);
-                                                                        }
-                                                                    }}
-                                                                />
-                                                                <button onClick={() => handleAddTask(column.columnId)}>
-                                                                    + 추가
+                                                                <button
+                                                                    className="add-task-btn"
+                                                                    onClick={() => setCreateTaskModalColumnId(column.columnId)}
+                                                                >
+                                                                    + 새 태스크 추가
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -1137,6 +1126,17 @@ function Board() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* 태스크 생성 모달 */}
+            {createTaskModalColumnId && (
+                <TaskCreateModal
+                    columnId={createTaskModalColumnId}
+                    teamId={currentTeam?.teamId}
+                    teamMembers={teamMembers}
+                    onClose={() => setCreateTaskModalColumnId(null)}
+                    onCreate={handleCreateTask}
+                />
             )}
         </div>
     );

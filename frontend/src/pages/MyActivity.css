@@ -1,566 +1,552 @@
 /* ===== 내 활동 페이지 레이아웃 ===== */
 .myactivity-page {
     display: flex;
-    min-height: 100vh;
-    background: #f4f5f7;
+    height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+    overflow: hidden;
 }
 
 .myactivity-layout {
     flex: 1;
     display: flex;
     flex-direction: column;
-    margin-left: 52px;
-    transition: margin-left 0.2s ease;
+    transition: margin-left 0.3s ease;
+    min-width: 0;
+    height: 100vh;
+    overflow: hidden;
 }
 
 .myactivity-layout.sidebar-open {
-    margin-left: 260px;
+    margin-left: 280px;
 }
 
 .myactivity-layout.sidebar-closed {
-    margin-left: 52px;
+    margin-left: 64px;
 }
 
-/* 헤더 */
-.myactivity-header {
-    height: 56px;
-    min-height: 56px;
-    background: white;
-    border-bottom: 1px solid #e5e5e5;
+/* ===== 통합 헤더 ===== */
+.team-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    height: 64px;
     padding: 0 24px;
+    background: white;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
     flex-shrink: 0;
-    width: 100%;
-    box-sizing: border-box;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.myactivity-header .header-left {
+.team-header-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 32px;
 }
 
-.myactivity-header .header-left h1 {
+.team-header .team-name {
     margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-    color: #1a1a1a;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+    letter-spacing: -0.3px;
 }
 
-.myactivity-header .header-right {
+.team-header-right {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
 }
 
-.myactivity-header .logout-btn {
-    padding: 8px 16px;
-    background: none;
-    border: 1px solid #ddd;
-    border-radius: 6px;
+.team-header .logout-btn {
+    padding: 10px 18px;
+    background: #f1f5f9;
+    border: none;
+    border-radius: 10px;
     cursor: pointer;
     font-size: 13px;
-    color: #666;
-    transition: all 0.15s ease;
+    font-weight: 600;
+    color: #64748b;
+    transition: all 0.2s ease;
 }
 
-.myactivity-header .logout-btn:hover {
-    background: #f5f5f5;
-    border-color: #ccc;
+.team-header .logout-btn:hover {
+    background: #e2e8f0;
+    color: #334155;
 }
 
 /* 메인 콘텐츠 */
 .myactivity-content {
     flex: 1;
-    padding: 24px;
     overflow-y: auto;
 }
 
-.myactivity-box {
-    background: white;
-    padding: 32px;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-/* 탭 스타일 */
-.myactivity-tabs {
+/* 로딩 */
+.loading-container {
     display: flex;
-    gap: 8px;
-    margin-bottom: 24px;
-    border-bottom: 2px solid #e0e0e0;
-    padding-bottom: 12px;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
 }
 
-.myactivity-tabs .tab-btn {
-    padding: 10px 16px;
-    border: none;
-    background: #f5f5f5;
-    color: #666;
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-container p {
+    margin-top: 16px;
+    color: #64748b;
+    font-size: 14px;
+}
+
+/* Activity View */
+.activity-view {
+    padding: 24px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 1600px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.activity-section {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.section-header h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-header h2::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 2px;
+}
+
+/* 상단 섹션: 캘린더 */
+.activity-top-section {
+    min-height: 500px;
+}
+
+.calendar-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
+}
+
+.calendar-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.calendar-nav button {
+    padding: 6px 12px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #667eea;
+    background: transparent;
+    border: 2px solid #e2e8f0;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.calendar-nav button:hover {
+    background: rgba(102, 126, 234, 0.1);
+    border-color: #667eea;
+}
+
+.calendar-month {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    min-width: 140px;
+    text-align: center;
+}
+
+.calendar-view {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.calendar-weekday {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+    padding: 8px;
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    flex: 1;
+}
+
+.calendar-day {
+    min-height: 80px;
+    padding: 8px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.calendar-day:hover:not(.empty) {
+    background: white;
+    border-color: rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+}
+
+.calendar-day.empty {
+    background: transparent;
+    cursor: default;
+}
+
+.calendar-day.today {
+    background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+    border-color: #667eea;
+}
+
+.day-number {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.day-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-top: 4px;
+}
+
+.day-task {
+    font-size: 11px;
+    padding: 4px 6px;
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    border-radius: 4px;
     font-weight: 600;
-    transition: all 0.2s;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.myactivity-tabs .tab-btn:hover {
-    background: #e0e0e0;
+.day-task-more {
+    font-size: 10px;
+    padding: 3px 6px;
+    background: rgba(100, 116, 139, 0.1);
+    color: #64748b;
+    border-radius: 4px;
+    font-weight: 600;
+    text-align: center;
 }
 
-.myactivity-tabs .tab-btn.active {
-    background: #026aa7;
+/* 하단 2열 레이아웃: 참여 팀, 아카이브 */
+.activity-bottom-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    min-height: 400px;
+}
+
+.count-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
 }
 
-/* 탭 콘텐츠 */
-.myactivity-tab-content {
-    min-height: 300px;
+/* 참여 팀 섹션 */
+.teams-section {
+    display: flex;
+    flex-direction: column;
+    max-height: 500px;
 }
 
-/* 팀 목록 */
 .teams-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+    overflow-y: auto;
+    flex: 1;
+    max-height: 400px;
 }
 
-.team-card {
+.teams-list::-webkit-scrollbar,
+.archives-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.teams-list::-webkit-scrollbar-track,
+.archives-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.teams-list::-webkit-scrollbar-thumb,
+.archives-list::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 3px;
+}
+
+.teams-list::-webkit-scrollbar-thumb:hover,
+.archives-list::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+}
+
+.team-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 16px 20px;
-    background: #f8f9fa;
-    border-radius: 10px;
-    border: 1px solid #e0e0e0;
-    transition: all 0.2s;
+    gap: 12px;
+    padding: 14px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    transition: all 0.2s ease;
     cursor: pointer;
+    border: 2px solid transparent;
 }
 
-.team-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    transform: translateY(-1px);
-    border-color: #026aa7;
+.team-item:hover {
+    background: white;
+    border-color: rgba(102, 126, 234, 0.2);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
 }
 
-.team-info h4 {
-    margin: 0 0 4px 0;
-    color: #333;
-    font-size: 16px;
+.team-item.active {
+    background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+    border-color: #667eea;
 }
 
-.team-code {
-    font-size: 12px;
-    color: #666;
-    font-family: monospace;
-    background: #e9ecef;
-    padding: 2px 6px;
-    border-radius: 4px;
-}
-
-.role-badge {
-    padding: 5px 10px;
-    border-radius: 16px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.role-badge.leader {
-    background: #ffc107;
-    color: #333;
-}
-
-.role-badge.member {
-    background: #17a2b8;
+.team-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
-.empty-message {
-    text-align: center;
-    color: #999;
-    padding: 40px;
-    font-size: 15px;
-}
-
-.loading {
-    text-align: center;
-    padding: 60px;
-    font-size: 16px;
-    color: #666;
-}
-
-/* ===== 즐겨찾기 스타일 ===== */
-.favorites-list {
+.team-details {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-}
-
-.favorite-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 20px;
-    background: #fffbeb;
-    border-radius: 10px;
-    border: 1px solid #fde68a;
-    transition: all 0.2s;
-}
-
-.favorite-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.favorite-info h4 {
-    margin: 0 0 6px 0;
-    font-size: 15px;
-    color: #333;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.star-icon {
-    color: #f5a623;
-    font-size: 16px;
-}
-
-.favorite-meta {
-    font-size: 13px;
-    color: #666;
+    gap: 4px;
+    flex: 1;
 }
 
 .team-name {
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 15px;
+    color: #1e293b;
 }
 
-.project-name {
-    color: #888;
+.team-badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+    border-radius: 6px;
+    font-weight: 700;
+    display: inline-block;
+    width: fit-content;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* ===== 아카이브 스타일 ===== */
+/* 아카이브 섹션 */
+.archives-section {
+    display: flex;
+    flex-direction: column;
+    max-height: 500px;
+}
+
 .archives-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+    overflow-y: auto;
+    flex: 1;
+    max-height: 400px;
 }
 
-.archive-card {
+.archive-item {
+    padding: 14px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.archive-item:hover {
+    background: white;
+    border-color: rgba(100, 116, 139, 0.2);
+    box-shadow: 0 4px 12px rgba(100, 116, 139, 0.1);
+}
+
+.archive-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    padding: 16px 20px;
-    background: #f8f9fa;
-    border-radius: 10px;
-    border: 1px solid #e0e0e0;
-    transition: all 0.2s;
-}
-
-.archive-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.archive-info {
-    flex: 1;
-    cursor: pointer;
-}
-
-.archive-info h4 {
-    margin: 0 0 6px 0;
-    font-size: 15px;
-    color: #333;
-    display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
+    margin-bottom: 6px;
 }
 
-.archive-icon {
-    font-size: 16px;
-}
-
-.archive-meta {
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 4px;
+.archive-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1e293b;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .archive-date {
-    font-size: 12px;
-    color: #888;
-    margin-bottom: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #94a3b8;
+    flex-shrink: 0;
 }
 
 .archive-note {
     font-size: 12px;
-    color: #666;
-    background: #fff;
-    padding: 6px 10px;
-    border-radius: 6px;
-    margin-top: 8px;
-    border: 1px solid #e0e0e0;
-}
-
-.archive-actions,
-.favorite-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.btn-small {
-    padding: 6px 12px;
-    font-size: 12px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.15s;
-}
-
-.btn-small.btn-secondary {
-    background: #e0e0e0;
-    color: #333;
-}
-
-.btn-small.btn-secondary:hover {
-    background: #d0d0d0;
-}
-
-.btn-small.btn-danger {
-    background: #dc3545;
-    color: white;
-}
-
-.btn-small.btn-danger:hover {
-    background: #c82333;
-}
-
-/* ===== 버튼 ===== */
-.myactivity-page .btn {
-    padding: 12px 20px;
-    border: none;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.myactivity-page .btn-primary {
-    background: #026aa7;
-    color: white;
-}
-
-.myactivity-page .btn-primary:hover {
-    background: #024d7a;
-}
-
-.myactivity-page .btn-secondary {
-    background: #6c757d;
-    color: white;
-}
-
-.myactivity-page .btn-secondary:hover {
-    background: #545b62;
-}
-
-.myactivity-page .btn-danger {
-    background: #dc3545;
-    color: white;
-}
-
-.myactivity-page .btn-danger:hover {
-    background: #c82333;
-}
-
-/* ===== 아카이브 모달 스타일 ===== */
-.archive-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.archive-modal-content {
-    background: white;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 600px;
-    max-height: 80vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-.archive-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 24px;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.archive-modal-header h3 {
+    color: #64748b;
     margin: 0;
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    margin-top: 8px;
+    line-height: 1.5;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
-.archive-modal-header .close-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #666;
-    padding: 0;
-    line-height: 1;
-}
-
-.archive-modal-header .close-btn:hover {
-    color: #333;
-}
-
-.archive-modal-body {
-    padding: 24px;
-    overflow-y: auto;
-    flex: 1;
-}
-
-.archive-detail-section {
-    margin-bottom: 24px;
-}
-
-.archive-detail-section:last-child {
-    margin-bottom: 0;
-}
-
-.archive-detail-section h4 {
-    margin: 0 0 16px 0;
-    font-size: 15px;
-    color: #333;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.detail-row {
-    display: flex;
-    margin-bottom: 10px;
+.no-data {
+    color: #94a3b8;
     font-size: 14px;
-}
-
-.detail-row .label {
-    width: 100px;
-    color: #666;
-    flex-shrink: 0;
-}
-
-.detail-row .value {
-    color: #333;
-}
-
-.archived-tasks-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.archived-task-item {
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
-}
-
-.archived-task-item .task-title {
-    font-weight: 500;
-    color: #333;
-    margin-bottom: 4px;
-}
-
-.archived-task-item .task-description {
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 8px;
-}
-
-.archived-task-item .task-meta {
-    display: flex;
-    gap: 8px;
-}
-
-.archived-task-item .task-meta span {
-    font-size: 11px;
-    padding: 2px 8px;
-    border-radius: 4px;
-}
-
-.archived-task-item .status {
-    background: #e9ecef;
-    color: #495057;
-}
-
-.empty-tasks {
     text-align: center;
-    color: #999;
-    padding: 20px;
-}
-
-.archive-modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    padding: 16px 24px;
-    border-top: 1px solid #e0e0e0;
-}
-
-.archive-modal-footer .btn {
-    padding: 10px 20px;
+    padding: 32px 20px;
+    background: #f8fafc;
+    border-radius: 10px;
 }
 
 /* 반응형 */
+@media (max-width: 1200px) {
+    .calendar-day {
+        min-height: 70px;
+    }
+}
+
 @media (max-width: 768px) {
     .myactivity-layout.sidebar-open,
     .myactivity-layout.sidebar-closed {
         margin-left: 0;
     }
 
-    .myactivity-header {
-        padding: 12px 16px;
+    .team-header {
+        padding: 0 16px;
+        height: 56px;
     }
 
-    .myactivity-header .header-left h1 {
+    .team-header-left {
+        gap: 16px;
+    }
+
+    .team-header .team-name {
         font-size: 16px;
     }
 
-    .myactivity-content {
-        padding: 16px;
+    .activity-view {
+        padding: 16px 20px;
     }
 
-    .myactivity-box {
-        padding: 20px;
+    .activity-top-section {
+        min-height: 300px;
     }
 
-    .myactivity-tabs {
-        gap: 6px;
+    .calendar-section {
+        min-height: 300px;
     }
 
-    .myactivity-tabs .tab-btn {
-        padding: 8px 12px;
-        font-size: 13px;
+    .activity-bottom-row {
+        grid-template-columns: 1fr;
+        min-height: auto;
+    }
+
+    .teams-section,
+    .archives-section {
+        max-height: 400px;
+    }
+
+    .teams-list,
+    .archives-list {
+        max-height: 320px;
+    }
+
+    .calendar-day {
+        min-height: 60px;
+        padding: 6px;
+    }
+
+    .day-number {
+        font-size: 12px;
+    }
+
+    .day-task {
+        font-size: 10px;
     }
 }

@@ -5,6 +5,14 @@ import './CalendarView.css';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
+// 우선순위 색상
+const PRIORITY_COLORS = {
+    CRITICAL: '#dc2626',
+    HIGH: '#f59e0b',
+    MEDIUM: '#3b82f6',
+    LOW: '#6b7280'
+};
+
 function CalendarView({ team, tasks: propTasks, teamMembers, loginMember, filters, refreshData }) {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [tasks, setTasks] = useState(propTasks || []);
@@ -218,7 +226,7 @@ function CalendarView({ team, tasks: propTasks, teamMembers, loginMember, filter
                                         {dayTasks.slice(0, 3).map(task => (
                                             <div
                                                 key={task.taskId}
-                                                className={`task-item status-${(task.status || 'OPEN').toLowerCase().replace('_', '-')}`}
+                                                className={`task-item priority-${(task.priority || 'MEDIUM').toLowerCase()}`}
                                                 onClick={() => setSelectedTask(task)}
                                                 title={task.title}
                                             >

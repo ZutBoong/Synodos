@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS flowtask_task_assignee CASCADE;
 DROP TABLE IF EXISTS flowtask_comment CASCADE;
 DROP TABLE IF EXISTS flowtask_chat_message CASCADE;
 DROP TABLE IF EXISTS flowtask_column_archive CASCADE;
+DROP TABLE IF EXISTS flowtask_task_favorite CASCADE;
 DROP TABLE IF EXISTS flowtask_column_favorite CASCADE;
 DROP TABLE IF EXISTS flowtask_column_assignee CASCADE;
 DROP TABLE IF EXISTS flowtask_notification CASCADE;
