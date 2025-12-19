@@ -7,12 +7,10 @@ import com.example.demo.dao.ColumnArchiveDao;
 import com.example.demo.dao.FlowtaskColumnDao;
 import com.example.demo.dao.TaskDao;
 import com.example.demo.dao.TeamDao;
-import com.example.demo.dao.ProjectDao;
 import com.example.demo.model.ColumnArchive;
 import com.example.demo.model.FlowtaskColumn;
 import com.example.demo.model.Task;
 import com.example.demo.model.Team;
-import com.example.demo.model.Project;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
@@ -30,9 +28,6 @@ public class ColumnArchiveService {
     @Autowired
     private TeamDao teamDao;
 
-    @Autowired
-    private ProjectDao projectDao;
-
     private ObjectMapper objectMapper = new ObjectMapper();
 
     // 컬럼 아카이브 생성
@@ -42,14 +37,10 @@ public class ColumnArchiveService {
             return 0;
         }
 
-        // 팀/프로젝트 정보 조회
+        // 팀 정보 조회
         Team team = null;
-        Project project = null;
         if (column.getTeamId() > 0) {
             team = teamDao.findById(column.getTeamId());
-        }
-        if (column.getProjectId() > 0) {
-            project = projectDao.content(column.getProjectId());
         }
 
         // 컬럼 내 태스크들 조회
@@ -67,7 +58,7 @@ public class ColumnArchiveService {
         archive.setTeamId(column.getTeamId());
         archive.setTeamName(team != null ? team.getTeamName() : null);
         archive.setProjectId(column.getProjectId());
-        archive.setProjectName(project != null ? project.getProjectName() : null);
+        archive.setProjectName(null); // Project 기능 미구현
         archive.setColumnTitle(column.getTitle());
         archive.setColumnPosition(column.getPosition());
         archive.setTasksSnapshot(tasksJson);
