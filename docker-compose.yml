@@ -8,8 +8,8 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-flow123}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/postgresql_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
-      - ./database/seed_data.sql:/docker-entrypoint-initdb.d/02_seed.sql
+      - ./backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./backend/src/main/resources/data.sql:/docker-entrypoint-initdb.d/02_seed.sql
     ports:
       - "5432:5432"
     healthcheck:

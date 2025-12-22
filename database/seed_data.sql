@@ -46,17 +46,7 @@ VALUES
     (nextval('flowtask_column_seq'), 1, 1, 'Done', 4)
 ON CONFLICT DO NOTHING;
 
--- 6. Sample Tags
-INSERT INTO flowtask_tag (tag_id, team_id, tag_name, color, created_at)
-VALUES
-    (nextval('flowtask_tag_seq'), 1, 'Bug', '#dc3545', CURRENT_TIMESTAMP),
-    (nextval('flowtask_tag_seq'), 1, 'Feature', '#198754', CURRENT_TIMESTAMP),
-    (nextval('flowtask_tag_seq'), 1, 'Enhancement', '#0d6efd', CURRENT_TIMESTAMP),
-    (nextval('flowtask_tag_seq'), 1, 'Documentation', '#6c757d', CURRENT_TIMESTAMP),
-    (nextval('flowtask_tag_seq'), 1, 'Urgent', '#fd7e14', CURRENT_TIMESTAMP)
-ON CONFLICT DO NOTHING;
-
--- 7. Sample Tasks
+-- 6. Sample Tasks
 INSERT INTO flowtask_task (task_id, column_id, title, description, position, priority, workflow_status, assignee_no, due_date, created_at)
 VALUES
     (nextval('flowtask_task_seq'), 1, 'Implement Login', 'JWT based login/logout feature', 1, 'HIGH', 'WAITING', 2, CURRENT_DATE + INTERVAL '7 days', CURRENT_TIMESTAMP),
@@ -69,21 +59,7 @@ VALUES
     (nextval('flowtask_task_seq'), 4, 'DB Schema Design', 'PostgreSQL table design completed', 2, 'HIGH', 'COMPLETED', 1, CURRENT_DATE - INTERVAL '5 days', CURRENT_TIMESTAMP)
 ON CONFLICT DO NOTHING;
 
--- 8. Task-Tag Relations
-INSERT INTO flowtask_task_tag (task_id, tag_id)
-VALUES
-    (1, 2),  -- Login - Feature
-    (2, 3),  -- Registration - Enhancement
-    (3, 4),  -- API Docs - Documentation
-    (4, 2),  -- DnD - Feature
-    (4, 5),  -- DnD - Urgent
-    (5, 2),  -- Notifications - Feature
-    (6, 3),  -- Code Review - Enhancement
-    (7, 2),  -- Initial Setup - Feature
-    (8, 4)   -- DB Schema - Documentation
-ON CONFLICT DO NOTHING;
-
--- 9. Multiple Assignees Sample
+-- 7. Multiple Assignees Sample
 INSERT INTO flowtask_task_assignee (task_id, member_no, assigned_at, assigned_by)
 VALUES
     (4, 2, CURRENT_TIMESTAMP, 1),  -- DnD - John
@@ -92,7 +68,7 @@ VALUES
     (5, 2, CURRENT_TIMESTAMP, 1)   -- Notifications - John
 ON CONFLICT DO NOTHING;
 
--- 10. Sample Comments
+-- 8. Sample Comments
 INSERT INTO flowtask_comment (comment_id, task_id, author_no, content, created_at, updated_at)
 VALUES
     (nextval('flowtask_comment_seq'), 4, 1, 'I recommend using @hello-pangea/dnd for drag and drop.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
@@ -101,7 +77,7 @@ VALUES
     (nextval('flowtask_comment_seq'), 6, 1, 'LGTM! Ready to merge.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 ON CONFLICT DO NOTHING;
 
--- 11. Sample Chat Messages
+-- 9. Sample Chat Messages
 INSERT INTO flowtask_chat_message (message_id, team_id, sender_no, content, sent_at)
 VALUES
     (nextval('flowtask_chat_seq'), 1, 1, 'Hello! Welcome to Flowtask Dev Team chat.', CURRENT_TIMESTAMP - INTERVAL '1 hour'),
