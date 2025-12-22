@@ -43,7 +43,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Environment files
+# Environment files (로컬 전용, git 제외)
 .env
 .env.local
 .env.development.local

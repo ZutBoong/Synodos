@@ -83,7 +83,8 @@ public class MemberController {
 					authenticatedMember.getNo(),
 					authenticatedMember.getUserid(),
 					authenticatedMember.getName(),
-					authenticatedMember.getEmail()
+					authenticatedMember.getEmail(),
+					authenticatedMember.isEmailVerified()
 			);
 		} else {
 			return AuthResponse.fail("아이디 또는 비밀번호가 일치하지 않습니다.");
@@ -244,5 +245,12 @@ public class MemberController {
 		}
 
 		return result;
+	}
+
+	// 모든 회원 조회 (팀 생성 시 초대용)
+	@GetMapping("member/all")
+	public java.util.List<Member> getAllMembers() {
+		System.out.println("모든 회원 목록 조회");
+		return service.findAll();
 	}
 }

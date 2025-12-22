@@ -13,5 +13,6 @@ public class Member {
 	private String name;
 	private String email;
 	private String phone;
+	private boolean emailVerified;
 	private Date register;
 }

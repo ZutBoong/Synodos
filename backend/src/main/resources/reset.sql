@@ -1,4 +1,5 @@
 -- 모든 테이블 삭제 후 새로 생성 (schema.sql에서 재생성됨)
+DROP TABLE IF EXISTS flowtask_email_verification CASCADE;
 DROP TABLE IF EXISTS flowtask_task_commit CASCADE;
 DROP TABLE IF EXISTS flowtask_task_tag CASCADE;
 DROP TABLE IF EXISTS flowtask_task_verifier CASCADE;
@@ -35,3 +36,4 @@ DROP SEQUENCE IF EXISTS flowtask_column_archive_seq CASCADE;
 DROP SEQUENCE IF EXISTS flowtask_notification_seq CASCADE;
 DROP SEQUENCE IF EXISTS flowtask_section_seq CASCADE;
 DROP SEQUENCE IF EXISTS flowtask_file_seq CASCADE;
+DROP SEQUENCE IF EXISTS flowtask_email_verification_seq CASCADE;

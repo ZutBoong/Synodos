@@ -18,6 +18,7 @@ CREATE SEQUENCE IF NOT EXISTS flowtask_git_repo_seq START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE IF NOT EXISTS flowtask_column_archive_seq START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE IF NOT EXISTS flowtask_section_seq START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE IF NOT EXISTS flowtask_file_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE IF NOT EXISTS flowtask_email_verification_seq START WITH 1 INCREMENT BY 1;
 
 -- ========================================
 -- 회원 테이블
@@ -29,8 +30,18 @@ CREATE TABLE IF NOT EXISTS flowtask_member (
     name VARCHAR(50) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     phone VARCHAR(20),
+    email_verified BOOLEAN DEFAULT FALSE,
     register TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 기존 테이블에 email_verified 컬럼 추가 (없는 경우)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'flowtask_member' AND column_name = 'email_verified') THEN
+        ALTER TABLE flowtask_member ADD COLUMN email_verified BOOLEAN DEFAULT FALSE;
+    END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_flowtask_member_userid ON flowtask_member(userid);
 CREATE INDEX IF NOT EXISTS idx_flowtask_member_email ON flowtask_member(email);
@@ -274,6 +285,28 @@ CREATE INDEX IF NOT EXISTS idx_column_archive_team ON flowtask_column_archive(te
 CREATE INDEX IF NOT EXISTS idx_column_archive_archived ON flowtask_column_archive(archived_at DESC);
 
 -- ========================================
+-- 태스크 아카이브 테이블 (아카이브한 태스크 스냅샷 저장)
+-- ========================================
+CREATE SEQUENCE IF NOT EXISTS flowtask_task_archive_seq START WITH 1 INCREMENT BY 1;
+
+CREATE TABLE IF NOT EXISTS flowtask_task_archive (
+    archive_id INTEGER PRIMARY KEY,
+    member_no INTEGER NOT NULL REFERENCES flowtask_member(no) ON DELETE CASCADE,
+    original_task_id INTEGER NOT NULL,
+    team_id INTEGER,
+    team_name VARCHAR(100),
+    column_id INTEGER,
+    column_title VARCHAR(100),
+    task_snapshot JSONB NOT NULL,
+    archive_note VARCHAR(500),
+    archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_archive_member ON flowtask_task_archive(member_no);
+CREATE INDEX IF NOT EXISTS idx_task_archive_team ON flowtask_task_archive(team_id);
+CREATE INDEX IF NOT EXISTS idx_task_archive_archived ON flowtask_task_archive(archived_at DESC);
+
+-- ========================================
 -- 알림 테이블
 -- ========================================
 CREATE SEQUENCE IF NOT EXISTS flowtask_notification_seq START WITH 1 INCREMENT BY 1;
@@ -353,3 +386,19 @@ CREATE INDEX IF NOT EXISTS idx_file_task ON flowtask_file(task_id);
 CREATE INDEX IF NOT EXISTS idx_file_uploader ON flowtask_file(uploader_no);
 CREATE INDEX IF NOT EXISTS idx_file_uploaded ON flowtask_file(uploaded_at DESC);
 
+-- ========================================
+-- 이메일 인증 테이블
+-- ========================================
+CREATE TABLE IF NOT EXISTS flowtask_email_verification (
+    id INTEGER PRIMARY KEY,
+    email VARCHAR(100) NOT NULL,
+    code VARCHAR(6) NOT NULL,
+    type VARCHAR(20) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    verified BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_email_verification_email ON flowtask_email_verification(email);
+CREATE INDEX IF NOT EXISTS idx_email_verification_code ON flowtask_email_verification(code);
+CREATE INDEX IF NOT EXISTS idx_email_verification_expires ON flowtask_email_verification(expires_at);

@@ -16,8 +16,10 @@ CREATE SEQUENCE IF NOT EXISTS flowtask_comment_seq START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE IF NOT EXISTS flowtask_chat_seq START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE IF NOT EXISTS flowtask_git_repo_seq START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE IF NOT EXISTS flowtask_column_archive_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE IF NOT EXISTS flowtask_task_archive_seq START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE IF NOT EXISTS flowtask_section_seq START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE IF NOT EXISTS flowtask_file_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE IF NOT EXISTS flowtask_email_verification_seq START WITH 1 INCREMENT BY 1;
 
 -- ========================================
 -- 회원 테이블
@@ -29,6 +31,7 @@ CREATE TABLE IF NOT EXISTS flowtask_member (
     name VARCHAR(50) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     phone VARCHAR(20),
+    email_verified BOOLEAN DEFAULT FALSE,
     register TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -274,6 +277,26 @@ CREATE INDEX IF NOT EXISTS idx_column_archive_team ON flowtask_column_archive(te
 CREATE INDEX IF NOT EXISTS idx_column_archive_archived ON flowtask_column_archive(archived_at DESC);
 
 -- ========================================
+-- 태스크 아카이브 테이블 (아카이브된 태스크 스냅샷 저장)
+-- ========================================
+CREATE TABLE IF NOT EXISTS flowtask_task_archive (
+    archive_id INTEGER PRIMARY KEY,
+    member_no INTEGER NOT NULL REFERENCES flowtask_member(no) ON DELETE CASCADE,
+    original_task_id INTEGER NOT NULL,
+    team_id INTEGER,
+    team_name VARCHAR(100),
+    column_id INTEGER,
+    column_title VARCHAR(100),
+    task_snapshot JSONB NOT NULL,
+    archive_note VARCHAR(500),
+    archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_archive_member ON flowtask_task_archive(member_no);
+CREATE INDEX IF NOT EXISTS idx_task_archive_team ON flowtask_task_archive(team_id);
+CREATE INDEX IF NOT EXISTS idx_task_archive_archived ON flowtask_task_archive(archived_at DESC);
+
+-- ========================================
 -- 알림 테이블
 -- ========================================
 CREATE SEQUENCE IF NOT EXISTS flowtask_notification_seq START WITH 1 INCREMENT BY 1;
@@ -354,8 +377,26 @@ CREATE INDEX IF NOT EXISTS idx_file_uploader ON flowtask_file(uploader_no);
 CREATE INDEX IF NOT EXISTS idx_file_uploaded ON flowtask_file(uploaded_at DESC);
 
 -- ========================================
+-- 이메일 인증 테이블
+-- ========================================
+CREATE TABLE IF NOT EXISTS flowtask_email_verification (
+    id INTEGER PRIMARY KEY,
+    email VARCHAR(100) NOT NULL,
+    code VARCHAR(6) NOT NULL,
+    type VARCHAR(20) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    verified BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_email_verification_email ON flowtask_email_verification(email);
+CREATE INDEX IF NOT EXISTS idx_email_verification_code ON flowtask_email_verification(code);
+CREATE INDEX IF NOT EXISTS idx_email_verification_expires ON flowtask_email_verification(expires_at);
+
+-- ========================================
 -- 샘플 데이터 초기화 (기존 데이터 삭제)
 -- ========================================
+DELETE FROM flowtask_email_verification;
 DELETE FROM flowtask_task_favorite;
 DELETE FROM flowtask_column_favorite;
 DELETE FROM flowtask_task_commit;
@@ -387,12 +428,12 @@ ALTER SEQUENCE flowtask_chat_seq RESTART WITH 1;
 -- ========================================
 -- 샘플 데이터: 회원
 -- ========================================
-INSERT INTO flowtask_member (no, userid, password, name, email, phone) VALUES
-(nextval('flowtask_member_seq'), 'admin', '$2a$10$XJ7z8f9kCf.IYc8xFfqEm.CZW5v8Cd5yRz0w1a8qV9xOJLz9Z1Zr2', '김팀장', 'admin@flowtask.com', '010-1111-1111'),
-(nextval('flowtask_member_seq'), 'user1', '$2a$10$XJ7z8f9kCf.IYc8xFfqEm.CZW5v8Cd5yRz0w1a8qV9xOJLz9Z1Zr2', '이프론트', 'frontend@flowtask.com', '010-2222-2222'),
-(nextval('flowtask_member_seq'), 'user2', '$2a$10$XJ7z8f9kCf.IYc8xFfqEm.CZW5v8Cd5yRz0w1a8qV9xOJLz9Z1Zr2', '박백엔드', 'backend@flowtask.com', '010-3333-3333'),
-(nextval('flowtask_member_seq'), 'user3', '$2a$10$XJ7z8f9kCf.IYc8xFfqEm.CZW5v8Cd5yRz0w1a8qV9xOJLz9Z1Zr2', '최데브옵스', 'devops@flowtask.com', '010-4444-4444'),
-(nextval('flowtask_member_seq'), 'user4', '$2a$10$XJ7z8f9kCf.IYc8xFfqEm.CZW5v8Cd5yRz0w1a8qV9xOJLz9Z1Zr2', '정디자이너', 'designer@flowtask.com', '010-5555-5555');
+INSERT INTO flowtask_member (no, userid, password, name, email, phone, email_verified) VALUES
+(nextval('flowtask_member_seq'), 'admin', '$2a$10$XJ7z8f9kCf.IYc8xFfqEm.CZW5v8Cd5yRz0w1a8qV9xOJLz9Z1Zr2', '김팀장', 'admin@flowtask.com', '010-1111-1111', TRUE),
+(nextval('flowtask_member_seq'), 'user1', '$2a$10$XJ7z8f9kCf.IYc8xFfqEm.CZW5v8Cd5yRz0w1a8qV9xOJLz9Z1Zr2', '이프론트', 'frontend@flowtask.com', '010-2222-2222', TRUE),
+(nextval('flowtask_member_seq'), 'user2', '$2a$10$XJ7z8f9kCf.IYc8xFfqEm.CZW5v8Cd5yRz0w1a8qV9xOJLz9Z1Zr2', '박백엔드', 'backend@flowtask.com', '010-3333-3333', TRUE),
+(nextval('flowtask_member_seq'), 'user3', '$2a$10$XJ7z8f9kCf.IYc8xFfqEm.CZW5v8Cd5yRz0w1a8qV9xOJLz9Z1Zr2', '최데브옵스', 'devops@flowtask.com', '010-4444-4444', TRUE),
+(nextval('flowtask_member_seq'), 'user4', '$2a$10$XJ7z8f9kCf.IYc8xFfqEm.CZW5v8Cd5yRz0w1a8qV9xOJLz9Z1Zr2', '정디자이너', 'designer@flowtask.com', '010-5555-5555', TRUE);
 
 -- ========================================
 -- 샘플 데이터: 팀

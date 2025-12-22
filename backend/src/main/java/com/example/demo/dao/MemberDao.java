@@ -40,4 +40,13 @@ public interface MemberDao {
 
 	// 아이디 또는 이메일로 회원 검색
 	Member findByUseridOrEmail(String keyword);
+
+	// 모든 회원 조회 (팀 생성 시 초대용)
+	java.util.List<Member> findAll();
+
+	// 이메일로 회원 조회
+	Member findByEmail(String email);
+
+	// 이메일 인증 완료 처리
+	int updateEmailVerified(int no);
 }

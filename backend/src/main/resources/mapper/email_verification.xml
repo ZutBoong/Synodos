@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.dao.EmailVerificationDao">
+
+	<resultMap id="emailVerificationMap" type="emailVerification">
+		<id property="id" column="id"/>
+		<result property="email" column="email"/>
+		<result property="code" column="code"/>
+		<result property="type" column="type"/>
+		<result property="expiresAt" column="expires_at"/>
+		<result property="verified" column="verified"/>
+		<result property="createdAt" column="created_at"/>
+	</resultMap>
+
+	<insert id="insert" parameterType="emailVerification">
+		INSERT INTO flowtask_email_verification (id, email, code, type, expires_at, verified, created_at)
+		VALUES (nextval('flowtask_email_verification_seq'), #{email}, #{code}, #{type}, #{expiresAt}, false, CURRENT_TIMESTAMP)
+	</insert>
+
+	<select id="findLatestByEmailAndType" resultMap="emailVerificationMap">
+		SELECT * FROM flowtask_email_verification
+		WHERE email = #{email} AND type = #{type} AND verified = false
+		ORDER BY created_at DESC
+		LIMIT 1
+	</select>
+
+	<update id="updateVerified">
+		UPDATE flowtask_email_verification
+		SET verified = true
+		WHERE id = #{id}
+	</update>
+
+	<delete id="deleteByEmailAndType">
+		DELETE FROM flowtask_email_verification
+		WHERE email = #{email} AND type = #{type} AND verified = false
+	</delete>
+
+	<delete id="deleteExpired">
+		DELETE FROM flowtask_email_verification
+		WHERE expires_at &lt; CURRENT_TIMESTAMP
+	</delete>
+
+</mapper>

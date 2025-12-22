@@ -1,0 +1,240 @@
+erDiagram
+    flowtask_member {
+        int no PK
+        varchar userid UK
+        varchar password
+        varchar name
+        varchar email UK
+        varchar phone
+        timestamp register
+    }
+
+    flowtask_team {
+        int team_id PK
+        varchar team_name
+        varchar team_code UK
+        int leader_no FK
+        text description
+        timestamp created_at
+    }
+
+    flowtask_team_member {
+        int team_id PK
+        int member_no PK
+        varchar role
+        timestamp joined_at
+    }
+
+    flowtask_project {
+        int project_id PK
+        int team_id FK
+        varchar project_name
+        timestamp created_at
+    }
+
+    flowtask_section {
+        int section_id PK
+        int team_id FK
+        varchar section_name
+        int position
+        varchar color
+        timestamp created_at
+    }
+
+    flowtask_column {
+        int column_id PK
+        varchar title
+        int position
+        int team_id FK
+        int project_id FK
+    }
+
+    flowtask_task {
+        int task_id PK
+        int column_id FK
+        varchar title
+        text description
+        int position
+        timestamp created_at
+        int assignee_no FK
+        varchar priority
+        timestamp start_date
+        timestamp due_date
+        int section_id FK
+        varchar workflow_status
+        text rejection_reason
+        timestamp rejected_at
+        int rejected_by FK
+    }
+
+    flowtask_tag {
+        int tag_id PK
+        int team_id FK
+        varchar tag_name
+        varchar color
+        timestamp created_at
+    }
+
+    flowtask_task_tag {
+        int task_id PK
+        int tag_id PK
+    }
+
+    flowtask_comment {
+        int comment_id PK
+        int task_id FK
+        int author_no FK
+        varchar content
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    flowtask_chat_message {
+        int message_id PK
+        int team_id FK
+        int sender_no FK
+        varchar content
+        timestamp sent_at
+    }
+
+    flowtask_notification {
+        int notification_id PK
+        int recipient_no FK
+        int sender_no FK
+        varchar notification_type
+        varchar title
+        varchar message
+        int team_id FK
+        int column_id FK
+        int task_id FK
+        boolean is_read
+        timestamp created_at
+    }
+
+    flowtask_task_assignee {
+        int task_id PK
+        int member_no PK
+        timestamp assigned_at
+        int assigned_by FK
+        boolean accepted
+        timestamp accepted_at
+        boolean completed
+        timestamp completed_at
+    }
+
+    flowtask_task_verifier {
+        int task_id PK
+        int member_no PK
+        timestamp assigned_at
+        boolean approved
+        timestamp approved_at
+        text rejection_reason
+    }
+
+    flowtask_git_repo {
+        int repo_id PK
+        int team_id FK
+        varchar provider
+        varchar repo_owner
+        varchar repo_name
+        varchar access_token
+        timestamp created_at
+    }
+
+    flowtask_task_commit {
+        int task_id PK
+        varchar commit_sha PK
+        varchar commit_message
+        varchar author_name
+        varchar author_email
+        timestamp committed_at
+        varchar commit_url
+    }
+
+    flowtask_column_favorite {
+        int column_id PK
+        int member_no PK
+        timestamp created_at
+    }
+
+    flowtask_task_favorite {
+        int task_id PK
+        int member_no PK
+        timestamp created_at
+    }
+
+    flowtask_column_archive {
+        int archive_id PK
+        int member_no FK
+        int original_column_id
+        int team_id
+        varchar team_name
+        int project_id
+        varchar project_name
+        varchar column_title
+        int column_position
+        jsonb tasks_snapshot
+        varchar archive_note
+        timestamp archived_at
+    }
+
+    flowtask_task_archive {
+        int archive_id PK
+        int member_no FK
+        int original_task_id
+        int team_id
+        varchar team_name
+        int column_id
+        varchar column_title
+        jsonb task_snapshot
+        varchar archive_note
+        timestamp archived_at
+    }
+
+    flowtask_file {
+        int file_id PK
+        int team_id FK
+        int task_id FK
+        int uploader_no FK
+        varchar original_name
+        varchar stored_name
+        varchar file_path
+        bigint file_size
+        varchar mime_type
+        timestamp uploaded_at
+    }
+
+    flowtask_member ||--o{ flowtask_team : leads
+    flowtask_member ||--o{ flowtask_team_member : joins
+    flowtask_team ||--o{ flowtask_team_member : has
+    flowtask_team ||--o{ flowtask_project : contains
+    flowtask_team ||--o{ flowtask_section : has
+    flowtask_team ||--o{ flowtask_column : has
+    flowtask_project ||--o{ flowtask_column : contains
+    flowtask_column ||--o{ flowtask_task : contains
+    flowtask_section ||--o{ flowtask_task : groups
+    flowtask_member ||--o{ flowtask_task : assigned
+    flowtask_team ||--o{ flowtask_tag : has
+    flowtask_task ||--o{ flowtask_task_tag : tagged
+    flowtask_tag ||--o{ flowtask_task_tag : applied
+    flowtask_task ||--o{ flowtask_comment : has
+    flowtask_member ||--o{ flowtask_comment : writes
+    flowtask_team ||--o{ flowtask_chat_message : has
+    flowtask_member ||--o{ flowtask_chat_message : sends
+    flowtask_task ||--o{ flowtask_task_assignee : has
+    flowtask_member ||--o{ flowtask_task_assignee : assigned
+    flowtask_task ||--o{ flowtask_task_verifier : has
+    flowtask_member ||--o{ flowtask_task_verifier : verifies
+    flowtask_team ||--|| flowtask_git_repo : linked
+    flowtask_task ||--o{ flowtask_task_commit : linked
+    flowtask_column ||--o{ flowtask_column_favorite : favorited
+    flowtask_member ||--o{ flowtask_column_favorite : favorites
+    flowtask_task ||--o{ flowtask_task_favorite : favorited
+    flowtask_member ||--o{ flowtask_task_favorite : favorites
+    flowtask_member ||--o{ flowtask_column_archive : archives
+    flowtask_member ||--o{ flowtask_task_archive : archives
+    flowtask_member ||--o{ flowtask_notification : receives
+    flowtask_team ||--o{ flowtask_notification : has
+    flowtask_team ||--o{ flowtask_file : has
+    flowtask_task ||--o{ flowtask_file : attached
+    flowtask_member ||--o{ flowtask_file : uploads

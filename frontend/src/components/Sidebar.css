@@ -57,6 +57,36 @@
     transform: scale(1.05);
 }
 
+/* 이메일 인증 배너 */
+.email-verify-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    margin: 12px;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.email-verify-banner:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+}
+
+.email-verify-banner svg {
+    color: white;
+    flex-shrink: 0;
+}
+
+.email-verify-banner span {
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+}
+
 /* 홈 버튼 */
 .sidebar-home {
     padding: 12px 20px 0;
