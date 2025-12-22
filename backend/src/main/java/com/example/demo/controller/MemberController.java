@@ -83,7 +83,8 @@ public class MemberController {
 					authenticatedMember.getNo(),
 					authenticatedMember.getUserid(),
 					authenticatedMember.getName(),
-					authenticatedMember.getEmail()
+					authenticatedMember.getEmail(),
+					authenticatedMember.isEmailVerified()
 			);
 		} else {
 			return AuthResponse.fail("아이디 또는 비밀번호가 일치하지 않습니다.");

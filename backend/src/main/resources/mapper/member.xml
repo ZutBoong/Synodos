@@ -4,8 +4,8 @@
 
 	<!-- 회원가입 -->
 	<insert id="insert" parameterType="member">
-		INSERT INTO flowtask_member (no, userid, password, name, email, phone, register)
-		VALUES (nextval('flowtask_member_seq'), #{userid}, #{password}, #{name}, #{email}, #{phone}, CURRENT_TIMESTAMP)
+		INSERT INTO flowtask_member (no, userid, password, name, email, phone, email_verified, register)
+		VALUES (nextval('flowtask_member_seq'), #{userid}, #{password}, #{name}, #{email}, #{phone}, #{emailVerified}, CURRENT_TIMESTAMP)
 	</insert>
 
 	<!-- 아이디 중복 체크 -->
@@ -69,7 +69,17 @@
 
 	<!-- 모든 회원 조회 (팀 생성 시 초대용) -->
 	<select id="findAll" resultType="member">
-		SELECT no, userid, name, email, phone, register FROM flowtask_member ORDER BY name
+		SELECT no, userid, name, email, phone, email_verified, register FROM flowtask_member ORDER BY name
 	</select>
+
+	<!-- 이메일로 회원 조회 -->
+	<select id="findByEmail" parameterType="String" resultType="member">
+		SELECT * FROM flowtask_member WHERE email = #{email}
+	</select>
+
+	<!-- 이메일 인증 완료 처리 -->
+	<update id="updateEmailVerified" parameterType="int">
+		UPDATE flowtask_member SET email_verified = true WHERE no = #{no}
+	</update>
 
 </mapper>

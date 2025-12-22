@@ -230,6 +230,182 @@
     background-color: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%);
 }
 
+/* 단계 표시기 */
+.step-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 32px;
+    padding: 0 20px;
+}
+
+.step-indicator .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.step-indicator .step-number {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.step-indicator .step.active .step-number {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
+}
+
+.step-indicator .step.completed .step-number {
+    background: #10b981;
+    color: white;
+}
+
+.step-indicator .step-label {
+    font-size: 12px;
+    color: #94a3b8;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.step-indicator .step.active .step-label {
+    color: #667eea;
+}
+
+.step-indicator .step.completed .step-label {
+    color: #10b981;
+}
+
+.step-indicator .step-line {
+    width: 60px;
+    height: 2px;
+    background: #e2e8f0;
+    margin: 0 12px;
+    margin-bottom: 24px;
+}
+
+/* 이메일 인증 관련 */
+.verification-info {
+    text-align: center;
+    padding: 24px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 16px;
+    margin-bottom: 24px;
+}
+
+.verification-info p {
+    margin: 8px 0;
+    color: #475569;
+    font-size: 14px;
+}
+
+.verification-info strong {
+    color: #667eea;
+}
+
+.expiry-timer {
+    color: #f59e0b !important;
+    font-weight: 600;
+}
+
+.expiry-timer strong {
+    color: #f59e0b !important;
+    font-size: 18px;
+}
+
+.verification-code-input {
+    text-align: center;
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    letter-spacing: 8px;
+    font-family: 'Courier New', monospace;
+}
+
+.step-back {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: #64748b;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-link:hover {
+    color: #667eea;
+}
+
+/* 완료 섹션 */
+.complete-section {
+    text-align: center;
+    padding: 32px 0;
+}
+
+.complete-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 40px;
+    color: white;
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+}
+
+.complete-section h3 {
+    font-size: 24px;
+    color: #1e293b;
+    margin-bottom: 12px;
+}
+
+.complete-section p {
+    color: #64748b;
+    margin-bottom: 8px;
+}
+
+.complete-section .btn-primary {
+    margin-top: 24px;
+    padding: 16px 48px;
+    font-size: 16px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
+}
+
+.complete-section .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+/* 버튼 비활성화 상태 */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
 /* 반응형 */
 @media (max-width: 480px) {
     .auth-box {
@@ -242,5 +418,13 @@
 
     .button-group {
         flex-direction: column;
+    }
+
+    .step-indicator .step-line {
+        width: 30px;
+    }
+
+    .step-indicator .step-label {
+        font-size: 10px;
     }
 }
