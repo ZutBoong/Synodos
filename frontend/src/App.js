@@ -86,10 +86,6 @@ function AppContent() {
           <Route path="/register" element={<Register />} />
           <Route path="/find-id" element={<FindId />} />
           <Route path="/find-password" element={<FindPassword />} />
-          
-          {/* 🔥 여기도 물론 있어야 하지만 */}
-          <Route path="/oauth2/redirect" element={<OAuth2Redirect />} />
-
           <Route path="/activity" element={<MyActivity />} />
         </Routes>
       </main>
