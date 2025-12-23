@@ -1,0 +1,56 @@
+.main-home {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #0a0a0f; /* 초기 프레임 깜빡임 방지 */
+}
+
+.shader-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.shader-layer canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+
+.title {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(255, 255, 255, 0.96);
+    font-size: 64px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    z-index: 10;
+}
+
+.subtitle {
+    position: absolute;
+    top: 55%;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 14px;
+    z-index: 10;
+}
+
+.start-btn {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(14px);
+    z-index: 20;
+    cursor: pointer;
+}
