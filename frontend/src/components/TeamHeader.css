@@ -11,13 +11,13 @@
     min-height: 0;
 }
 
-.team-header {
+.team-header-section .team-header {
     display: flex;
     align-items: center;
     gap: 16px;
 }
 
-.team-icon-large {
+.team-header-section .team-icon-large {
     width: 56px;
     height: 56px;
     border-radius: 14px;
@@ -32,24 +32,24 @@
     flex-shrink: 0;
 }
 
-.team-title-area {
+.team-header-section .team-title-area {
     flex: 1;
 }
 
-.team-title {
+.team-header-section .team-title {
     margin: 0;
     font-size: 24px;
     font-weight: 700;
     color: #1e293b;
 }
 
-.team-description-area {
+.team-header-section .team-description-area {
     padding-top: 12px;
     margin-top: 12px;
     border-top: 1px solid #f1f5f9;
 }
 
-.team-description {
+.team-header-section .team-description {
     margin: 0;
     font-size: 13px;
     line-height: 1.5;
@@ -63,11 +63,11 @@
         padding: 20px 24px;
     }
 
-    .team-title {
+    .team-header-section .team-title {
         font-size: 24px;
     }
 
-    .team-icon-large {
+    .team-header-section .team-icon-large {
         width: 56px;
         height: 56px;
         font-size: 24px;
@@ -80,16 +80,16 @@
         padding: 16px 20px;
     }
 
-    .team-header {
+    .team-header-section .team-header {
         flex-direction: column;
         align-items: flex-start;
     }
 
-    .team-title {
+    .team-header-section .team-title {
         font-size: 20px;
     }
 
-    .team-icon-large {
+    .team-header-section .team-icon-large {
         width: 48px;
         height: 48px;
         font-size: 20px;

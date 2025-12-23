@@ -19,7 +19,7 @@
     overflow: hidden;
 }
 
-.section-header {
+.overview-section .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -29,7 +29,7 @@
     flex-shrink: 0;
 }
 
-.section-header h2 {
+.overview-section .section-header h2 {
     font-size: 18px;
     font-weight: 700;
     color: #1e293b;
@@ -39,7 +39,7 @@
     gap: 10px;
 }
 
-.section-header h2::before {
+.overview-section .section-header h2::before {
     content: '';
     width: 4px;
     height: 20px;
@@ -99,7 +99,7 @@
 }
 
 /* 태스크 아이템 - 가로 레이아웃 (상태, 제목, 설명, 날짜, 긴급) */
-.task-item {
+.tasks-list .task-item {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -112,7 +112,7 @@
     flex-shrink: 0;
 }
 
-.task-item:hover {
+.tasks-list .task-item:hover {
     background: white;
     border-color: rgba(102, 126, 234, 0.2);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
@@ -178,12 +178,12 @@
 }
 
 /* Done 상태 태스크 */
-.task-item.done {
+.tasks-list .task-item.done {
     opacity: 0.6;
 }
 
-.task-item.done .task-title,
-.task-item.done .task-description {
+.tasks-list .task-item.done .task-title,
+.tasks-list .task-item.done .task-description {
     text-decoration: line-through;
     color: #94a3b8;
 }

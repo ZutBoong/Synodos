@@ -80,7 +80,7 @@ function CreateTeam() {
         try {
             const result = await createTeam({
                 teamName: teamName.trim(),
-                teamDescription: teamDescription.trim(),
+                description: teamDescription.trim(),
                 leaderNo: loginMember.no,
                 memberNos: selectedMembers.map(m => m.no)
             });

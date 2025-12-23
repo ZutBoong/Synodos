@@ -24,8 +24,8 @@
     margin-left: 64px;
 }
 
-/* ===== 통합 헤더 ===== */
-.team-header {
+/* ===== 통합 헤더 (MyActivity 전용) ===== */
+.myactivity-page .team-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -37,13 +37,13 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.team-header-left {
+.myactivity-page .team-header-left {
     display: flex;
     align-items: center;
     gap: 32px;
 }
 
-.team-header .team-name {
+.myactivity-page .team-header .team-name {
     margin: 0;
     font-size: 20px;
     font-weight: 700;
@@ -51,13 +51,13 @@
     letter-spacing: -0.3px;
 }
 
-.team-header-right {
+.myactivity-page .team-header-right {
     display: flex;
     align-items: center;
     gap: 16px;
 }
 
-.team-header .logout-btn {
+.myactivity-page .team-header .logout-btn {
     padding: 10px 18px;
     background: #f1f5f9;
     border: none;
@@ -69,7 +69,7 @@
     transition: all 0.2s ease;
 }
 
-.team-header .logout-btn:hover {
+.myactivity-page .team-header .logout-btn:hover {
     background: #e2e8f0;
     color: #334155;
 }
@@ -129,7 +129,7 @@
     border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
-.section-header {
+.activity-section .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -138,7 +138,7 @@
     border-bottom: 2px solid #f1f5f9;
 }
 
-.section-header h2 {
+.activity-section .section-header h2 {
     font-size: 18px;
     font-weight: 700;
     color: #1e293b;
@@ -148,7 +148,7 @@
     gap: 10px;
 }
 
-.section-header h2::before {
+.activity-section .section-header h2::before {
     content: '';
     width: 4px;
     height: 20px;
@@ -335,7 +335,7 @@
     overflow: hidden;
 }
 
-.task-item {
+.day-tasks .task-item {
     padding: 6px 10px;
     border-radius: 6px;
     font-size: 12px;
@@ -353,13 +353,13 @@
     gap: 4px;
 }
 
-.task-item .urgent-icon {
+.day-tasks .task-item .urgent-icon {
     font-size: 10px;
     flex-shrink: 0;
     color: #dc2626;
 }
 
-.task-item:hover {
+.day-tasks .task-item:hover {
     background: #e2e8f0;
     border-color: #94a3b8;
 }
@@ -476,7 +476,7 @@
     flex: 1;
 }
 
-.team-name {
+.team-details .team-name {
     font-weight: 600;
     font-size: 15px;
     color: #1e293b;
@@ -768,16 +768,16 @@
         margin-left: 0;
     }
 
-    .team-header {
+    .myactivity-page .team-header {
         padding: 0 16px;
         height: 56px;
     }
 
-    .team-header-left {
+    .myactivity-page .team-header-left {
         gap: 16px;
     }
 
-    .team-header .team-name {
+    .myactivity-page .team-header .team-name {
         font-size: 16px;
     }
 

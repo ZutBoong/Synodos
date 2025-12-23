@@ -7,8 +7,8 @@
 		<selectKey keyProperty="teamId" resultType="int" order="BEFORE">
 			SELECT nextval('flowtask_team_seq')
 		</selectKey>
-		INSERT INTO flowtask_team (team_id, team_name, team_code, leader_no, created_at)
-		VALUES (#{teamId}, #{teamName}, #{teamCode}, #{leaderNo}, CURRENT_TIMESTAMP)
+		INSERT INTO flowtask_team (team_id, team_name, team_code, leader_no, description, created_at)
+		VALUES (#{teamId}, #{teamName}, #{teamCode}, #{leaderNo}, #{description, jdbcType=VARCHAR}, CURRENT_TIMESTAMP)
 	</insert>
 
 	<!-- 팀 멤버 추가 -->

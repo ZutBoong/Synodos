@@ -11,7 +11,7 @@
     border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
-.section-header {
+.files-section .section-header {
     display: flex;
     align-items: center;
     gap: 14px;
@@ -19,7 +19,7 @@
     border-bottom: 2px solid #f1f5f9;
 }
 
-.section-header h2 {
+.files-section .section-header h2 {
     margin: 0;
     font-size: 18px;
     font-weight: 700;
@@ -29,7 +29,7 @@
     gap: 10px;
 }
 
-.section-header h2::before {
+.files-section .section-header h2::before {
     content: '';
     width: 4px;
     height: 20px;
