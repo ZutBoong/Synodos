@@ -95,14 +95,13 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         }
 
         /*
-        * 작성자: 홍진기
-        * ===============================
-        * KAKAO LOGIN
-        * ===============================
-        */
+         * 작성자: 윤희망 
+         * ===============================
+         * KAKAO LOGIN
+         * ===============================
+         */
         else if ("kakao".equals(registrationId)) {
 
-            // kakao_account에 실제 정보가 들어 있음
             @SuppressWarnings("unchecked")
             Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
 
@@ -115,37 +114,14 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
             email = (String) kakaoAccount.get("email");
 
-            // profile 정보 안에 name(=nickname)이 존재
             @SuppressWarnings("unchecked")
             Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
 
             if (profile != null) {
                 name = (String) profile.get("nickname");
             } else {
-                name = null;
+                name = email.split("@")[0];
             }
-
-            // provider 고유 ID는 attributes.get("id")
-            String providerId = String.valueOf(attributes.get("id"));
-
-            userid = "kakao_" + providerId;
-        }
-
-        /*
-         * ===============================
-         * KAKAO LOGIN
-         * ===============================
-         */
-        else if ("kakao".equals(registrationId)) {
-
-            @SuppressWarnings("unchecked")
-            Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
-
-            @SuppressWarnings("unchecked")
-            Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
-
-            email = (String) kakaoAccount.get("email");
-            name = (String) profile.get("nickname");
 
             String providerId = String.valueOf(attributes.get("id"));
             userid = "kakao_" + providerId;
