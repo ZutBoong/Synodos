@@ -26,7 +26,7 @@ public class FileService {
     @Autowired
     private BoardNotificationService boardNotificationService;
 
-    @Value("${flowtask.upload.path:uploads}")
+    @Value("${synodos.upload.path:uploads}")
     private String uploadPath;
 
     @Transactional

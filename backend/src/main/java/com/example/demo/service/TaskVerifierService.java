@@ -6,10 +6,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.dao.TaskVerifierDao;
 import com.example.demo.dao.TaskDao;
-import com.example.demo.dao.FlowtaskColumnDao;
+import com.example.demo.dao.SynodosColumnDao;
 import com.example.demo.model.Task;
 import com.example.demo.model.TaskVerifier;
-import com.example.demo.model.FlowtaskColumn;
+import com.example.demo.model.SynodosColumn;
 
 @Service
 public class TaskVerifierService {
@@ -21,7 +21,7 @@ public class TaskVerifierService {
 	private TaskDao taskDao;
 
 	@Autowired
-	private FlowtaskColumnDao columnDao;
+	private SynodosColumnDao columnDao;
 
 	@Autowired
 	private BoardNotificationService notificationService;
@@ -48,7 +48,7 @@ public class TaskVerifierService {
 			if (verifier.getMemberNo() != senderNo) {
 				Task task = taskDao.content(verifier.getTaskId());
 				if (task != null) {
-					FlowtaskColumn column = columnDao.content(task.getColumnId());
+					SynodosColumn column = columnDao.content(task.getColumnId());
 					if (column != null) {
 						persistentNotificationService.sendNotification(
 							verifier.getMemberNo(),
@@ -117,7 +117,7 @@ public class TaskVerifierService {
 		int count = 0;
 		if (memberNos != null) {
 			Task task = taskDao.content(taskId);
-			FlowtaskColumn column = task != null ? columnDao.content(task.getColumnId()) : null;
+			SynodosColumn column = task != null ? columnDao.content(task.getColumnId()) : null;
 
 			for (Integer memberNo : memberNos) {
 				TaskVerifier verifier = new TaskVerifier();
@@ -173,7 +173,7 @@ public class TaskVerifierService {
 	private void notifyTaskUpdate(int taskId) {
 		Task task = taskDao.content(taskId);
 		if (task != null) {
-			FlowtaskColumn column = columnDao.content(task.getColumnId());
+			SynodosColumn column = columnDao.content(task.getColumnId());
 			if (column != null) {
 				notificationService.notifyTaskUpdated(task, column.getTeamId());
 			}

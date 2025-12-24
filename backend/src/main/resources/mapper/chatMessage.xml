@@ -5,9 +5,9 @@
 	<!-- 메시지 생성 -->
 	<insert id="insert" parameterType="chatMessage">
 		<selectKey keyProperty="messageId" resultType="int" order="BEFORE">
-			SELECT nextval('flowtask_chat_seq')
+			SELECT nextval('chat_seq')
 		</selectKey>
-		INSERT INTO flowtask_chat_message (message_id, team_id, sender_no, content, sent_at)
+		INSERT INTO chat_message (message_id, team_id, sender_no, content, sent_at)
 		VALUES (#{messageId}, #{teamId}, #{senderNo}, #{content}, CURRENT_TIMESTAMP)
 	</insert>
 
@@ -16,8 +16,8 @@
 		SELECT * FROM (
 			SELECT c.message_id, c.team_id, c.sender_no, m.name as sender_name, m.userid as sender_userid,
 				c.content, c.sent_at
-			FROM flowtask_chat_message c
-			JOIN flowtask_member m ON c.sender_no = m.no
+			FROM chat_message c
+			JOIN member m ON c.sender_no = m.no
 			WHERE c.team_id = #{teamId}
 			<if test="beforeId != null">
 				AND c.message_id &lt; #{beforeId}
@@ -33,8 +33,8 @@
 		SELECT * FROM (
 			SELECT c.message_id, c.team_id, c.sender_no, m.name as sender_name, m.userid as sender_userid,
 				c.content, c.sent_at
-			FROM flowtask_chat_message c
-			JOIN flowtask_member m ON c.sender_no = m.no
+			FROM chat_message c
+			JOIN member m ON c.sender_no = m.no
 			WHERE c.team_id = #{teamId}
 			ORDER BY c.sent_at DESC
 			LIMIT #{limit}
@@ -46,14 +46,14 @@
 	<select id="content" parameterType="int" resultType="chatMessage">
 		SELECT c.message_id, c.team_id, c.sender_no, m.name as sender_name, m.userid as sender_userid,
 			c.content, c.sent_at
-		FROM flowtask_chat_message c
-		JOIN flowtask_member m ON c.sender_no = m.no
+		FROM chat_message c
+		JOIN member m ON c.sender_no = m.no
 		WHERE c.message_id = #{messageId}
 	</select>
 
 	<!-- 메시지 삭제 -->
 	<delete id="delete" parameterType="int">
-		DELETE FROM flowtask_chat_message WHERE message_id = #{messageId}
+		DELETE FROM chat_message WHERE message_id = #{messageId}
 	</delete>
 
 </mapper>

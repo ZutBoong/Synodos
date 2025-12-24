@@ -76,7 +76,7 @@ function Invite() {
     return (
         <div className="invite-page">
             <div className="invite-container">
-                <div className="invite-logo">Flowtask</div>
+                <div className="invite-logo">Synodos</div>
 
                 {status === 'checking' && (
                     <div className="invite-content">

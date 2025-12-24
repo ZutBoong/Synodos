@@ -7,11 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.example.demo.dao.TaskArchiveDao;
 import com.example.demo.dao.TaskDao;
-import com.example.demo.dao.FlowtaskColumnDao;
+import com.example.demo.dao.SynodosColumnDao;
 import com.example.demo.dao.TeamDao;
 import com.example.demo.model.TaskArchive;
 import com.example.demo.model.Task;
-import com.example.demo.model.FlowtaskColumn;
+import com.example.demo.model.SynodosColumn;
 import com.example.demo.model.Team;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -26,7 +26,7 @@ public class TaskArchiveService {
     private TaskDao taskDao;
 
     @Autowired
-    private FlowtaskColumnDao columnDao;
+    private SynodosColumnDao columnDao;
 
     @Autowired
     private TeamDao teamDao;
@@ -46,7 +46,7 @@ public class TaskArchiveService {
         }
 
         // 컬럼 정보 조회
-        FlowtaskColumn column = null;
+        SynodosColumn column = null;
         if (task.getColumnId() > 0) {
             column = columnDao.content(task.getColumnId());
         }

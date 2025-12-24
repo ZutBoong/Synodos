@@ -4,12 +4,12 @@
 
     <!-- 아카이브 생성 -->
     <insert id="insert" parameterType="taskArchive">
-        INSERT INTO flowtask_task_archive (
+        INSERT INTO task_archive (
             archive_id, member_no, original_task_id,
             team_id, team_name, column_id, column_title,
             task_snapshot, archive_note, archived_at
         ) VALUES (
-            nextval('flowtask_task_archive_seq'), #{memberNo}, #{originalTaskId},
+            nextval('task_archive_seq'), #{memberNo}, #{originalTaskId},
             #{teamId}, #{teamName}, #{columnId}, #{columnTitle},
             #{taskSnapshot}::jsonb, #{archiveNote}, CURRENT_TIMESTAMP
         )
@@ -17,13 +17,13 @@
 
     <!-- 아카이브 삭제 (archiveId로) -->
     <delete id="delete" parameterType="int">
-        DELETE FROM flowtask_task_archive
+        DELETE FROM task_archive
         WHERE archive_id = #{archiveId}
     </delete>
 
     <!-- 아카이브 삭제 (taskId와 memberNo로) -->
     <delete id="deleteByTaskAndMember">
-        DELETE FROM flowtask_task_archive
+        DELETE FROM task_archive
         WHERE original_task_id = #{taskId} AND member_no = #{memberNo}
     </delete>
 
@@ -33,7 +33,7 @@
                team_id, team_name, column_id, column_title,
                task_snapshot::text as task_snapshot,
                archive_note, archived_at
-        FROM flowtask_task_archive
+        FROM task_archive
         WHERE archive_id = #{archiveId}
     </select>
 
@@ -43,14 +43,14 @@
                team_id, team_name, column_id, column_title,
                task_snapshot::text as task_snapshot,
                archive_note, archived_at
-        FROM flowtask_task_archive
+        FROM task_archive
         WHERE member_no = #{memberNo}
         ORDER BY archived_at DESC
     </select>
 
     <!-- 멤버의 아카이브 수 -->
     <select id="countByMember" parameterType="int" resultType="int">
-        SELECT COUNT(*) FROM flowtask_task_archive
+        SELECT COUNT(*) FROM task_archive
         WHERE member_no = #{memberNo}
     </select>
 

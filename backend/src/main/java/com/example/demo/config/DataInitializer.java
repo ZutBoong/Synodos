@@ -31,7 +31,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private final MemberDao memberDao;
     private final TeamDao teamDao;
-    private final FlowtaskColumnDao columnDao;
+    private final SynodosColumnDao columnDao;
     private final TaskDao taskDao;
     private final TaskAssigneeDao taskAssigneeDao;
     private final TaskVerifierDao taskVerifierDao;
@@ -67,27 +67,27 @@ public class DataInitializer implements CommandLineRunner {
         logger.info("기존 데이터 삭제 중...");
 
         // 외래키 순서 고려하여 삭제
-        jdbcTemplate.execute("DELETE FROM flowtask_task_archive");
-        jdbcTemplate.execute("DELETE FROM flowtask_task_favorite");
-        jdbcTemplate.execute("DELETE FROM flowtask_task_verifier");
-        jdbcTemplate.execute("DELETE FROM flowtask_task_assignee");
-        jdbcTemplate.execute("DELETE FROM flowtask_comment");
-        jdbcTemplate.execute("DELETE FROM flowtask_task");
-        jdbcTemplate.execute("DELETE FROM flowtask_column");
-        jdbcTemplate.execute("DELETE FROM flowtask_chat_message");
-        jdbcTemplate.execute("DELETE FROM flowtask_team_member");
-        jdbcTemplate.execute("DELETE FROM flowtask_team");
-        jdbcTemplate.execute("DELETE FROM flowtask_member");
-        jdbcTemplate.execute("DELETE FROM flowtask_notification");
-        jdbcTemplate.execute("DELETE FROM flowtask_file");
+        jdbcTemplate.execute("DELETE FROM task_archive");
+        jdbcTemplate.execute("DELETE FROM task_favorite");
+        jdbcTemplate.execute("DELETE FROM task_verifier");
+        jdbcTemplate.execute("DELETE FROM task_assignee");
+        jdbcTemplate.execute("DELETE FROM comment");
+        jdbcTemplate.execute("DELETE FROM task");
+        jdbcTemplate.execute("DELETE FROM columns");
+        jdbcTemplate.execute("DELETE FROM chat_message");
+        jdbcTemplate.execute("DELETE FROM team_member");
+        jdbcTemplate.execute("DELETE FROM team");
+        jdbcTemplate.execute("DELETE FROM member");
+        jdbcTemplate.execute("DELETE FROM notification");
+        jdbcTemplate.execute("DELETE FROM file");
 
         // 시퀀스 초기화
-        jdbcTemplate.execute("ALTER SEQUENCE flowtask_member_seq RESTART WITH 1");
-        jdbcTemplate.execute("ALTER SEQUENCE flowtask_team_seq RESTART WITH 1");
-        jdbcTemplate.execute("ALTER SEQUENCE flowtask_column_seq RESTART WITH 1");
-        jdbcTemplate.execute("ALTER SEQUENCE flowtask_task_seq RESTART WITH 1");
-        jdbcTemplate.execute("ALTER SEQUENCE flowtask_comment_seq RESTART WITH 1");
-        jdbcTemplate.execute("ALTER SEQUENCE flowtask_chat_seq RESTART WITH 1");
+        jdbcTemplate.execute("ALTER SEQUENCE member_seq RESTART WITH 1");
+        jdbcTemplate.execute("ALTER SEQUENCE team_seq RESTART WITH 1");
+        jdbcTemplate.execute("ALTER SEQUENCE column_seq RESTART WITH 1");
+        jdbcTemplate.execute("ALTER SEQUENCE task_seq RESTART WITH 1");
+        jdbcTemplate.execute("ALTER SEQUENCE comment_seq RESTART WITH 1");
+        jdbcTemplate.execute("ALTER SEQUENCE chat_seq RESTART WITH 1");
 
         logger.info("기존 데이터 삭제 완료");
     }
@@ -110,7 +110,7 @@ public class DataInitializer implements CommandLineRunner {
             member.setUserid("user" + i);
             member.setPassword(passwordEncoder.encode("1234"));
             member.setName(names[i - 1]);
-            member.setEmail("user" + i + "@flowtask.com");
+            member.setEmail("user" + i + "@synodos.com");
             member.setPhone("010-" + String.format("%04d", random.nextInt(10000)) + "-" + String.format("%04d", random.nextInt(10000)));
             member.setEmailVerified(true);
 
@@ -160,7 +160,7 @@ public class DataInitializer implements CommandLineRunner {
 
             // 생성된 팀 조회
             Team created = jdbcTemplate.queryForObject(
-                "SELECT * FROM flowtask_team WHERE team_name = ?",
+                "SELECT * FROM team WHERE team_name = ?",
                 (rs, rowNum) -> {
                     Team t = new Team();
                     t.setTeamId(rs.getInt("team_id"));
@@ -187,9 +187,9 @@ public class DataInitializer implements CommandLineRunner {
         List<Integer> addedMembers = new ArrayList<>();
         addedMembers.add(team.getLeaderNo()); // 팀장은 기본 포함
 
-        // 팀장을 flowtask_team_member 테이블에 추가
+        // 팀장을 team_member 테이블에 추가
         jdbcTemplate.update(
-            "INSERT INTO flowtask_team_member (team_id, member_no, role) VALUES (?, ?, ?)",
+            "INSERT INTO team_member (team_id, member_no, role) VALUES (?, ?, ?)",
             team.getTeamId(), team.getLeaderNo(), "LEADER"
         );
 
@@ -201,7 +201,7 @@ public class DataInitializer implements CommandLineRunner {
                 addedMembers.add(member.getNo());
 
                 jdbcTemplate.update(
-                    "INSERT INTO flowtask_team_member (team_id, member_no, role) VALUES (?, ?, ?)",
+                    "INSERT INTO team_member (team_id, member_no, role) VALUES (?, ?, ?)",
                     team.getTeamId(), member.getNo(), "MEMBER"
                 );
             }
@@ -212,14 +212,14 @@ public class DataInitializer implements CommandLineRunner {
         logger.info("팀 '" + team.getTeamName() + "' 데이터 생성 중...");
 
         // 컬럼 10개 생성
-        List<FlowtaskColumn> columns = createColumns(team);
+        List<SynodosColumn> columns = createColumns(team);
 
         // 태스크 50개 생성
         createTasks(team, columns);
     }
 
-    private List<FlowtaskColumn> createColumns(Team team) {
-        List<FlowtaskColumn> columns = new ArrayList<>();
+    private List<SynodosColumn> createColumns(Team team) {
+        List<SynodosColumn> columns = new ArrayList<>();
 
         String[] columnTitles = {
             "백로그", "할 일", "진행 중", "검토 중", "완료",
@@ -227,7 +227,7 @@ public class DataInitializer implements CommandLineRunner {
         };
 
         for (int i = 0; i < 10; i++) {
-            FlowtaskColumn column = new FlowtaskColumn();
+            SynodosColumn column = new SynodosColumn();
             column.setTeamId(team.getTeamId());
             column.setTitle(columnTitles[i]);
             column.setPosition(i);
@@ -235,10 +235,10 @@ public class DataInitializer implements CommandLineRunner {
             columnDao.insert(column);
 
             // 생성된 컬럼 조회
-            FlowtaskColumn created = jdbcTemplate.queryForObject(
-                "SELECT * FROM flowtask_column WHERE team_id = ? AND title = ?",
+            SynodosColumn created = jdbcTemplate.queryForObject(
+                "SELECT * FROM columns WHERE team_id = ? AND title = ?",
                 (rs, rowNum) -> {
-                    FlowtaskColumn c = new FlowtaskColumn();
+                    SynodosColumn c = new SynodosColumn();
                     c.setColumnId(rs.getInt("column_id"));
                     c.setTeamId(rs.getInt("team_id"));
                     c.setTitle(rs.getString("title"));
@@ -253,10 +253,10 @@ public class DataInitializer implements CommandLineRunner {
         return columns;
     }
 
-    private void createTasks(Team team, List<FlowtaskColumn> columns) {
+    private void createTasks(Team team, List<SynodosColumn> columns) {
         // 팀 멤버 조회
         List<Member> teamMembers = jdbcTemplate.query(
-            "SELECT m.* FROM flowtask_member m JOIN flowtask_team_member tm ON m.no = tm.member_no WHERE tm.team_id = ?",
+            "SELECT m.* FROM member m JOIN team_member tm ON m.no = tm.member_no WHERE tm.team_id = ?",
             (rs, rowNum) -> {
                 Member m = new Member();
                 m.setNo(rs.getInt("no"));
@@ -294,7 +294,7 @@ public class DataInitializer implements CommandLineRunner {
         List<Task> createdTasks = new ArrayList<>();
 
         for (int i = 1; i <= 50; i++) {
-            FlowtaskColumn column = columns.get(random.nextInt(columns.size()));
+            SynodosColumn column = columns.get(random.nextInt(columns.size()));
 
             // 검증자 유무 결정 (50% 확률)
             boolean hasVerifiers = random.nextDouble() < 0.5;
@@ -321,7 +321,7 @@ public class DataInitializer implements CommandLineRunner {
 
             // 생성된 태스크 조회
             Task created = jdbcTemplate.queryForObject(
-                "SELECT * FROM flowtask_task WHERE column_id = ? AND title = ?",
+                "SELECT * FROM task WHERE column_id = ? AND title = ?",
                 (rs, rowNum) -> {
                     Task t = new Task();
                     t.setTaskId(rs.getInt("task_id"));
@@ -356,7 +356,7 @@ public class DataInitializer implements CommandLineRunner {
                     ? teamMembers.get(random.nextInt(teamMembers.size())).getNo()
                     : assigneeNos.get(0);
                 jdbcTemplate.update(
-                    "UPDATE flowtask_task SET rejection_reason = ?, rejected_by = ?, rejected_at = CURRENT_TIMESTAMP WHERE task_id = ?",
+                    "UPDATE task SET rejection_reason = ?, rejected_by = ?, rejected_at = CURRENT_TIMESTAMP WHERE task_id = ?",
                     reason, rejectedBy, created.getTaskId()
                 );
             }
@@ -462,7 +462,7 @@ public class DataInitializer implements CommandLineRunner {
             }
 
             jdbcTemplate.update(
-                "INSERT INTO flowtask_task_assignee (task_id, member_no, accepted, completed) VALUES (?, ?, ?, ?)",
+                "INSERT INTO task_assignee (task_id, member_no, accepted, completed) VALUES (?, ?, ?, ?)",
                 task.getTaskId(), memberNo, accepted, completed
             );
         }
@@ -501,7 +501,7 @@ public class DataInitializer implements CommandLineRunner {
                 boolean approved = status.equals("DONE");
 
                 jdbcTemplate.update(
-                    "INSERT INTO flowtask_task_verifier (task_id, member_no, approved) VALUES (?, ?, ?)",
+                    "INSERT INTO task_verifier (task_id, member_no, approved) VALUES (?, ?, ?)",
                     task.getTaskId(), member.getNo(), approved
                 );
             }
@@ -529,7 +529,7 @@ public class DataInitializer implements CommandLineRunner {
             String content = String.format(commentTemplates[random.nextInt(commentTemplates.length)], 10 + random.nextInt(90));
 
             jdbcTemplate.update(
-                "INSERT INTO flowtask_comment (comment_id, task_id, author_no, content, created_at, updated_at) VALUES (nextval('flowtask_comment_seq'), ?, ?, ?, CURRENT_TIMESTAMP - INTERVAL '" + random.nextInt(72) + " hours', CURRENT_TIMESTAMP - INTERVAL '" + random.nextInt(24) + " hours')",
+                "INSERT INTO comment (comment_id, task_id, author_no, content, created_at, updated_at) VALUES (nextval('comment_seq'), ?, ?, ?, CURRENT_TIMESTAMP - INTERVAL '" + random.nextInt(72) + " hours', CURRENT_TIMESTAMP - INTERVAL '" + random.nextInt(24) + " hours')",
                 task.getTaskId(), author.getNo(), content
             );
         }
@@ -549,7 +549,7 @@ public class DataInitializer implements CommandLineRunner {
 
                     // 즐겨찾기 시간을 다르게 설정하여 정렬 순서 유지 (가장 최근 것이 가장 나중에 추가됨)
                     jdbcTemplate.update(
-                        "INSERT INTO flowtask_task_favorite (task_id, member_no, created_at) VALUES (?, ?, CURRENT_TIMESTAMP - INTERVAL '" + timeOffset + " minutes')",
+                        "INSERT INTO task_favorite (task_id, member_no, created_at) VALUES (?, ?, CURRENT_TIMESTAMP - INTERVAL '" + timeOffset + " minutes')",
                         task.getTaskId(), member.getNo()
                     );
                     timeOffset += 5 + random.nextInt(30); // 5~35분 간격
@@ -585,7 +585,7 @@ public class DataInitializer implements CommandLineRunner {
                     String note = archiveNotes[random.nextInt(archiveNotes.length)];
 
                     jdbcTemplate.update(
-                        "INSERT INTO flowtask_task_archive (archive_id, original_task_id, member_no, task_snapshot, archive_note, archived_at) VALUES (nextval('flowtask_task_archive_seq'), ?, ?, ?::jsonb, ?, CURRENT_TIMESTAMP - INTERVAL '" + timeOffset + " hours')",
+                        "INSERT INTO task_archive (archive_id, original_task_id, member_no, task_snapshot, archive_note, archived_at) VALUES (nextval('task_archive_seq'), ?, ?, ?::jsonb, ?, CURRENT_TIMESTAMP - INTERVAL '" + timeOffset + " hours')",
                         task.getTaskId(), member.getNo(), taskSnapshot, note
                     );
                     timeOffset += 1 + random.nextInt(48); // 1~49시간 간격

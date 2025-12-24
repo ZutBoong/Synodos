@@ -30,7 +30,7 @@ public class MemberController {
 	private final JwtTokenProvider jwtTokenProvider;
 	private final TeamDao teamDao;
 
-	@Value("${flowtask.upload.path:uploads}")
+	@Value("${synodos.upload.path:uploads}")
 	private String uploadPath;
 
 	public MemberController(MemberService service, JwtTokenProvider jwtTokenProvider, TeamDao teamDao) {

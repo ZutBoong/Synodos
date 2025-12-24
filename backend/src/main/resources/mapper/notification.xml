@@ -4,38 +4,38 @@
 
     <!-- 알림 생성 -->
     <insert id="insert" parameterType="notification">
-        INSERT INTO flowtask_notification (
+        INSERT INTO notification (
             notification_id, recipient_no, sender_no, notification_type,
             title, message, team_id, column_id, task_id, is_read, created_at
         ) VALUES (
-            nextval('flowtask_notification_seq'), #{recipientNo}, #{senderNo}, #{notificationType},
+            nextval('notification_seq'), #{recipientNo}, #{senderNo}, #{notificationType},
             #{title}, #{message}, #{teamId}, #{columnId}, #{taskId}, false, CURRENT_TIMESTAMP
         )
     </insert>
 
     <!-- 읽음 처리 -->
     <update id="markAsRead" parameterType="int">
-        UPDATE flowtask_notification
+        UPDATE notification
         SET is_read = true
         WHERE notification_id = #{notificationId}
     </update>
 
     <!-- 모두 읽음 처리 -->
     <update id="markAllAsRead" parameterType="int">
-        UPDATE flowtask_notification
+        UPDATE notification
         SET is_read = true
         WHERE recipient_no = #{recipientNo} AND is_read = false
     </update>
 
     <!-- 알림 삭제 -->
     <delete id="delete" parameterType="int">
-        DELETE FROM flowtask_notification
+        DELETE FROM notification
         WHERE notification_id = #{notificationId}
     </delete>
 
     <!-- 모든 알림 삭제 -->
     <delete id="deleteAllByRecipient" parameterType="int">
-        DELETE FROM flowtask_notification
+        DELETE FROM notification
         WHERE recipient_no = #{recipientNo}
     </delete>
 
@@ -44,11 +44,11 @@
         SELECT n.*,
                s.name as sender_name, s.userid as sender_userid,
                t.team_name, c.title as column_title, tk.title as task_title
-        FROM flowtask_notification n
-        LEFT JOIN flowtask_member s ON n.sender_no = s.no
-        LEFT JOIN flowtask_team t ON n.team_id = t.team_id
-        LEFT JOIN flowtask_column c ON n.column_id = c.column_id
-        LEFT JOIN flowtask_task tk ON n.task_id = tk.task_id
+        FROM notification n
+        LEFT JOIN member s ON n.sender_no = s.no
+        LEFT JOIN team t ON n.team_id = t.team_id
+        LEFT JOIN columns c ON n.column_id = c.column_id
+        LEFT JOIN task tk ON n.task_id = tk.task_id
         WHERE n.notification_id = #{notificationId}
     </select>
 
@@ -57,11 +57,11 @@
         SELECT n.*,
                s.name as sender_name, s.userid as sender_userid,
                t.team_name, c.title as column_title, tk.title as task_title
-        FROM flowtask_notification n
-        LEFT JOIN flowtask_member s ON n.sender_no = s.no
-        LEFT JOIN flowtask_team t ON n.team_id = t.team_id
-        LEFT JOIN flowtask_column c ON n.column_id = c.column_id
-        LEFT JOIN flowtask_task tk ON n.task_id = tk.task_id
+        FROM notification n
+        LEFT JOIN member s ON n.sender_no = s.no
+        LEFT JOIN team t ON n.team_id = t.team_id
+        LEFT JOIN columns c ON n.column_id = c.column_id
+        LEFT JOIN task tk ON n.task_id = tk.task_id
         WHERE n.recipient_no = #{recipientNo}
         ORDER BY n.created_at DESC
         LIMIT #{limit}
@@ -72,18 +72,18 @@
         SELECT n.*,
                s.name as sender_name, s.userid as sender_userid,
                t.team_name, c.title as column_title, tk.title as task_title
-        FROM flowtask_notification n
-        LEFT JOIN flowtask_member s ON n.sender_no = s.no
-        LEFT JOIN flowtask_team t ON n.team_id = t.team_id
-        LEFT JOIN flowtask_column c ON n.column_id = c.column_id
-        LEFT JOIN flowtask_task tk ON n.task_id = tk.task_id
+        FROM notification n
+        LEFT JOIN member s ON n.sender_no = s.no
+        LEFT JOIN team t ON n.team_id = t.team_id
+        LEFT JOIN columns c ON n.column_id = c.column_id
+        LEFT JOIN task tk ON n.task_id = tk.task_id
         WHERE n.recipient_no = #{recipientNo} AND n.is_read = false
         ORDER BY n.created_at DESC
     </select>
 
     <!-- 읽지 않은 알림 수 -->
     <select id="countUnread" parameterType="int" resultType="int">
-        SELECT COUNT(*) FROM flowtask_notification
+        SELECT COUNT(*) FROM notification
         WHERE recipient_no = #{recipientNo} AND is_read = false
     </select>
 

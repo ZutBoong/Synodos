@@ -1,10 +1,10 @@
 -- =============================================
--- Flowtask - 회원 테이블
+-- Synodos - 회원 테이블
 -- =============================================
 
-CREATE SEQUENCE IF NOT EXISTS flowtask_member_seq START WITH 1 INCREMENT BY 1;
+CREATE SEQUENCE IF NOT EXISTS member_seq START WITH 1 INCREMENT BY 1;
 
-CREATE TABLE IF NOT EXISTS flowtask_member (
+CREATE TABLE IF NOT EXISTS member (
     no INTEGER PRIMARY KEY,
     userid VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(100) NOT NULL,
@@ -14,5 +14,5 @@ CREATE TABLE IF NOT EXISTS flowtask_member (
     register TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_flowtask_member_userid ON flowtask_member(userid);
-CREATE INDEX IF NOT EXISTS idx_flowtask_member_email ON flowtask_member(email);
+CREATE INDEX IF NOT EXISTS idx_member_userid ON member(userid);
+CREATE INDEX IF NOT EXISTS idx_member_email ON member(email);

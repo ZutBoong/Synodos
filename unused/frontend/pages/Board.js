@@ -693,7 +693,7 @@ function Board() {
             <div className={`board-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'} ${chatOpen ? 'chat-open' : ''}`}>
                 {/* 헤더 */}
                 <Header
-                    title="Flowtask"
+                    title="Synodos"
                     loginMember={loginMember}
                     onLogout={() => websocketService.disconnect()}
                 />

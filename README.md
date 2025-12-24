@@ -1,4 +1,4 @@
-# Flowtask
+# Synodos
 
 팀 기반 칸반 보드 및 실시간 협업 애플리케이션입니다.
 
@@ -54,8 +54,8 @@ Docker만 설치되어 있으면 바로 실행할 수 있습니다.
 
 ```bash
 # 클론
-git clone https://github.com/your-repo/Flowtask.git
-cd Flowtask
+git clone https://github.com/your-repo/Synodos.git
+cd Synodos
 
 # 환경 변수 설정
 cp .env.example .env
@@ -115,15 +115,15 @@ docker-compose down -v
 ### 1. 데이터베이스 설정
 
 ```sql
-CREATE DATABASE flowtask;
+CREATE DATABASE synodos;
 CREATE USER flow WITH PASSWORD 'flow123';
-GRANT ALL PRIVILEGES ON DATABASE flowtask TO flow;
-\c flowtask
+GRANT ALL PRIVILEGES ON DATABASE synodos TO flow;
+\c synodos
 GRANT ALL ON SCHEMA public TO flow;
 ```
 
 ```bash
-psql -U flow -d flowtask -f database/postgresql_schema.sql
+psql -U flow -d synodos -f database/postgresql_schema.sql
 ```
 
 ### 2. SMTP 설정 (이메일 인증용)
@@ -200,8 +200,8 @@ exit
 
 ```bash
 # 프로젝트 클론
-git clone https://github.com/your-repo/Flowtask.git
-cd Flowtask
+git clone https://github.com/your-repo/Synodos.git
+cd Synodos
 
 # 환경 변수 설정
 cp .env.example .env
@@ -239,7 +239,7 @@ docker-compose ps
 docker-compose logs -f
 
 # 백엔드 로그만
-docker logs -f flowtask-backend
+docker logs -f synodos-backend
 
 # 재시작
 docker-compose restart
@@ -251,10 +251,10 @@ docker-compose down
 docker-compose up -d --build
 
 # DB 데이터 백업
-docker exec flowtask-db pg_dump -U flow flowtask > backup.sql
+docker exec synodos-db pg_dump -U flow synodos > backup.sql
 
 # DB 데이터 복원
-cat backup.sql | docker exec -i flowtask-db psql -U flow flowtask
+cat backup.sql | docker exec -i synodos-db psql -U flow synodos
 ```
 
 ### 5. 도메인 및 HTTPS 설정 (선택)
@@ -302,7 +302,7 @@ sudo certbot --nginx -d yourdomain.com
 ## 프로젝트 구조
 
 ```
-Flowtask/
+Synodos/
 ├── backend/                 # Spring Boot 백엔드
 │   ├── src/main/java/      # Java 소스
 │   └── src/main/resources/ # 설정 및 MyBatis 매퍼

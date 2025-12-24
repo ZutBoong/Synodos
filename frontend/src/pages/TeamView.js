@@ -342,7 +342,7 @@ function TeamView() {
                 {/* 통합 헤더: 팀명, 탭, 검색, 로그아웃 */}
                 <header className="team-header">
                     <div className="team-header-left">
-                        <h1 className="team-name">{team?.teamName || 'Flowtask'}</h1>
+                        <h1 className="team-name">{team?.teamName || 'Synodos'}</h1>
                         {team && (
                             <div className="header-tabs">
                                 {TABS.map(tab => {

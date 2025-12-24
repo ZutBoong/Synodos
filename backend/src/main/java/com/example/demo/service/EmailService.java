@@ -45,19 +45,19 @@ public class EmailService {
 
 		switch (type) {
 			case "REGISTER":
-				subject = "[Flowtask] 회원가입 이메일 인증";
+				subject = "[Synodos] 회원가입 이메일 인증";
 				body = buildRegisterEmailBody(code);
 				break;
 			case "PASSWORD_CHANGE":
-				subject = "[Flowtask] 비밀번호 변경 인증";
+				subject = "[Synodos] 비밀번호 변경 인증";
 				body = buildPasswordChangeEmailBody(code);
 				break;
 			case "EMAIL_CHANGE":
-				subject = "[Flowtask] 이메일 변경 인증";
+				subject = "[Synodos] 이메일 변경 인증";
 				body = buildEmailChangeEmailBody(code);
 				break;
 			default:
-				subject = "[Flowtask] 비밀번호 재설정 인증";
+				subject = "[Synodos] 비밀번호 재설정 인증";
 				body = buildPasswordResetEmailBody(code);
 		}
 
@@ -118,13 +118,13 @@ public class EmailService {
 			<body>
 				<div class="container">
 					<div class="header">
-						<div class="logo">Flowtask</div>
+						<div class="logo">Synodos</div>
 					</div>
 					<p class="message">회원가입을 위한 이메일 인증 코드입니다.<br>아래 코드를 입력해주세요.</p>
 					<div class="code-box">%s</div>
 					<p class="message">이 코드는 5분간 유효합니다.</p>
 					<div class="footer">
-						본 메일은 Flowtask 회원가입 요청에 의해 발송되었습니다.<br>
+						본 메일은 Synodos 회원가입 요청에 의해 발송되었습니다.<br>
 						본인이 요청하지 않았다면 이 메일을 무시해주세요.
 					</div>
 				</div>
@@ -155,13 +155,13 @@ public class EmailService {
 			<body>
 				<div class="container">
 					<div class="header">
-						<div class="logo">Flowtask</div>
+						<div class="logo">Synodos</div>
 					</div>
 					<p class="message">비밀번호 재설정을 위한 인증 코드입니다.<br>아래 코드를 입력해주세요.</p>
 					<div class="code-box">%s</div>
 					<p class="message">이 코드는 5분간 유효합니다.</p>
 					<div class="footer">
-						본 메일은 Flowtask 비밀번호 재설정 요청에 의해 발송되었습니다.<br>
+						본 메일은 Synodos 비밀번호 재설정 요청에 의해 발송되었습니다.<br>
 						본인이 요청하지 않았다면 이 메일을 무시해주세요.
 					</div>
 				</div>
@@ -192,13 +192,13 @@ public class EmailService {
 			<body>
 				<div class="container">
 					<div class="header">
-						<div class="logo">Flowtask</div>
+						<div class="logo">Synodos</div>
 					</div>
 					<p class="message">비밀번호 변경을 위한 인증 코드입니다.<br>아래 코드를 입력해주세요.</p>
 					<div class="code-box">%s</div>
 					<p class="message">이 코드는 5분간 유효합니다.</p>
 					<div class="footer">
-						본 메일은 Flowtask 비밀번호 변경 요청에 의해 발송되었습니다.<br>
+						본 메일은 Synodos 비밀번호 변경 요청에 의해 발송되었습니다.<br>
 						본인이 요청하지 않았다면 즉시 비밀번호를 변경해주세요.
 					</div>
 				</div>
@@ -229,13 +229,13 @@ public class EmailService {
 			<body>
 				<div class="container">
 					<div class="header">
-						<div class="logo">Flowtask</div>
+						<div class="logo">Synodos</div>
 					</div>
 					<p class="message">이메일 변경을 위한 인증 코드입니다.<br>아래 코드를 입력해주세요.</p>
 					<div class="code-box">%s</div>
 					<p class="message">이 코드는 5분간 유효합니다.</p>
 					<div class="footer">
-						본 메일은 Flowtask 이메일 변경 요청에 의해 발송되었습니다.<br>
+						본 메일은 Synodos 이메일 변경 요청에 의해 발송되었습니다.<br>
 						본인이 요청하지 않았다면 이 메일을 무시해주세요.
 					</div>
 				</div>

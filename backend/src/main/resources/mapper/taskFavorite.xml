@@ -4,14 +4,14 @@
 
     <!-- 즐겨찾기 추가 -->
     <insert id="insert" parameterType="taskFavorite">
-        INSERT INTO flowtask_task_favorite (task_id, member_no, created_at)
+        INSERT INTO task_favorite (task_id, member_no, created_at)
         VALUES (#{taskId}, #{memberNo}, CURRENT_TIMESTAMP)
         ON CONFLICT (task_id, member_no) DO NOTHING
     </insert>
 
     <!-- 즐겨찾기 삭제 -->
     <delete id="delete">
-        DELETE FROM flowtask_task_favorite
+        DELETE FROM task_favorite
         WHERE task_id = #{taskId} AND member_no = #{memberNo}
     </delete>
 
@@ -21,10 +21,10 @@
                t.title, t.description, t.workflow_status, t.priority, t.due_date,
                t.column_id, c.title as column_title,
                c.team_id, tm.team_name
-        FROM flowtask_task_favorite tf
-        JOIN flowtask_task t ON tf.task_id = t.task_id
-        JOIN flowtask_column c ON t.column_id = c.column_id
-        JOIN flowtask_team tm ON c.team_id = tm.team_id
+        FROM task_favorite tf
+        JOIN task t ON tf.task_id = t.task_id
+        JOIN columns c ON t.column_id = c.column_id
+        JOIN team tm ON c.team_id = tm.team_id
         WHERE tf.member_no = #{memberNo}
         ORDER BY tf.created_at DESC
     </select>
@@ -32,13 +32,13 @@
     <!-- 특정 즐겨찾기 조회 -->
     <select id="findOne" resultType="taskFavorite">
         SELECT task_id, member_no, created_at
-        FROM flowtask_task_favorite
+        FROM task_favorite
         WHERE task_id = #{taskId} AND member_no = #{memberNo}
     </select>
 
     <!-- 멤버의 즐겨찾기 수 -->
     <select id="countByMember" parameterType="int" resultType="int">
-        SELECT COUNT(*) FROM flowtask_task_favorite
+        SELECT COUNT(*) FROM task_favorite
         WHERE member_no = #{memberNo}
     </select>
 

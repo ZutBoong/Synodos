@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Flowtask is a team-based Kanban board application with a Spring Boot backend and React frontend, using PostgreSQL database for persistence. Features include JWT authentication, real-time updates via WebSocket, task comments, verification workflow, and team chat.
+Synodos is a team-based Kanban board application with a Spring Boot backend and React frontend, using PostgreSQL database for persistence. Features include JWT authentication, real-time updates via WebSocket, task comments, verification workflow, and team chat.
 
 ## Build and Run Commands
 
@@ -31,16 +31,16 @@ PostgreSQL running on localhost:5432. Main schema file: `database/postgresql_sch
 
 Setup from scratch:
 ```sql
-CREATE DATABASE flowtask;
+CREATE DATABASE synodos;
 CREATE USER flow WITH PASSWORD 'flow123';
-GRANT ALL PRIVILEGES ON DATABASE flowtask TO flow;
-\c flowtask
+GRANT ALL PRIVILEGES ON DATABASE synodos TO flow;
+\c synodos
 GRANT ALL ON SCHEMA public TO flow;
 ```
 
 Initialize schema:
 ```bash
-psql -U flow -d flowtask -f database/postgresql_schema.sql
+psql -U flow -d synodos -f database/postgresql_schema.sql
 ```
 
 ### Docker (Full Stack)
@@ -71,7 +71,7 @@ Note: `data.sql` is not used - DataInitializer handles all sample data creation.
 - **Config** (`config/`): WebSocket and Security configuration
 - **Security** (`security/`): JWT token provider and authentication filter
 
-Key entities: Member, Team, TeamMember, Project, FlowtaskColumn, Task, Comment, ChatMessage, Notification, TaskAssignee, TaskVerifier, TaskFavorite, TaskArchive, ProjectFile
+Key entities: Member, Team, TeamMember, Project, SynodosColumn, Task, Comment, ChatMessage, Notification, TaskAssignee, TaskVerifier, TaskFavorite, TaskArchive, ProjectFile
 
 ### MyBatis Mapping Conventions
 - Mapper XMLs in `resources/mapper/` (one per entity, e.g., `task.xml`, `team.xml`)
@@ -114,7 +114,7 @@ Services follow consistent patterns:
 
 ### Notification System (Dual-Channel)
 **Real-time (WebSocket):** `BoardNotificationService` sends events to `/topic/team/{teamId}` for online users
-**Persistent (Database):** `NotificationService` stores notifications in `flowtask_notification` table for offline users
+**Persistent (Database):** `NotificationService` stores notifications in `notification` table for offline users
 Services trigger both channels when creating/updating tasks with assignees or verifiers.
 
 ### API Patterns
@@ -128,7 +128,7 @@ JWT-based authentication with tokens stored client-side. Configured in `Security
 - Backend port: 8081 (application.properties)
 - Frontend dev port: 3000, proxies to 8081 (package.json proxy setting)
 - Frontend Docker port: 80 via Nginx
-- DB credentials: flow/flow123@localhost:5432/flowtask
+- DB credentials: flow/flow123@localhost:5432/synodos
 - Java version: 17
 - Node version: 18+
 - MyBatis: Maps underscore to camelCase automatically

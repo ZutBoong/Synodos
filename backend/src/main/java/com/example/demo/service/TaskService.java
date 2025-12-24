@@ -6,11 +6,11 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.example.demo.dao.TaskDao;
-import com.example.demo.dao.FlowtaskColumnDao;
+import com.example.demo.dao.SynodosColumnDao;
 import com.example.demo.dao.TaskAssigneeDao;
 import com.example.demo.dao.TaskVerifierDao;
 import com.example.demo.model.Task;
-import com.example.demo.model.FlowtaskColumn;
+import com.example.demo.model.SynodosColumn;
 
 @Service
 public class TaskService {
@@ -19,7 +19,7 @@ public class TaskService {
 	private TaskDao dao;
 
 	@Autowired
-	private FlowtaskColumnDao columnDao;
+	private SynodosColumnDao columnDao;
 
 	@Autowired
 	private TaskAssigneeDao taskAssigneeDao;
@@ -80,7 +80,7 @@ public class TaskService {
 	public int insert(Task task) {
 		int result = dao.insert(task);
 		if (result == 1) {
-			FlowtaskColumn column = columnDao.content(task.getColumnId());
+			SynodosColumn column = columnDao.content(task.getColumnId());
 			if (column != null) {
 				// Fetch the latest task in this column to get the created one
 				List<Task> tasks = dao.listByColumn(task.getColumnId());
@@ -128,7 +128,7 @@ public class TaskService {
 		if (result == 1) {
 			Task updated = dao.content(task.getTaskId());
 			if (updated != null) {
-				FlowtaskColumn column = columnDao.content(updated.getColumnId());
+				SynodosColumn column = columnDao.content(updated.getColumnId());
 				if (column != null) {
 					notificationService.notifyTaskUpdated(updated, column.getTeamId());
 				}
@@ -143,7 +143,7 @@ public class TaskService {
 		if (result == 1) {
 			Task updated = dao.content(task.getTaskId());
 			if (updated != null) {
-				FlowtaskColumn column = columnDao.content(updated.getColumnId());
+				SynodosColumn column = columnDao.content(updated.getColumnId());
 				if (column != null) {
 					// WebSocket 알림
 					notificationService.notifyTaskUpdated(updated, column.getTeamId());
@@ -169,7 +169,7 @@ public class TaskService {
 		Task task = dao.content(taskId);
 		int result = dao.delete(taskId);
 		if (result == 1 && task != null) {
-			FlowtaskColumn column = columnDao.content(task.getColumnId());
+			SynodosColumn column = columnDao.content(task.getColumnId());
 			if (column != null) {
 				notificationService.notifyTaskDeleted(column.getTeamId(), taskId);
 			}
@@ -182,7 +182,7 @@ public class TaskService {
 		if (result == 1) {
 			Task updated = dao.content(task.getTaskId());
 			if (updated != null) {
-				FlowtaskColumn column = columnDao.content(updated.getColumnId());
+				SynodosColumn column = columnDao.content(updated.getColumnId());
 				if (column != null) {
 					notificationService.notifyTaskMoved(updated, column.getTeamId());
 				}
@@ -218,7 +218,7 @@ public class TaskService {
 			Task updated = dao.content(task.getTaskId());
 			if (updated != null) {
 				populateRelations(updated);
-				FlowtaskColumn column = columnDao.content(updated.getColumnId());
+				SynodosColumn column = columnDao.content(updated.getColumnId());
 				if (column != null) {
 					notificationService.notifyTaskUpdated(updated, column.getTeamId());
 				}
@@ -234,7 +234,7 @@ public class TaskService {
 			Task updated = dao.content(task.getTaskId());
 			if (updated != null) {
 				populateRelations(updated);
-				FlowtaskColumn column = columnDao.content(updated.getColumnId());
+				SynodosColumn column = columnDao.content(updated.getColumnId());
 				if (column != null) {
 					notificationService.notifyTaskUpdated(updated, column.getTeamId());
 				}
@@ -248,7 +248,7 @@ public class TaskService {
 		if (result == 1) {
 			Task updated = dao.content(task.getTaskId());
 			if (updated != null) {
-				FlowtaskColumn column = columnDao.content(updated.getColumnId());
+				SynodosColumn column = columnDao.content(updated.getColumnId());
 				if (column != null) {
 					notificationService.notifyTaskUpdated(updated, column.getTeamId());
 				}
@@ -267,7 +267,7 @@ public class TaskService {
 		if (result == 1) {
 			Task updated = dao.content(task.getTaskId());
 			if (updated != null) {
-				FlowtaskColumn column = columnDao.content(updated.getColumnId());
+				SynodosColumn column = columnDao.content(updated.getColumnId());
 				if (column != null) {
 					// WebSocket 알림
 					notificationService.notifyTaskUpdated(updated, column.getTeamId());
@@ -314,7 +314,7 @@ public class TaskService {
 		if (result == 1) {
 			Task updated = dao.content(task.getTaskId());
 			if (updated != null) {
-				FlowtaskColumn column = columnDao.content(updated.getColumnId());
+				SynodosColumn column = columnDao.content(updated.getColumnId());
 				if (column != null) {
 					notificationService.notifyTaskDatesChanged(updated, column.getTeamId());
 				}

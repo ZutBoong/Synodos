@@ -4,53 +4,53 @@
 
 	<!-- 회원가입 -->
 	<insert id="insert" parameterType="member">
-		INSERT INTO flowtask_member (no, userid, password, name, email, phone, email_verified, register)
-		VALUES (nextval('flowtask_member_seq'), #{userid}, #{password}, #{name}, #{email}, #{phone}, #{emailVerified}, CURRENT_TIMESTAMP)
+		INSERT INTO member (no, userid, password, name, email, phone, email_verified, register)
+		VALUES (nextval('member_seq'), #{userid}, #{password}, #{name}, #{email}, #{phone}, #{emailVerified}, CURRENT_TIMESTAMP)
 	</insert>
 
 	<!-- 아이디 중복 체크 -->
 	<select id="checkUserid" parameterType="String" resultType="int">
-		SELECT COUNT(*) FROM flowtask_member WHERE userid = #{userid}
+		SELECT COUNT(*) FROM member WHERE userid = #{userid}
 	</select>
 
 	<!-- 이메일 중복 체크 -->
 	<select id="checkEmail" parameterType="String" resultType="int">
-		SELECT COUNT(*) FROM flowtask_member WHERE email = #{email}
+		SELECT COUNT(*) FROM member WHERE email = #{email}
 	</select>
 
 	<!-- 로그인 (기존 - 더 이상 사용 안함) -->
 	<select id="login" parameterType="member" resultType="member">
-		SELECT * FROM flowtask_member WHERE userid = #{userid} AND password = #{password}
+		SELECT * FROM member WHERE userid = #{userid} AND password = #{password}
 	</select>
 
 	<!-- userid로 회원 조회 (BCrypt 비밀번호 검증용) -->
 	<select id="findByUserid" parameterType="String" resultType="member">
-		SELECT * FROM flowtask_member WHERE userid = #{userid}
+		SELECT * FROM member WHERE userid = #{userid}
 	</select>
 
 	<!-- 아이디 찾기 -->
 	<select id="findUserid" parameterType="member" resultType="String">
-		SELECT userid FROM flowtask_member WHERE name = #{name} AND email = #{email}
+		SELECT userid FROM member WHERE name = #{name} AND email = #{email}
 	</select>
 
 	<!-- 비밀번호 찾기 전 회원 확인 -->
 	<select id="findMemberForPassword" parameterType="member" resultType="member">
-		SELECT * FROM flowtask_member WHERE userid = #{userid} AND email = #{email}
+		SELECT * FROM member WHERE userid = #{userid} AND email = #{email}
 	</select>
 
 	<!-- 비밀번호 변경 -->
 	<update id="updatePassword" parameterType="member">
-		UPDATE flowtask_member SET password = #{password} WHERE no = #{no}
+		UPDATE member SET password = #{password} WHERE no = #{no}
 	</update>
 
 	<!-- 회원번호로 회원 조회 -->
 	<select id="findByNo" parameterType="int" resultType="member">
-		SELECT * FROM flowtask_member WHERE no = #{no}
+		SELECT * FROM member WHERE no = #{no}
 	</select>
 
 	<!-- 회원 정보 수정 -->
 	<update id="update" parameterType="member">
-		UPDATE flowtask_member
+		UPDATE member
 		SET name = #{name},
 			email = #{email},
 			phone = #{phone}
@@ -59,42 +59,42 @@
 
 	<!-- 이메일 중복 체크 (본인 제외) -->
 	<select id="checkEmailExcludeSelf" parameterType="member" resultType="int">
-		SELECT COUNT(*) FROM flowtask_member WHERE email = #{email} AND no != #{no}
+		SELECT COUNT(*) FROM member WHERE email = #{email} AND no != #{no}
 	</select>
 
 	<!-- 아이디 또는 이메일로 회원 검색 -->
 	<select id="findByUseridOrEmail" parameterType="String" resultType="member">
-		SELECT * FROM flowtask_member WHERE userid = #{keyword} OR email = #{keyword}
+		SELECT * FROM member WHERE userid = #{keyword} OR email = #{keyword}
 	</select>
 
 	<!-- 모든 회원 조회 (팀 생성 시 초대용) -->
 	<select id="findAll" resultType="member">
-		SELECT no, userid, name, email, phone, email_verified, register FROM flowtask_member ORDER BY name
+		SELECT no, userid, name, email, phone, email_verified, register FROM member ORDER BY name
 	</select>
 
 	<!-- 이메일로 회원 조회 -->
 	<select id="findByEmail" parameterType="String" resultType="member">
-		SELECT * FROM flowtask_member WHERE email = #{email}
+		SELECT * FROM member WHERE email = #{email}
 	</select>
 
 	<!-- 이메일 인증 완료 처리 -->
 	<update id="updateEmailVerified" parameterType="int">
-		UPDATE flowtask_member SET email_verified = true WHERE no = #{no}
+		UPDATE member SET email_verified = true WHERE no = #{no}
 	</update>
 
 	<!-- 이메일 변경 -->
 	<update id="updateEmail" parameterType="member">
-		UPDATE flowtask_member SET email = #{email}, email_verified = true WHERE no = #{no}
+		UPDATE member SET email = #{email}, email_verified = true WHERE no = #{no}
 	</update>
 
 	<!-- 회원 삭제 -->
 	<delete id="delete" parameterType="int">
-		DELETE FROM flowtask_member WHERE no = #{no}
+		DELETE FROM member WHERE no = #{no}
 	</delete>
 
 	<!-- 프로필 이미지 업데이트 -->
 	<update id="updateProfileImage" parameterType="member">
-		UPDATE flowtask_member SET profile_image = #{profileImage} WHERE no = #{no}
+		UPDATE member SET profile_image = #{profileImage} WHERE no = #{no}
 	</update>
 
 </mapper>

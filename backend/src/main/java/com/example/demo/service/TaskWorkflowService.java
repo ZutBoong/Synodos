@@ -6,9 +6,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.dao.TaskDao;
 import com.example.demo.dao.TaskAssigneeDao;
 import com.example.demo.dao.TaskVerifierDao;
-import com.example.demo.dao.FlowtaskColumnDao;
+import com.example.demo.dao.SynodosColumnDao;
 import com.example.demo.model.Task;
-import com.example.demo.model.FlowtaskColumn;
+import com.example.demo.model.SynodosColumn;
 
 @Service
 public class TaskWorkflowService {
@@ -31,7 +31,7 @@ public class TaskWorkflowService {
 	private TaskVerifierDao verifierDao;
 
 	@Autowired
-	private FlowtaskColumnDao columnDao;
+	private SynodosColumnDao columnDao;
 
 	@Autowired
 	private BoardNotificationService notificationService;
@@ -274,7 +274,7 @@ public class TaskWorkflowService {
 
 	// 알림 발송 헬퍼
 	private void notifyAndReturn(Task task) {
-		FlowtaskColumn column = columnDao.content(task.getColumnId());
+		SynodosColumn column = columnDao.content(task.getColumnId());
 		if (column != null) {
 			notificationService.notifyTaskUpdated(task, column.getTeamId());
 		}
@@ -282,7 +282,7 @@ public class TaskWorkflowService {
 
 	// 검증자들에게 검토 요청 알림
 	private void notifyVerifiersForReview(Task task, int senderNo) {
-		FlowtaskColumn column = columnDao.content(task.getColumnId());
+		SynodosColumn column = columnDao.content(task.getColumnId());
 		if (column != null) {
 			verifierDao.listByTask(task.getTaskId()).forEach(v -> {
 				if (v.getMemberNo() != senderNo) {
@@ -303,7 +303,7 @@ public class TaskWorkflowService {
 
 	// 담당자들에게 완료 알림
 	private void notifyAssigneesForDone(Task task, int senderNo) {
-		FlowtaskColumn column = columnDao.content(task.getColumnId());
+		SynodosColumn column = columnDao.content(task.getColumnId());
 		if (column != null) {
 			assigneeDao.listByTask(task.getTaskId()).forEach(a -> {
 				if (a.getMemberNo() != senderNo) {
@@ -324,7 +324,7 @@ public class TaskWorkflowService {
 
 	// 담당자들에게 반려 알림
 	private void notifyAssigneesForRejection(Task task, int senderNo, String reason) {
-		FlowtaskColumn column = columnDao.content(task.getColumnId());
+		SynodosColumn column = columnDao.content(task.getColumnId());
 		if (column != null) {
 			assigneeDao.listByTask(task.getTaskId()).forEach(a -> {
 				if (a.getMemberNo() != senderNo) {
@@ -345,7 +345,7 @@ public class TaskWorkflowService {
 
 	// 담당자들에게 거부 알림
 	private void notifyAssigneesForDecline(Task task, int senderNo, String reason) {
-		FlowtaskColumn column = columnDao.content(task.getColumnId());
+		SynodosColumn column = columnDao.content(task.getColumnId());
 		if (column != null) {
 			assigneeDao.listByTask(task.getTaskId()).forEach(a -> {
 				if (a.getMemberNo() != senderNo) {

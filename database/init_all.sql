@@ -1,13 +1,13 @@
 -- =============================================
--- Flowtask - 전체 스키마 초기화
+-- Synodos - 전체 스키마 초기화
 -- PostgreSQL 15+ 호환
 --
 -- 사용법:
---   psql -U flow -d flowtask -f init_all.sql
+--   psql -U flow -d synodos -f init_all.sql
 -- =============================================
 
 \echo '=========================================='
-\echo 'Flowtask Database Initialization'
+\echo 'Synodos Database Initialization'
 \echo '=========================================='
 
 \echo '1. Creating member tables...'

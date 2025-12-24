@@ -61,7 +61,7 @@ function AppContent() {
     <div className="App">
       {!hideHeader && (
         <header className="App-header">
-          <h1>Flowtask</h1>
+          <h1>Synodos</h1>
         </header>
       )}
       <main className={hideHeader ? 'no-header' : ''}>

@@ -20,7 +20,7 @@ public class MemberService {
 	private final MemberDao dao;
 	private final PasswordEncoder passwordEncoder;
 
-	@Value("${flowtask.upload.path:uploads}")
+	@Value("${synodos.upload.path:uploads}")
 	private String uploadPath;
 
 	public MemberService(MemberDao dao, PasswordEncoder passwordEncoder) {
