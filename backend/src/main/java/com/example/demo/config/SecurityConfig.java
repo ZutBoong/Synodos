@@ -74,6 +74,10 @@ public class SecurityConfig {
                     "/api/auth/**"
                 ).permitAll()
 
+                .requestMatchers("/api/team/**").authenticated()
+                .requestMatchers("/api/board/**").authenticated()
+                .requestMatchers("/api/member/**").authenticated()
+
                 // 그 외는 인증 필요
                 .anyRequest().authenticated()
             )
@@ -83,6 +87,7 @@ public class SecurityConfig {
                 jwtAuthenticationFilter,
                 UsernamePasswordAuthenticationFilter.class
             );
+
 
         return http.build();
     }
