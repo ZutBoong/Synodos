@@ -46,18 +46,6 @@
 		ORDER BY t.column_id, t.position ASC
 	</select>
 
-	<!-- 프로젝트별 태스크 목록 -->
-	<select id="listByProject" parameterType="int" resultType="task">
-		SELECT t.task_id, t.column_id, t.title, t.description, t.position, t.created_at,
-			t.assignee_no, m.name as assignee_name, t.priority, t.start_date, t.due_date,
-			t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
-		FROM task t
-		JOIN columns c ON t.column_id = c.column_id
-		LEFT JOIN member m ON t.assignee_no = m.no
-		WHERE c.project_id = #{projectId}
-		ORDER BY t.column_id, t.position ASC
-	</select>
-
 	<!-- 태스크 상세 -->
 	<select id="content" parameterType="int" resultType="task">
 		SELECT t.task_id, t.column_id, t.title, t.description, t.position, t.created_at,

@@ -111,12 +111,6 @@ public class TaskService {
 		return tasks;
 	}
 
-	public List<Task> listByProject(int projectId) {
-		List<Task> tasks = dao.listByProject(projectId);
-		populateRelations(tasks);
-		return tasks;
-	}
-
 	public Task content(int taskId) {
 		Task task = dao.content(taskId);
 		populateRelations(task);

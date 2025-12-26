@@ -53,14 +53,6 @@ public class TaskController {
 		return list;
 	}
 
-	// 프로젝트별 태스크 목록
-	@GetMapping("tasklist/project/{projectId}")
-	public List<Task> tasklistByProject(@PathVariable("projectId") int projectId) {
-		List<Task> list = service.listByProject(projectId);
-		System.out.println("tasklist by project: " + list);
-		return list;
-	}
-
 	// 태스크 상세
 	@GetMapping("taskcontent/{taskId}")
 	public Task taskcontent(@PathVariable("taskId") int taskId) {

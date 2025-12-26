@@ -40,14 +40,6 @@ public class SynodosColumnController {
 		return list;
 	}
 
-	// 프로젝트별 컬럼 목록
-	@GetMapping("columnlist/project/{projectId}")
-	public List<SynodosColumn> columnlistByProject(@PathVariable("projectId") int projectId) {
-		List<SynodosColumn> list = service.listByProject(projectId);
-		System.out.println("columnlist by project: " + list);
-		return list;
-	}
-
 	// 컬럼 상세
 	@GetMapping("columncontent/{columnId}")
 	public SynodosColumn columncontent(@PathVariable("columnId") int columnId) {

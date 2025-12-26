@@ -36,10 +36,6 @@ public class SynodosColumnService {
 		return dao.listByTeam(teamId);
 	}
 
-	public List<SynodosColumn> listByProject(int projectId) {
-		return dao.listByProject(projectId);
-	}
-
 	public SynodosColumn content(int columnId) {
 		return dao.content(columnId);
 	}

@@ -12,7 +12,6 @@ public interface TaskDao {
 	List<Task> listByColumn(int columnId);
 	List<Task> listAll();
 	List<Task> listByTeam(int teamId);
-	List<Task> listByProject(int projectId);
 	Task content(int taskId);
 	int update(Task task);
 	int delete(int taskId);

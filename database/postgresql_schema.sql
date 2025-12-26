@@ -8,7 +8,6 @@
 -- ========================================
 CREATE SEQUENCE IF NOT EXISTS member_seq START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE IF NOT EXISTS team_seq START WITH 1 INCREMENT BY 1;
-CREATE SEQUENCE IF NOT EXISTS project_seq START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE IF NOT EXISTS column_seq START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE IF NOT EXISTS task_seq START WITH 1 INCREMENT BY 1;
 CREATE SEQUENCE IF NOT EXISTS comment_seq START WITH 1 INCREMENT BY 1;
@@ -82,31 +81,17 @@ CREATE INDEX IF NOT EXISTS idx_teammember_team ON team_member(team_id);
 CREATE INDEX IF NOT EXISTS idx_teammember_member ON team_member(member_no);
 
 -- ========================================
--- 프로젝트 테이블
--- ========================================
-CREATE TABLE IF NOT EXISTS project (
-    project_id INTEGER PRIMARY KEY,
-    team_id INTEGER NOT NULL REFERENCES team(team_id) ON DELETE CASCADE,
-    project_name VARCHAR(100) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX IF NOT EXISTS idx_project_team ON project(team_id);
-
--- ========================================
 -- 컬럼 테이블
 -- ========================================
 CREATE TABLE IF NOT EXISTS columns (
     column_id INTEGER PRIMARY KEY,
     title VARCHAR(100) NOT NULL,
     position INTEGER NOT NULL,
-    team_id INTEGER REFERENCES team(team_id) ON DELETE CASCADE,
-    project_id INTEGER REFERENCES project(project_id) ON DELETE CASCADE
+    team_id INTEGER NOT NULL REFERENCES team(team_id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_column_position ON columns(position);
 CREATE INDEX IF NOT EXISTS idx_column_team ON columns(team_id);
-CREATE INDEX IF NOT EXISTS idx_column_project ON columns(project_id);
 
 -- ========================================
 -- 태스크 테이블

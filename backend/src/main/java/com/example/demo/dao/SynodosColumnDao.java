@@ -9,7 +9,6 @@ public interface SynodosColumnDao {
 	int insert(SynodosColumn column);
 	List<SynodosColumn> list();
 	List<SynodosColumn> listByTeam(int teamId);
-	List<SynodosColumn> listByProject(int projectId);
 	SynodosColumn content(int columnId);
 	int update(SynodosColumn column);
 	int delete(int columnId);

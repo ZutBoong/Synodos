@@ -10,5 +10,4 @@ public class SynodosColumn {
 	private String title;
 	private int position;
 	private int teamId;
-	private int projectId;
 }

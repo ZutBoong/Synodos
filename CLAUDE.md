@@ -77,7 +77,7 @@ Note: `data.sql` is not used - DataInitializer handles all sample data creation.
 - **Config** (`config/`): WebSocket and Security configuration
 - **Security** (`security/`): JWT token provider and authentication filter
 
-Key entities: Member, Team, TeamMember, Project, SynodosColumn, Task, Comment, ChatMessage, Notification, TaskAssignee, TaskVerifier, TaskFavorite, TaskArchive, ProjectFile
+Key entities: Member, Team, TeamMember, SynodosColumn, Task, Comment, ChatMessage, Notification, TaskAssignee, TaskVerifier, TaskFavorite, TaskArchive, ProjectFile
 
 ### MyBatis Mapping Conventions
 - Mapper XMLs in `resources/mapper/` (one per entity, e.g., `task.xml`, `team.xml`)
@@ -120,11 +120,10 @@ Services follow consistent patterns:
 - `REACT_APP_WS_URL` - WebSocket endpoint (default: `/ws`)
 
 ### Data Flow
-1. Teams contain Projects
-2. Projects contain Columns (Kanban columns)
-3. Columns contain Tasks
-4. Tasks can have Comments, Assignees, and Verifiers
-5. Drag-and-drop uses `@hello-pangea/dnd` library
+1. Teams contain Columns (Kanban columns)
+2. Columns contain Tasks
+3. Tasks can have Comments, Assignees, and Verifiers
+4. Drag-and-drop uses `@hello-pangea/dnd` library
 
 ### Real-Time Communication
 - WebSocket endpoint: `/ws` (STOMP over SockJS)

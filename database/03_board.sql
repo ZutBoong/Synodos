@@ -10,13 +10,11 @@ CREATE TABLE IF NOT EXISTS columns (
     column_id INTEGER PRIMARY KEY,
     title VARCHAR(100) NOT NULL,
     position INTEGER NOT NULL,
-    team_id INTEGER REFERENCES team(team_id) ON DELETE CASCADE,
-    project_id INTEGER REFERENCES project(project_id) ON DELETE CASCADE
+    team_id INTEGER NOT NULL REFERENCES team(team_id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_column_position ON columns(position);
 CREATE INDEX IF NOT EXISTS idx_column_team ON columns(team_id);
-CREATE INDEX IF NOT EXISTS idx_column_project ON columns(project_id);
 
 -- 태스크 테이블 (이슈 트래커 + 검증자 필드 포함)
 CREATE TABLE IF NOT EXISTS task (

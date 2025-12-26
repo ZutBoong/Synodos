@@ -66,18 +66,6 @@ export const tasklistByTeam = async (teamId) => {
     return response.data;
 };
 
-// 프로젝트별 컬럼 목록
-export const columnlistByProject = async (projectId) => {
-    const response = await axiosInstance.get(`${API_PATH}/columnlist/project/${projectId}`);
-    return response.data;
-};
-
-// 프로젝트별 태스크 목록
-export const tasklistByProject = async (projectId) => {
-    const response = await axiosInstance.get(`${API_PATH}/tasklist/project/${projectId}`);
-    return response.data;
-};
-
 // 컬럼별 태스크 목록
 export const tasklistByColumn = async (columnId) => {
     const response = await axiosInstance.get(`${API_PATH}/tasklist/${columnId}`);
