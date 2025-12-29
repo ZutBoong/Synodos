@@ -355,6 +355,29 @@
     outline: none;
 }
 
+/* GitHub URL */
+.tsm-field label i {
+    margin-right: 6px;
+}
+
+.tsm-value.github-url {
+    word-break: break-all;
+}
+
+.tsm-value.github-url a {
+    color: #1e3a5f;
+    text-decoration: none;
+}
+
+.tsm-value.github-url a:hover {
+    text-decoration: underline;
+}
+
+.tsm-value .not-set {
+    color: #94a3b8;
+    font-style: italic;
+}
+
 /* ===== 멤버 목록 ===== */
 .tsm-members-list {
     display: flex;

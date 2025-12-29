@@ -7,8 +7,8 @@
 		<selectKey keyProperty="teamId" resultType="int" order="BEFORE">
 			SELECT nextval('team_seq')
 		</selectKey>
-		INSERT INTO team (team_id, team_name, team_code, leader_no, description, created_at)
-		VALUES (#{teamId}, #{teamName}, #{teamCode}, #{leaderNo}, #{description, jdbcType=VARCHAR}, CURRENT_TIMESTAMP)
+		INSERT INTO team (team_id, team_name, team_code, leader_no, description, github_repo_url, created_at)
+		VALUES (#{teamId}, #{teamName}, #{teamCode}, #{leaderNo}, #{description, jdbcType=VARCHAR}, #{githubRepoUrl, jdbcType=VARCHAR}, CURRENT_TIMESTAMP)
 	</insert>
 
 	<!-- 팀 멤버 추가 -->
@@ -19,7 +19,7 @@
 
 	<!-- 팀 코드로 팀 조회 -->
 	<select id="findByCode" parameterType="String" resultType="team">
-		SELECT t.team_id, t.team_name, t.team_code, t.leader_no, t.description, t.created_at,
+		SELECT t.team_id, t.team_name, t.team_code, t.leader_no, t.description, t.github_repo_url, t.created_at,
 			   m.name as leader_name
 		FROM team t
 		JOIN member m ON t.leader_no = m.no
@@ -28,7 +28,7 @@
 
 	<!-- 팀 ID로 팀 조회 -->
 	<select id="findById" parameterType="int" resultType="team">
-		SELECT t.team_id, t.team_name, t.team_code, t.leader_no, t.description, t.created_at,
+		SELECT t.team_id, t.team_name, t.team_code, t.leader_no, t.description, t.github_repo_url, t.created_at,
 			   m.name as leader_name
 		FROM team t
 		JOIN member m ON t.leader_no = m.no
@@ -37,7 +37,7 @@
 
 	<!-- 내가 속한 팀 목록 -->
 	<select id="findMyTeams" parameterType="int" resultType="team">
-		SELECT t.team_id, t.team_name, t.team_code, t.leader_no, t.description, t.created_at,
+		SELECT t.team_id, t.team_name, t.team_code, t.leader_no, t.description, t.github_repo_url, t.created_at,
 			   m.name as leader_name
 		FROM team t
 		JOIN team_member tm ON t.team_id = tm.team_id
@@ -77,7 +77,8 @@
 	<update id="updateTeam" parameterType="team">
 		UPDATE team
 		SET team_name = #{teamName},
-			description = #{description, jdbcType=VARCHAR}
+			description = #{description, jdbcType=VARCHAR},
+			github_repo_url = #{githubRepoUrl, jdbcType=VARCHAR}
 		WHERE team_id = #{teamId}
 	</update>
 

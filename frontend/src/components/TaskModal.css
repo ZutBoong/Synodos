@@ -909,6 +909,138 @@ section h4 {
     box-shadow: none;
 }
 
+/* ===== GitHub 커밋 연결 섹션 ===== */
+.commits-section {
+    margin-bottom: 24px;
+}
+
+.commits-section .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.commits-section .section-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.commits-section .section-header h2 i {
+    font-size: 16px;
+    color: #64748b;
+}
+
+.link-commit-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.link-commit-btn:hover {
+    background: #e2e8f0;
+    border-color: #cbd5e1;
+}
+
+.link-commit-btn i {
+    font-size: 11px;
+}
+
+/* ===== AI 코드 분석 섹션 ===== */
+.analysis-section {
+    margin-bottom: 24px;
+}
+
+.analysis-input-wrapper {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.github-url-input {
+    flex: 1;
+    padding: 12px 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 13px;
+    background: #f8fafc;
+    transition: all 0.2s ease;
+}
+
+.github-url-input:hover {
+    border-color: #cbd5e1;
+    background: white;
+}
+
+.github-url-input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.github-url-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.analyze-btn {
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    white-space: nowrap;
+}
+
+.analyze-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.analyze-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.analysis-hint {
+    margin: 0;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* 모바일 대응 */
+@media (max-width: 767px) {
+    .analysis-input-wrapper {
+        flex-direction: column;
+    }
+
+    .analyze-btn {
+        width: 100%;
+    }
+}
+
 /* ===== 댓글 섹션 ===== */
 .comments-section {
     min-height: 150px;

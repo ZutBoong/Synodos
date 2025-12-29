@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { getCommentsByTask, createComment, updateComment, deleteComment } from '../api/commentApi';
 import './CommentSection.css';
 
-function CommentSection({ taskId, loginMember }) {
+const CommentSection = forwardRef(({ taskId, loginMember }, ref) => {
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
     const [editingId, setEditingId] = useState(null);
     const [editContent, setEditContent] = useState('');
     const [loading, setLoading] = useState(false);
+
+    // 외부에서 댓글 새로고침 가능하도록 ref 노출
+    useImperativeHandle(ref, () => ({
+        refresh: fetchComments
+    }));
 
     useEffect(() => {
         if (taskId) {
@@ -195,6 +200,6 @@ function CommentSection({ taskId, loginMember }) {
             </div>
         </div>
     );
-}
+});
 
 export default CommentSection;

@@ -60,8 +60,18 @@ CREATE TABLE IF NOT EXISTS team (
     team_code VARCHAR(20) NOT NULL UNIQUE,
     leader_no INTEGER NOT NULL REFERENCES member(no),
     description TEXT,
+    github_repo_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 기존 테이블에 github_repo_url 컬럼 추가 (없는 경우)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'team' AND column_name = 'github_repo_url') THEN
+        ALTER TABLE team ADD COLUMN github_repo_url VARCHAR(500);
+    END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_team_leader ON team(leader_no);
 CREATE INDEX IF NOT EXISTS idx_team_code ON team(team_code);
@@ -284,3 +294,23 @@ CREATE TABLE IF NOT EXISTS email_verification (
 CREATE INDEX IF NOT EXISTS idx_email_verification_email ON email_verification(email);
 CREATE INDEX IF NOT EXISTS idx_email_verification_code ON email_verification(code);
 CREATE INDEX IF NOT EXISTS idx_email_verification_expires ON email_verification(expires_at);
+
+-- ========================================
+-- 태스크-커밋 연결 테이블
+-- ========================================
+CREATE SEQUENCE IF NOT EXISTS task_commit_seq START WITH 1 INCREMENT BY 1;
+
+CREATE TABLE IF NOT EXISTS task_commit (
+    id INTEGER PRIMARY KEY,
+    task_id INTEGER NOT NULL REFERENCES task(task_id) ON DELETE CASCADE,
+    commit_sha VARCHAR(40) NOT NULL,
+    commit_message VARCHAR(500),
+    commit_author VARCHAR(100),
+    commit_date TIMESTAMP,
+    github_url VARCHAR(500),
+    linked_by INTEGER REFERENCES member(no) ON DELETE SET NULL,
+    linked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_commit_task ON task_commit(task_id);
+CREATE INDEX IF NOT EXISTS idx_task_commit_sha ON task_commit(commit_sha);

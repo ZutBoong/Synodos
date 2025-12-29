@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { taskupdate, updateTaskAssignees, updateTaskVerifiers, archiveTask, unarchiveTask, toggleTaskFavorite, checkTaskFavorite } from '../api/boardApi';
-import { getTeamMembers } from '../api/teamApi';
+import { getTeamMembers, getTeam } from '../api/teamApi';
 import { uploadFile, getFilesByTask, deleteFile, formatFileSize, getFileIcon } from '../api/fileApi';
+import { analyzeCode } from '../api/analysisApi';
 import CommentSection from './CommentSection';
+import CommitBrowser from './CommitBrowser';
+import LinkedCommits from './LinkedCommits';
 import './TaskModal.css';
 
 function TaskModal({ task, teamId, onClose, onSave, loginMember, isArchived: propIsArchived, onArchiveChange }) {
@@ -40,6 +43,16 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember, isArchived: pro
     // 즐겨찾기 상태
     const [isFavorite, setIsFavorite] = useState(false);
 
+    // AI 코드 분석 상태
+    const [githubUrl, setGithubUrl] = useState('');
+    const [analyzing, setAnalyzing] = useState(false);
+    const commentSectionRef = useRef(null);  // CommentSection 새로고침용
+
+    // GitHub 커밋 연결 상태
+    const [showCommitBrowser, setShowCommitBrowser] = useState(false);
+    const [hasGithubRepo, setHasGithubRepo] = useState(false);
+    const linkedCommitsRef = useRef(null);
+
     // 아카이브 상태 (props에서 초기값 받음)
     const [isArchived, setIsArchived] = useState(propIsArchived || false);
 
@@ -51,6 +64,7 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember, isArchived: pro
     useEffect(() => {
         if (teamId) {
             fetchTeamMembers();
+            checkGithubRepo();
         }
         if (task?.taskId) {
             fetchFiles();
@@ -64,6 +78,17 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember, isArchived: pro
             setDueTime(extractTimeFromDateTime(task.dueDate));
         }
     }, [teamId, task?.taskId, task?.startDate, task?.dueDate]);
+
+    // 팀의 GitHub 저장소 설정 확인
+    const checkGithubRepo = async () => {
+        if (!teamId) return;
+        try {
+            const team = await getTeam(teamId);
+            setHasGithubRepo(!!team?.githubRepoUrl);
+        } catch (error) {
+            console.error('팀 정보 조회 실패:', error);
+        }
+    };
 
     const fetchFavoriteStatus = async () => {
         if (!task?.taskId || !loginMember?.no) return;
@@ -261,6 +286,31 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember, isArchived: pro
             }
         } catch (error) {
             console.error('태스크 아카이브 토글 실패:', error);
+        }
+    };
+
+    // AI 코드 분석
+    const handleAnalyzeCode = async () => {
+        if (!githubUrl.trim() || !task?.taskId || !loginMember?.no) return;
+
+        setAnalyzing(true);
+        try {
+            await analyzeCode(task.taskId, githubUrl.trim(), loginMember.no);
+            setGithubUrl('');
+            // 댓글 섹션 새로고침
+            if (commentSectionRef.current) {
+                commentSectionRef.current.refresh();
+            }
+        } catch (error) {
+            console.error('코드 분석 실패:', error);
+            const errorMsg = error.response?.data || error.message || '알 수 없는 오류';
+            if (errorMsg.includes('429') || errorMsg.includes('quota')) {
+                alert('API 할당량을 초과했습니다. 잠시 후 다시 시도해주세요.');
+            } else {
+                alert('코드 분석 실패: ' + errorMsg);
+            }
+        } finally {
+            setAnalyzing(false);
         }
     };
 
@@ -485,11 +535,61 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember, isArchived: pro
                         </div>
                     </div>
 
+                    {/* GitHub 커밋 연결 섹션 */}
+                    {form.taskId > 0 && hasGithubRepo && (
+                        <section className="commits-section">
+                            <div className="section-header">
+                                <h2><i className="fa-brands fa-github"></i> 연결된 커밋</h2>
+                                <button
+                                    type="button"
+                                    className="link-commit-btn"
+                                    onClick={() => setShowCommitBrowser(true)}
+                                >
+                                    <i className="fa-solid fa-plus"></i> 커밋 연결
+                                </button>
+                            </div>
+                            <LinkedCommits
+                                ref={linkedCommitsRef}
+                                taskId={form.taskId}
+                                canEdit={true}
+                            />
+                        </section>
+                    )}
+
+                    {/* AI 코드 분석 섹션 */}
+                    {form.taskId > 0 && (
+                        <section className="analysis-section">
+                            <h2>AI 코드 분석</h2>
+                            <div className="analysis-input-wrapper">
+                                <input
+                                    type="text"
+                                    className="github-url-input"
+                                    placeholder="GitHub URL을 입력하세요 (예: https://github.com/owner/repo/blob/main/file.js)"
+                                    value={githubUrl}
+                                    onChange={(e) => setGithubUrl(e.target.value)}
+                                    disabled={analyzing}
+                                />
+                                <button
+                                    type="button"
+                                    className="analyze-btn"
+                                    onClick={handleAnalyzeCode}
+                                    disabled={analyzing || !githubUrl.trim()}
+                                >
+                                    {analyzing ? '분석중...' : '🔍 AI 분석'}
+                                </button>
+                            </div>
+                            <p className="analysis-hint">
+                                Public GitHub 저장소의 파일 또는 커밋 URL을 입력하면 AI가 코드를 분석합니다.
+                            </p>
+                        </section>
+                    )}
+
                     {/* 댓글 섹션 */}
                     {form.taskId > 0 && (
                         <section className="comments-section">
                             <h2>댓글</h2>
                             <CommentSection
+                                ref={commentSectionRef}
                                 taskId={form.taskId}
                                 loginMember={loginMember}
                             />
@@ -580,6 +680,21 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember, isArchived: pro
                     </div>
                 </div>
             </div>
+
+            {/* CommitBrowser 모달 */}
+            {showCommitBrowser && (
+                <CommitBrowser
+                    teamId={teamId}
+                    taskId={form.taskId}
+                    loginMember={loginMember}
+                    onClose={() => setShowCommitBrowser(false)}
+                    onCommitLinked={() => {
+                        if (linkedCommitsRef.current) {
+                            linkedCommitsRef.current.refresh();
+                        }
+                    }}
+                />
+            )}
         </div>
     );
 }

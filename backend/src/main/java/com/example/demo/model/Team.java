@@ -13,5 +13,6 @@ public class Team {
 	private int leaderNo;
 	private String leaderName; // 조회용
 	private String description; // 팀 설명
+	private String githubRepoUrl; // GitHub 저장소 URL
 	private Date createdAt;
 }

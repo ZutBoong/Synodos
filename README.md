@@ -146,6 +146,8 @@ cd backend
 
 # Windows PowerShell
 .\mvnw spring-boot:run "-Dspring-boot.run.profiles=local"
+#or
+mvn spring-boot:run "-Dspring-boot.run.profiles=local"
 
 # Mac/Linux
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
