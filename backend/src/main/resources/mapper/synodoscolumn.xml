@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.dao.SynodosColumnDao">
+
+	<!-- 컬럼 생성 -->
+	<insert id="insert" parameterType="synodoscolumn">
+		INSERT INTO columns (column_id, title, position, team_id)
+		VALUES (nextval('column_seq'), #{title},
+			(SELECT COALESCE(MAX(position), 0) + 1 FROM columns WHERE team_id = #{teamId}),
+			#{teamId})
+	</insert>
+
+	<!-- 팀별 컬럼 목록 -->
+	<select id="listByTeam" parameterType="int" resultType="synodoscolumn">
+		SELECT column_id, title, position, team_id
+		FROM columns
+		WHERE team_id = #{teamId}
+		ORDER BY position ASC
+	</select>
+
+	<!-- 컬럼 목록 (전체 - 하위호환) -->
+	<select id="list" resultType="synodoscolumn">
+		SELECT column_id, title, position, team_id
+		FROM columns
+		ORDER BY position ASC
+	</select>
+
+	<!-- 컬럼 상세 -->
+	<select id="content" parameterType="int" resultType="synodoscolumn">
+		SELECT column_id, title, position, team_id
+		FROM columns
+		WHERE column_id = #{columnId}
+	</select>
+
+	<!-- 컬럼 수정 -->
+	<update id="update" parameterType="synodoscolumn">
+		UPDATE columns
+		SET title = #{title}
+		WHERE column_id = #{columnId}
+	</update>
+
+	<!-- 컬럼 삭제 -->
+	<delete id="delete" parameterType="int">
+		DELETE FROM columns WHERE column_id = #{columnId}
+	</delete>
+
+	<!-- 컬럼 위치 변경 -->
+	<update id="updatePosition" parameterType="synodoscolumn">
+		UPDATE columns
+		SET position = #{position}
+		WHERE column_id = #{columnId}
+	</update>
+
+</mapper>

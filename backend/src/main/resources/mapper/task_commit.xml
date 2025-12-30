@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.dao.TaskCommitDao">
+
+    <!-- 커밋 연결 추가 -->
+    <insert id="insert" parameterType="taskCommit">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT nextval('task_commit_seq')
+        </selectKey>
+        INSERT INTO task_commit (id, task_id, commit_sha, commit_message, commit_author, commit_date, github_url, linked_by, linked_at)
+        VALUES (#{id}, #{taskId}, #{commitSha}, #{commitMessage, jdbcType=VARCHAR}, #{commitAuthor, jdbcType=VARCHAR},
+                #{commitDate, jdbcType=TIMESTAMP}, #{githubUrl, jdbcType=VARCHAR}, #{linkedBy, jdbcType=INTEGER}, CURRENT_TIMESTAMP)
+    </insert>
+
+    <!-- 커밋 연결 삭제 -->
+    <delete id="delete" parameterType="int">
+        DELETE FROM task_commit WHERE id = #{id}
+    </delete>
+
+    <!-- 태스크의 모든 커밋 연결 삭제 -->
+    <delete id="deleteByTaskId" parameterType="int">
+        DELETE FROM task_commit WHERE task_id = #{taskId}
+    </delete>
+
+    <!-- ID로 조회 -->
+    <select id="findById" parameterType="int" resultType="taskCommit">
+        SELECT tc.id, tc.task_id, tc.commit_sha, tc.commit_message, tc.commit_author,
+               tc.commit_date, tc.github_url, tc.linked_by, tc.linked_at,
+               m.name as linked_by_name
+        FROM task_commit tc
+        LEFT JOIN member m ON tc.linked_by = m.no
+        WHERE tc.id = #{id}
+    </select>
+
+    <!-- 태스크의 커밋 목록 조회 -->
+    <select id="listByTask" parameterType="int" resultType="taskCommit">
+        SELECT tc.id, tc.task_id, tc.commit_sha, tc.commit_message, tc.commit_author,
+               tc.commit_date, tc.github_url, tc.linked_by, tc.linked_at,
+               m.name as linked_by_name
+        FROM task_commit tc
+        LEFT JOIN member m ON tc.linked_by = m.no
+        WHERE tc.task_id = #{taskId}
+        ORDER BY tc.linked_at DESC
+    </select>
+
+    <!-- 중복 체크 -->
+    <select id="countByTaskAndSha" resultType="int">
+        SELECT COUNT(*) FROM task_commit
+        WHERE task_id = #{taskId} AND commit_sha = #{commitSha}
+    </select>
+
+</mapper>

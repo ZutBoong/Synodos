@@ -35,13 +35,13 @@
     flex-shrink: 0;
 }
 
-.header-left {
+.calendar-header .header-left {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.header-left h1 {
+.calendar-header .header-left h1 {
     margin: 0;
     font-size: 18px;
     font-weight: 600;
@@ -83,20 +83,18 @@
     border-color: #ccc;
 }
 
-.header-center {
+.calendar-header .header-center {
     display: flex;
     align-items: center;
 }
 
-.team-name {
+.calendar-page .team-name {
     font-size: 14px;
     color: #666;
-    background: #f0f0f0;
-    padding: 4px 12px;
-    border-radius: 4px;
+    font-weight: 500;
 }
 
-.header-right {
+.calendar-header .header-right {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -132,7 +130,7 @@
     color: white;
 }
 
-.logout-btn {
+.calendar-header .logout-btn {
     padding: 8px 16px;
     background: none;
     border: 1px solid #ddd;
@@ -142,7 +140,7 @@
     color: #666;
 }
 
-.logout-btn:hover {
+.calendar-header .logout-btn:hover {
     background: #f5f5f5;
     border-color: #ccc;
     color: #333;
@@ -259,10 +257,10 @@
     gap: 4px;
 }
 
-.task-item {
+.calendar-page .day-tasks .task-item {
     padding: 4px 8px;
     border-radius: 4px;
-    font-size: 110px;
+    font-size: 11px;
     color: white !important;
     cursor: pointer;
     white-space: nowrap;
@@ -271,23 +269,23 @@
     transition: opacity 0.15s;
 }
 
-.task-item.priority-critical {
+.calendar-page .day-tasks .task-item.priority-critical {
     background: #dc2626 !important;
 }
 
-.task-item.priority-high {
+.calendar-page .day-tasks .task-item.priority-high {
     background: #f59e0b !important;
 }
 
-.task-item.priority-medium {
+.calendar-page .day-tasks .task-item.priority-medium {
     background: #3b82f6 !important;
 }
 
-.task-item.priority-low {
+.calendar-page .day-tasks .task-item.priority-low {
     background: #6b7280 !important;
 }
 
-.task-item:hover {
+.calendar-page .day-tasks .task-item:hover {
     opacity: 0.85;
 }
 
@@ -303,24 +301,119 @@
     min-height: 200px;
 }
 
-/* ===== 반응형 ===== */
-@media (max-width: 768px) {
+/* ===== 반응형: 태블릿 (768px ~ 1023px) ===== */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .calendar-layout.sidebar-open,
+    .calendar-layout.sidebar-closed {
+        margin-left: 64px;
+    }
+
+    .calendar-header {
+        padding: 0 16px;
+    }
+
+    .calendar-header .header-left h1 {
+        font-size: 16px;
+        min-width: 130px;
+    }
+
     .calendar-day {
-        min-height: 80px;
-        padding: 4px;
+        min-height: 100px;
     }
 
-    .task-item {
-        font-size: 10px;
-        padding: 2px 4px;
+    .view-toggle button {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+}
+
+/* ===== 반응형: 모바일 (max-width: 767px) ===== */
+@media (max-width: 767px) {
+    .calendar-layout.sidebar-open,
+    .calendar-layout.sidebar-closed {
+        margin-left: 0;
     }
 
-    .day-number {
+    .calendar-header {
+        padding: 0 12px;
+        padding-left: 64px; /* 햄버거 버튼 공간 */
+        height: 56px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .calendar-header .header-left {
+        gap: 8px;
+    }
+
+    .calendar-header .header-left h1 {
+        font-size: 14px;
+        min-width: auto;
+    }
+
+    .nav-btn {
+        width: 28px;
+        height: 28px;
         font-size: 12px;
     }
 
-    .header-left h1 {
-        font-size: 16px;
-        min-width: 120px;
+    .today-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+
+    .calendar-header .header-center {
+        display: none;
+    }
+
+    .calendar-header .header-right {
+        gap: 8px;
+    }
+
+    .view-toggle {
+        display: none;
+    }
+
+    .logout-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .calendar-content {
+        padding: 12px;
+    }
+
+    .calendar-day {
+        min-height: 60px;
+        padding: 4px;
+    }
+
+    .day-number {
+        font-size: 11px;
+    }
+
+    .weekday {
+        padding: 8px 4px;
+        font-size: 11px;
+    }
+
+    .task-item {
+        font-size: 9px;
+        padding: 2px 4px;
+    }
+
+    .calendar-day.today .day-number {
+        width: 22px;
+        height: 22px;
+        font-size: 11px;
+    }
+
+    .more-tasks {
+        font-size: 10px;
+    }
+
+    /* 주간 뷰 모바일 */
+    .calendar-grid.week .calendar-day {
+        min-height: 120px;
     }
 }

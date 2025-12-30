@@ -13,30 +13,30 @@
 	</resultMap>
 
 	<insert id="insert" parameterType="emailVerification">
-		INSERT INTO flowtask_email_verification (id, email, code, type, expires_at, verified, created_at)
-		VALUES (nextval('flowtask_email_verification_seq'), #{email}, #{code}, #{type}, #{expiresAt}, false, CURRENT_TIMESTAMP)
+		INSERT INTO email_verification (id, email, code, type, expires_at, verified, created_at)
+		VALUES (nextval('email_verification_seq'), #{email}, #{code}, #{type}, #{expiresAt}, false, CURRENT_TIMESTAMP)
 	</insert>
 
 	<select id="findLatestByEmailAndType" resultMap="emailVerificationMap">
-		SELECT * FROM flowtask_email_verification
+		SELECT * FROM email_verification
 		WHERE email = #{email} AND type = #{type} AND verified = false
 		ORDER BY created_at DESC
 		LIMIT 1
 	</select>
 
 	<update id="updateVerified">
-		UPDATE flowtask_email_verification
+		UPDATE email_verification
 		SET verified = true
 		WHERE id = #{id}
 	</update>
 
 	<delete id="deleteByEmailAndType">
-		DELETE FROM flowtask_email_verification
+		DELETE FROM email_verification
 		WHERE email = #{email} AND type = #{type} AND verified = false
 	</delete>
 
 	<delete id="deleteExpired">
-		DELETE FROM flowtask_email_verification
+		DELETE FROM email_verification
 		WHERE expires_at &lt; CURRENT_TIMESTAMP
 	</delete>
 

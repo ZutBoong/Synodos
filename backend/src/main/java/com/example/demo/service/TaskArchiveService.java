@@ -1,17 +1,20 @@
 package com.example.demo.service;
 
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.example.demo.dao.TaskArchiveDao;
 import com.example.demo.dao.TaskDao;
-import com.example.demo.dao.FlowtaskColumnDao;
+import com.example.demo.dao.SynodosColumnDao;
 import com.example.demo.dao.TeamDao;
 import com.example.demo.model.TaskArchive;
 import com.example.demo.model.Task;
-import com.example.demo.model.FlowtaskColumn;
+import com.example.demo.model.SynodosColumn;
 import com.example.demo.model.Team;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 @Service
 public class TaskArchiveService {
@@ -23,12 +26,17 @@ public class TaskArchiveService {
     private TaskDao taskDao;
 
     @Autowired
-    private FlowtaskColumnDao columnDao;
+    private SynodosColumnDao columnDao;
 
     @Autowired
     private TeamDao teamDao;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper;
+
+    public TaskArchiveService() {
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    }
 
     // 태스크 아카이브 생성
     public int archiveTask(int taskId, int memberNo, String archiveNote) {
@@ -38,7 +46,7 @@ public class TaskArchiveService {
         }
 
         // 컬럼 정보 조회
-        FlowtaskColumn column = null;
+        SynodosColumn column = null;
         if (task.getColumnId() > 0) {
             column = columnDao.content(task.getColumnId());
         }
@@ -49,10 +57,20 @@ public class TaskArchiveService {
             team = teamDao.findById(column.getTeamId());
         }
 
-        // 태스크 정보를 JSON으로 변환
+        // 태스크 정보를 JSON으로 변환 (필요한 필드만 명시적으로)
         String taskJson = "{}";
         try {
-            taskJson = objectMapper.writeValueAsString(task);
+            Map<String, Object> taskMap = new HashMap<>();
+            taskMap.put("taskId", task.getTaskId());
+            taskMap.put("title", task.getTitle());
+            taskMap.put("description", task.getDescription());
+            taskMap.put("priority", task.getPriority());
+            taskMap.put("workflowStatus", task.getWorkflowStatus());
+            taskMap.put("startDate", task.getStartDate() != null ? task.getStartDate().toString() : null);
+            taskMap.put("dueDate", task.getDueDate() != null ? task.getDueDate().toString() : null);
+            taskMap.put("assigneeNo", task.getAssigneeNo());
+            taskMap.put("assigneeName", task.getAssigneeName());
+            taskJson = objectMapper.writeValueAsString(taskMap);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -70,9 +88,14 @@ public class TaskArchiveService {
         return archiveDao.insert(archive);
     }
 
-    // 아카이브 삭제
+    // 아카이브 삭제 (archiveId로)
     public int deleteArchive(int archiveId) {
         return archiveDao.delete(archiveId);
+    }
+
+    // 아카이브 삭제 (taskId와 memberNo로)
+    public int deleteArchiveByTaskAndMember(int taskId, int memberNo) {
+        return archiveDao.deleteByTaskAndMember(taskId, memberNo);
     }
 
     // 아카이브 상세 조회

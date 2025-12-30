@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { columnlistByTeam, tasklistByTeam } from '../api/boardApi';
 import { getTeam, getTeamMembers } from '../api/teamApi';
-import { getSectionsByTeam } from '../api/sectionApi';
 import websocketService from '../api/websocketService';
 import Sidebar from '../components/Sidebar';
 import OverviewView from './views/OverviewView';
@@ -10,6 +9,7 @@ import ListView from './views/ListView';
 import BoardView from './views/BoardView';
 import TimelineView from './views/TimelineView';
 import CalendarView from './views/CalendarView';
+import ChatView from './views/ChatView';
 import FilesView from './views/FilesView';
 import './TeamView.css';
 
@@ -20,6 +20,7 @@ const TABS = [
     { id: 'board', label: '보드', icon: '▦' },
     { id: 'timeline', label: '타임라인', icon: '📊' },
     { id: 'calendar', label: '캘린더', icon: '📅' },
+    { id: 'chat', label: '채팅', icon: '💬' },
     { id: 'files', label: '파일', icon: '📁' }
 ];
 
@@ -35,18 +36,17 @@ function TeamView() {
     const [team, setTeam] = useState(null);
     const [columns, setColumns] = useState([]);
     const [tasks, setTasks] = useState([]);
-    const [sections, setSections] = useState([]);
     const [teamMembers, setTeamMembers] = useState([]);
     const [loginMember, setLoginMember] = useState(null);
     const [loading, setLoading] = useState(true);
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [memberSidebarOpen, setMemberSidebarOpen] = useState(true);
     const [wsConnected, setWsConnected] = useState(false);
     const [onlineMembers, setOnlineMembers] = useState([]);
     const [filters, setFilters] = useState({
         searchQuery: '',
         priorities: [],
         statuses: [],
-        tags: [],
         assigneeNo: null,
         dueDateFilter: ''
     });
@@ -122,25 +122,6 @@ function TeamView() {
                 ));
                 break;
 
-            // Section 이벤트
-            case 'SECTION_CREATED':
-                setSections(prev => {
-                    const exists = prev.some(s => s.sectionId === event.payload.sectionId);
-                    if (exists) return prev;
-                    return [...prev, event.payload].sort((a, b) => a.position - b.position);
-                });
-                break;
-
-            case 'SECTION_UPDATED':
-                setSections(prev => prev.map(s =>
-                    s.sectionId === event.payload.sectionId ? event.payload : s
-                ));
-                break;
-
-            case 'SECTION_DELETED':
-                setSections(prev => prev.filter(s => s.sectionId !== event.payload));
-                break;
-
             // Team 이벤트
             case 'TEAM_UPDATED':
                 if (event.payload.teamId === parseInt(teamId)) {
@@ -211,18 +192,16 @@ function TeamView() {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [teamData, columnsData, tasksData, sectionsData, membersData] = await Promise.all([
+            const [teamData, columnsData, tasksData, membersData] = await Promise.all([
                 getTeam(teamId),
                 columnlistByTeam(teamId),
                 tasklistByTeam(teamId),
-                getSectionsByTeam(teamId),
                 getTeamMembers(teamId)
             ]);
 
             setTeam(teamData);
             setColumns(columnsData || []);
             setTasks(tasksData || []);
-            setSections(sectionsData || []);
             setTeamMembers(membersData || []);
 
             // localStorage에 현재 팀 저장
@@ -271,21 +250,6 @@ function TeamView() {
         setTasks(prev => prev.filter(task => task.columnId !== columnId));
     }, []);
 
-    // Sections 업데이트 헬퍼
-    const updateSection = useCallback((updatedSection) => {
-        setSections(prev => prev.map(s =>
-            s.sectionId === updatedSection.sectionId ? { ...s, ...updatedSection } : s
-        ));
-    }, []);
-
-    const addSection = useCallback((newSection) => {
-        setSections(prev => [...prev, newSection].sort((a, b) => a.position - b.position));
-    }, []);
-
-    const removeSection = useCallback((sectionId) => {
-        setSections(prev => prev.filter(s => s.sectionId !== sectionId));
-    }, []);
-
     // Team 업데이트 헬퍼
     const updateTeam = useCallback((updatedTeam) => {
         setTeam(prev => ({ ...prev, ...updatedTeam }));
@@ -305,7 +269,6 @@ function TeamView() {
         team,
         columns,
         tasks,
-        sections,
         teamMembers,
         loginMember,
         isLeader,
@@ -318,12 +281,11 @@ function TeamView() {
         updateColumn,
         addColumn,
         removeColumn,
-        updateSection,
-        addSection,
-        removeSection,
         updateTeam,
         // 데이터 리로드
-        refreshData: fetchData
+        refreshData: fetchData,
+        // 현재 탭
+        activeTab
     };
 
     // 현재 탭에 해당하는 뷰 렌더링
@@ -357,6 +319,8 @@ function TeamView() {
                 return <TimelineView {...viewProps} />;
             case 'calendar':
                 return <CalendarView {...viewProps} />;
+            case 'chat':
+                return <ChatView {...viewProps} />;
             case 'files':
                 return <FilesView {...viewProps} />;
             default:
@@ -378,7 +342,7 @@ function TeamView() {
                 {/* 통합 헤더: 팀명, 탭, 검색, 로그아웃 */}
                 <header className="team-header">
                     <div className="team-header-left">
-                        <h1 className="team-name">{team?.teamName || 'Flowtask'}</h1>
+                        <h1 className="team-name">{team?.teamName || 'Synodos'}</h1>
                         {team && (
                             <div className="header-tabs">
                                 {TABS.map(tab => {
@@ -424,11 +388,29 @@ function TeamView() {
 
                     {/* 멤버 사이드바 */}
                     {team && (
-                        <aside className="member-sidebar">
+                        <aside className={`member-sidebar ${memberSidebarOpen ? 'open' : 'collapsed'}`}>
                             <div className="member-sidebar-header">
-                                <span>멤버</span>
-                                <span className="member-count">{teamMembers.length}</span>
+                                <button
+                                    className="member-sidebar-toggle"
+                                    onClick={() => setMemberSidebarOpen(!memberSidebarOpen)}
+                                    title={memberSidebarOpen ? '멤버 패널 접기' : '멤버 패널 펼치기'}
+                                >
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        {memberSidebarOpen ? (
+                                            <polyline points="15 18 9 12 15 6" />
+                                        ) : (
+                                            <polyline points="9 18 15 12 9 6" />
+                                        )}
+                                    </svg>
+                                </button>
+                                {memberSidebarOpen && (
+                                    <>
+                                        <span>멤버</span>
+                                        <span className="member-count">{teamMembers.length}</span>
+                                    </>
+                                )}
                             </div>
+                            {memberSidebarOpen ? (
                             <div className="member-list">
                                 {/* 온라인 멤버 */}
                                 {teamMembers.filter(m => onlineMembers.includes(m.memberNo)).length > 0 && (
@@ -437,15 +419,21 @@ function TeamView() {
                                             <span className="online-indicator"></span>
                                             온라인 — {teamMembers.filter(m => onlineMembers.includes(m.memberNo)).length}
                                         </div>
-                                        {teamMembers.filter(m => onlineMembers.includes(m.memberNo)).map(member => (
+                                        {teamMembers
+                                            .filter(m => onlineMembers.includes(m.memberNo))
+                                            .sort((a, b) => (a.role === 'LEADER' ? -1 : b.role === 'LEADER' ? 1 : 0))
+                                            .map(member => (
                                             <div key={member.memberNo} className={`member-item ${member.role === 'LEADER' ? 'leader' : ''}`}>
                                                 <div className="member-avatar">
                                                     {member.memberName?.charAt(0) || 'U'}
                                                     <span className="status-dot online"></span>
                                                 </div>
                                                 <div className="member-info">
-                                                    <span className="member-name">{member.memberName}</span>
-                                                    {member.role === 'LEADER' && <span className="member-role">팀장</span>}
+                                                    <span className="member-name">
+                                                        {member.memberName}
+                                                        {member.role === 'LEADER' && <span className="member-role">팀장</span>}
+                                                    </span>
+                                                    <span className="member-userid">{member.memberUserid}</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -457,21 +445,49 @@ function TeamView() {
                                         <div className="member-section-title">
                                             오프라인 — {teamMembers.filter(m => !onlineMembers.includes(m.memberNo)).length}
                                         </div>
-                                        {teamMembers.filter(m => !onlineMembers.includes(m.memberNo)).map(member => (
+                                        {teamMembers
+                                            .filter(m => !onlineMembers.includes(m.memberNo))
+                                            .sort((a, b) => (a.role === 'LEADER' ? -1 : b.role === 'LEADER' ? 1 : 0))
+                                            .map(member => (
                                             <div key={member.memberNo} className={`member-item offline ${member.role === 'LEADER' ? 'leader' : ''}`}>
                                                 <div className="member-avatar">
                                                     {member.memberName?.charAt(0) || 'U'}
                                                     <span className="status-dot"></span>
                                                 </div>
                                                 <div className="member-info">
-                                                    <span className="member-name">{member.memberName}</span>
-                                                    {member.role === 'LEADER' && <span className="member-role">팀장</span>}
+                                                    <span className="member-name">
+                                                        {member.memberName}
+                                                        {member.role === 'LEADER' && <span className="member-role">팀장</span>}
+                                                    </span>
+                                                    <span className="member-userid">{member.memberUserid}</span>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 )}
                             </div>
+                            ) : (
+                            <div className="member-list-collapsed">
+                                {teamMembers
+                                    .sort((a, b) => {
+                                        // 온라인 먼저, 그 다음 리더 먼저
+                                        const aOnline = onlineMembers.includes(a.memberNo) ? 1 : 0;
+                                        const bOnline = onlineMembers.includes(b.memberNo) ? 1 : 0;
+                                        if (aOnline !== bOnline) return bOnline - aOnline;
+                                        return a.role === 'LEADER' ? -1 : b.role === 'LEADER' ? 1 : 0;
+                                    })
+                                    .map(member => (
+                                    <div
+                                        key={member.memberNo}
+                                        className={`member-avatar-collapsed ${member.role === 'LEADER' ? 'leader' : ''}`}
+                                        title={`${member.memberName} (${member.memberUserid})`}
+                                    >
+                                        {member.memberName?.charAt(0) || 'U'}
+                                        <span className={`status-dot ${onlineMembers.includes(member.memberNo) ? 'online' : ''}`}></span>
+                                    </div>
+                                ))}
+                            </div>
+                            )}
                         </aside>
                     )}
                 </div>

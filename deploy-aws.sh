@@ -5,7 +5,7 @@
 
 set -e
 
-echo "=== Flowtask AWS 배포 ==="
+echo "=== Synodos AWS 배포 ==="
 
 # .env.aws 파일 확인
 if [ ! -f .env.aws ]; then

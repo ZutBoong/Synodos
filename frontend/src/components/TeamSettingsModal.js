@@ -10,11 +10,20 @@ function TeamSettingsModal({ team, loginMember, onClose, onTeamUpdate, onTeamDel
     const [activeTab, setActiveTab] = useState('info');
     const [editingName, setEditingName] = useState(false);
     const [editingDesc, setEditingDesc] = useState(false);
+    const [editingGithub, setEditingGithub] = useState(false);
     const [teamName, setTeamName] = useState(team?.teamName || '');
     const [description, setDescription] = useState(team?.description || '');
+    const [githubRepoUrl, setGithubRepoUrl] = useState(team?.githubRepoUrl || '');
     const [showTeamCode, setShowTeamCode] = useState(false);
     const [codeCopySuccess, setCodeCopySuccess] = useState(false);
+    const [urlCopySuccess, setUrlCopySuccess] = useState(false);
     const [saving, setSaving] = useState(false);
+
+    // 초대 URL 생성
+    const getInviteUrl = () => {
+        const baseUrl = window.location.origin;
+        return `${baseUrl}/invite/${team?.teamCode}`;
+    };
 
     const isLeader = team?.leaderNo === loginMember?.no;
 
@@ -68,6 +77,28 @@ function TeamSettingsModal({ team, loginMember, onClose, onTeamUpdate, onTeamDel
         }
     };
 
+    // GitHub 저장소 URL 저장
+    const handleSaveGithubUrl = async () => {
+        // URL 유효성 검사
+        const trimmedUrl = githubRepoUrl.trim();
+        if (trimmedUrl && !trimmedUrl.match(/^https:\/\/github\.com\/[^\/]+\/[^\/]+/)) {
+            alert('올바른 GitHub 저장소 URL을 입력해주세요.\n예: https://github.com/owner/repo');
+            return;
+        }
+
+        setSaving(true);
+        try {
+            await updateTeam(team.teamId, { ...team, githubRepoUrl: trimmedUrl });
+            if (onTeamUpdate) onTeamUpdate({ githubRepoUrl: trimmedUrl });
+            setEditingGithub(false);
+        } catch (error) {
+            console.error('GitHub URL 저장 실패:', error);
+            alert('저장에 실패했습니다.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     // 초대 코드 복사
     const handleCopyCode = async () => {
         if (!team?.teamCode) return;
@@ -84,6 +115,25 @@ function TeamSettingsModal({ team, loginMember, onClose, onTeamUpdate, onTeamDel
             document.body.removeChild(textArea);
             setCodeCopySuccess(true);
             setTimeout(() => setCodeCopySuccess(false), 2000);
+        }
+    };
+
+    // 초대 URL 복사
+    const handleCopyUrl = async () => {
+        const inviteUrl = getInviteUrl();
+        try {
+            await navigator.clipboard.writeText(inviteUrl);
+            setUrlCopySuccess(true);
+            setTimeout(() => setUrlCopySuccess(false), 2000);
+        } catch (error) {
+            const textArea = document.createElement('textarea');
+            textArea.value = inviteUrl;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            setUrlCopySuccess(true);
+            setTimeout(() => setUrlCopySuccess(false), 2000);
         }
     };
 
@@ -265,6 +315,88 @@ function TeamSettingsModal({ team, loginMember, onClose, onTeamUpdate, onTeamDel
                                 )}
                             </div>
 
+                            {/* GitHub 저장소 URL */}
+                            {isLeader && (
+                                <div className="tsm-field">
+                                    <label>
+                                        <i className="fa-brands fa-github"></i> GitHub 저장소
+                                    </label>
+                                    {editingGithub ? (
+                                        <div className="tsm-edit-field">
+                                            <input
+                                                type="url"
+                                                value={githubRepoUrl}
+                                                onChange={(e) => setGithubRepoUrl(e.target.value)}
+                                                placeholder="https://github.com/owner/repo"
+                                                autoFocus
+                                            />
+                                            <p className="tsm-hint" style={{ marginTop: '4px', marginBottom: '8px' }}>
+                                                Public 저장소만 지원됩니다.
+                                            </p>
+                                            <div className="tsm-edit-actions">
+                                                <button
+                                                    className="tsm-btn secondary"
+                                                    onClick={() => {
+                                                        setGithubRepoUrl(team?.githubRepoUrl || '');
+                                                        setEditingGithub(false);
+                                                    }}
+                                                >
+                                                    취소
+                                                </button>
+                                                <button
+                                                    className="tsm-btn primary"
+                                                    onClick={handleSaveGithubUrl}
+                                                    disabled={saving}
+                                                >
+                                                    {saving ? '저장 중...' : '저장'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="tsm-display-field">
+                                            <span className="tsm-value github-url">
+                                                {team?.githubRepoUrl ? (
+                                                    <a href={team.githubRepoUrl} target="_blank" rel="noopener noreferrer">
+                                                        {team.githubRepoUrl}
+                                                    </a>
+                                                ) : (
+                                                    <span className="not-set">설정되지 않음</span>
+                                                )}
+                                            </span>
+                                            <button className="tsm-edit-btn" onClick={() => setEditingGithub(true)}>
+                                                {team?.githubRepoUrl ? '수정' : '설정'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* 초대 링크 */}
+                            {isLeader && (
+                                <div className="tsm-field">
+                                    <label>초대 링크</label>
+                                    <div className="tsm-code-section">
+                                        <div className="tsm-invite-url">
+                                            <input
+                                                type="text"
+                                                value={getInviteUrl()}
+                                                readOnly
+                                                className="tsm-url-input"
+                                            />
+                                            <button
+                                                className="tsm-code-btn primary"
+                                                onClick={handleCopyUrl}
+                                            >
+                                                {urlCopySuccess ? '복사됨!' : '링크 복사'}
+                                            </button>
+                                        </div>
+                                        <p className="tsm-hint">
+                                            이 링크를 공유하여 다른 사람을 팀에 초대할 수 있습니다.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* 초대 코드 */}
                             {isLeader && (
                                 <div className="tsm-field">
@@ -294,7 +426,7 @@ function TeamSettingsModal({ team, loginMember, onClose, onTeamUpdate, onTeamDel
                                             새 코드 생성
                                         </button>
                                         <p className="tsm-hint">
-                                            이 코드를 공유하여 다른 사람을 팀에 초대할 수 있습니다.
+                                            링크 대신 코드로 직접 초대할 수도 있습니다.
                                         </p>
                                     </div>
                                 </div>

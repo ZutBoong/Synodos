@@ -66,18 +66,6 @@ export const tasklistByTeam = async (teamId) => {
     return response.data;
 };
 
-// 프로젝트별 컬럼 목록
-export const columnlistByProject = async (projectId) => {
-    const response = await axiosInstance.get(`${API_PATH}/columnlist/project/${projectId}`);
-    return response.data;
-};
-
-// 프로젝트별 태스크 목록
-export const tasklistByProject = async (projectId) => {
-    const response = await axiosInstance.get(`${API_PATH}/tasklist/project/${projectId}`);
-    return response.data;
-};
-
 // 컬럼별 태스크 목록
 export const tasklistByColumn = async (columnId) => {
     const response = await axiosInstance.get(`${API_PATH}/tasklist/${columnId}`);
@@ -158,6 +146,11 @@ export const rejectTask = async (taskId, memberNo, reason) => {
 };
 
 // 반려된 태스크 재작업 시작
+export const declineTask = async (taskId, memberNo, reason) => {
+    const response = await axiosInstance.post(`${API_PATH}/task/workflow/${taskId}/decline?memberNo=${memberNo}`, { reason });
+    return response.data;
+};
+
 export const restartTask = async (taskId, memberNo) => {
     const response = await axiosInstance.post(`${API_PATH}/task/workflow/${taskId}/restart?memberNo=${memberNo}`);
     return response.data;
@@ -243,19 +236,7 @@ export const updateTaskAssignees = async (taskId, memberNos, senderNo = null) =>
     return response.data;
 };
 
-// ========== Section/Timeline API ==========
-
-// 섹션별 태스크 목록
-export const tasklistBySection = async (sectionId) => {
-    const response = await axiosInstance.get(`${API_PATH}/tasklist/section/${sectionId}`);
-    return response.data;
-};
-
-// 태스크 섹션 변경
-export const updateTaskSection = async (taskId, sectionId) => {
-    const response = await axiosInstance.put(`${API_PATH}/task/${taskId}/section`, { sectionId });
-    return response.data;
-};
+// ========== Timeline API ==========
 
 // 태스크 날짜 변경 (타임라인용)
 export const updateTaskDates = async (taskId, startDate, dueDate) => {
@@ -306,9 +287,15 @@ export const archiveTask = async (taskId, memberNo, archiveNote = '') => {
     return response.data;
 };
 
-// 아카이브 삭제
+// 아카이브 삭제 (archiveId로)
 export const deleteTaskArchive = async (archiveId) => {
     const response = await axiosInstance.delete(`${API_PATH}/task/archive/${archiveId}`);
+    return response.data;
+};
+
+// 아카이브 해제 (taskId와 memberNo로)
+export const unarchiveTask = async (taskId, memberNo) => {
+    const response = await axiosInstance.delete(`${API_PATH}/task/${taskId}/archive?memberNo=${memberNo}`);
     return response.data;
 };
 

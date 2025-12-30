@@ -4,20 +4,20 @@
 
     <!-- 담당자 추가 -->
     <insert id="insert" parameterType="taskAssignee">
-        INSERT INTO flowtask_task_assignee (task_id, member_no, assigned_at, assigned_by, accepted, completed)
+        INSERT INTO task_assignee (task_id, member_no, assigned_at, assigned_by, accepted, completed)
         VALUES (#{taskId}, #{memberNo}, CURRENT_TIMESTAMP, #{assignedBy}, false, false)
         ON CONFLICT (task_id, member_no) DO NOTHING
     </insert>
 
     <!-- 담당자 삭제 -->
     <delete id="delete">
-        DELETE FROM flowtask_task_assignee
+        DELETE FROM task_assignee
         WHERE task_id = #{taskId} AND member_no = #{memberNo}
     </delete>
 
     <!-- 태스크의 모든 담당자 삭제 -->
     <delete id="deleteByTask" parameterType="int">
-        DELETE FROM flowtask_task_assignee
+        DELETE FROM task_assignee
         WHERE task_id = #{taskId}
     </delete>
 
@@ -26,8 +26,8 @@
         SELECT ta.task_id, ta.member_no, ta.assigned_at, ta.assigned_by,
                ta.accepted, ta.accepted_at, ta.completed, ta.completed_at,
                m.name as member_name, m.userid as member_userid
-        FROM flowtask_task_assignee ta
-        JOIN flowtask_member m ON ta.member_no = m.no
+        FROM task_assignee ta
+        JOIN member m ON ta.member_no = m.no
         WHERE ta.task_id = #{taskId}
         ORDER BY ta.assigned_at ASC
     </select>
@@ -37,28 +37,28 @@
         SELECT ta.task_id, ta.member_no, ta.assigned_at, ta.assigned_by,
                ta.accepted, ta.accepted_at, ta.completed, ta.completed_at,
                m.name as member_name, m.userid as member_userid
-        FROM flowtask_task_assignee ta
-        JOIN flowtask_member m ON ta.member_no = m.no
+        FROM task_assignee ta
+        JOIN member m ON ta.member_no = m.no
         WHERE ta.member_no = #{memberNo}
         ORDER BY ta.assigned_at DESC
     </select>
 
     <!-- 태스크 담당자 수 -->
     <select id="countByTask" parameterType="int" resultType="int">
-        SELECT COUNT(*) FROM flowtask_task_assignee
+        SELECT COUNT(*) FROM task_assignee
         WHERE task_id = #{taskId}
     </select>
 
     <!-- 담당자 수락 -->
     <update id="acceptTask">
-        UPDATE flowtask_task_assignee
+        UPDATE task_assignee
         SET accepted = true, accepted_at = CURRENT_TIMESTAMP
         WHERE task_id = #{taskId} AND member_no = #{memberNo}
     </update>
 
     <!-- 담당자 완료 처리 -->
     <update id="completeTask">
-        UPDATE flowtask_task_assignee
+        UPDATE task_assignee
         SET completed = true, completed_at = CURRENT_TIMESTAMP
         WHERE task_id = #{taskId} AND member_no = #{memberNo}
     </update>
@@ -68,11 +68,11 @@
         SELECT CASE
             WHEN COUNT(*) = 0 THEN true
             ELSE NOT EXISTS (
-                SELECT 1 FROM flowtask_task_assignee
+                SELECT 1 FROM task_assignee
                 WHERE task_id = #{taskId} AND accepted = false
             )
         END
-        FROM flowtask_task_assignee WHERE task_id = #{taskId}
+        FROM task_assignee WHERE task_id = #{taskId}
     </select>
 
     <!-- 모든 담당자 완료 여부 확인 -->
@@ -80,23 +80,23 @@
         SELECT CASE
             WHEN COUNT(*) = 0 THEN true
             ELSE NOT EXISTS (
-                SELECT 1 FROM flowtask_task_assignee
+                SELECT 1 FROM task_assignee
                 WHERE task_id = #{taskId} AND completed = false
             )
         END
-        FROM flowtask_task_assignee WHERE task_id = #{taskId}
+        FROM task_assignee WHERE task_id = #{taskId}
     </select>
 
     <!-- 수락 상태 초기화 (반려시 재수락 필요) -->
     <update id="resetAcceptance" parameterType="int">
-        UPDATE flowtask_task_assignee
+        UPDATE task_assignee
         SET accepted = false, accepted_at = NULL
         WHERE task_id = #{taskId}
     </update>
 
     <!-- 완료 상태 초기화 (반려시 재완료 필요) -->
     <update id="resetCompletion" parameterType="int">
-        UPDATE flowtask_task_assignee
+        UPDATE task_assignee
         SET completed = false, completed_at = NULL
         WHERE task_id = #{taskId}
     </update>

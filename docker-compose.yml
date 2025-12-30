@@ -1,19 +1,19 @@
 services:
   db:
     image: postgres:16-alpine
-    container_name: flowtask-db
+    container_name: synodos-db
     environment:
-      POSTGRES_DB: flowtask
+      POSTGRES_DB: synodos
       POSTGRES_USER: ${DB_USERNAME:-flow}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-flow123}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/postgresql_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
-      - ./database/seed_data.sql:/docker-entrypoint-initdb.d/02_seed.sql
+      - ./backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./backend/src/main/resources/data.sql:/docker-entrypoint-initdb.d/02_seed.sql
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-flow} -d flowtask"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-flow} -d synodos"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -21,17 +21,18 @@ services:
 
   backend:
     build: ./backend
-    container_name: flowtask-backend
+    container_name: synodos-backend
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/flowtask
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/synodos
       SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-flow}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-flow123}
-      JWT_SECRET: ${JWT_SECRET:-FlowtaskProjectSecretKeyForJWTTokenGeneration2024VeryLongSecretKey}
+      JWT_SECRET: ${JWT_SECRET:-SynodosProjectSecretKeyForJWTTokenGeneration2024VeryLongSecretKey}
       SPRING_SQL_INIT_MODE: never
       # Docker는 AWS 전용 = prod 모드 (실제 이메일 발송)
       EMAIL_ENVIRONMENT: prod
-      AWS_SES_REGION: ${AWS_SES_REGION:-ap-northeast-2}
-      AWS_SES_SENDER: ${AWS_SES_SENDER:-noreply@flowtask.com}
+      # SMTP Configuration (Gmail)
+      SPRING_MAIL_USERNAME: ${SMTP_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SMTP_PASSWORD}
     volumes:
       - uploads_data:/app/uploads
     ports:
@@ -47,7 +48,7 @@ services:
       args:
         REACT_APP_API_URL: ${API_URL:-}
         REACT_APP_WS_URL: ${WS_URL:-/ws}
-    container_name: flowtask-frontend
+    container_name: synodos-frontend
     ports:
       - "80:80"
     depends_on:

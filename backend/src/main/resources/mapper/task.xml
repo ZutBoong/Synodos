@@ -4,9 +4,9 @@
 
 	<!-- 태스크 생성 -->
 	<insert id="insert" parameterType="task">
-		INSERT INTO flowtask_task (task_id, column_id, title, description, position, created_at,
+		INSERT INTO task (task_id, column_id, title, description, position, created_at,
 			assignee_no, priority, start_date, due_date, workflow_status)
-		VALUES (nextval('flowtask_task_seq'), #{columnId}, #{title}, #{description, jdbcType=VARCHAR},
+		VALUES (nextval('task_seq'), #{columnId}, #{title}, #{description, jdbcType=VARCHAR},
 			#{position}, CURRENT_TIMESTAMP,
 			#{assigneeNo, jdbcType=INTEGER}, #{priority, jdbcType=VARCHAR},
 			COALESCE(#{startDate, jdbcType=DATE}, CURRENT_DATE),
@@ -17,9 +17,9 @@
 	<select id="listByColumn" parameterType="int" resultType="task">
 		SELECT t.task_id, t.column_id, t.title, t.description, t.position, t.created_at,
 			t.assignee_no, m.name as assignee_name, t.priority, t.start_date, t.due_date,
-			t.section_id, t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
-		FROM flowtask_task t
-		LEFT JOIN flowtask_member m ON t.assignee_no = m.no
+			t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
+		FROM task t
+		LEFT JOIN member m ON t.assignee_no = m.no
 		WHERE t.column_id = #{columnId}
 		ORDER BY t.position ASC
 	</select>
@@ -28,9 +28,9 @@
 	<select id="listAll" resultType="task">
 		SELECT t.task_id, t.column_id, t.title, t.description, t.position, t.created_at,
 			t.assignee_no, m.name as assignee_name, t.priority, t.start_date, t.due_date,
-			t.section_id, t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
-		FROM flowtask_task t
-		LEFT JOIN flowtask_member m ON t.assignee_no = m.no
+			t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
+		FROM task t
+		LEFT JOIN member m ON t.assignee_no = m.no
 		ORDER BY t.column_id, t.position ASC
 	</select>
 
@@ -38,23 +38,11 @@
 	<select id="listByTeam" parameterType="int" resultType="task">
 		SELECT t.task_id, t.column_id, t.title, t.description, t.position, t.created_at,
 			t.assignee_no, m.name as assignee_name, t.priority, t.start_date, t.due_date,
-			t.section_id, t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
-		FROM flowtask_task t
-		JOIN flowtask_column c ON t.column_id = c.column_id
-		LEFT JOIN flowtask_member m ON t.assignee_no = m.no
+			t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
+		FROM task t
+		JOIN columns c ON t.column_id = c.column_id
+		LEFT JOIN member m ON t.assignee_no = m.no
 		WHERE c.team_id = #{teamId}
-		ORDER BY t.column_id, t.position ASC
-	</select>
-
-	<!-- 프로젝트별 태스크 목록 -->
-	<select id="listByProject" parameterType="int" resultType="task">
-		SELECT t.task_id, t.column_id, t.title, t.description, t.position, t.created_at,
-			t.assignee_no, m.name as assignee_name, t.priority, t.start_date, t.due_date,
-			t.section_id, t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
-		FROM flowtask_task t
-		JOIN flowtask_column c ON t.column_id = c.column_id
-		LEFT JOIN flowtask_member m ON t.assignee_no = m.no
-		WHERE c.project_id = #{projectId}
 		ORDER BY t.column_id, t.position ASC
 	</select>
 
@@ -62,15 +50,15 @@
 	<select id="content" parameterType="int" resultType="task">
 		SELECT t.task_id, t.column_id, t.title, t.description, t.position, t.created_at,
 			t.assignee_no, m.name as assignee_name, t.priority, t.start_date, t.due_date,
-			t.section_id, t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
-		FROM flowtask_task t
-		LEFT JOIN flowtask_member m ON t.assignee_no = m.no
+			t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
+		FROM task t
+		LEFT JOIN member m ON t.assignee_no = m.no
 		WHERE t.task_id = #{taskId}
 	</select>
 
 	<!-- 태스크 수정 (전체 필드) -->
 	<update id="update" parameterType="task">
-		UPDATE flowtask_task
+		UPDATE task
 		SET title = #{title},
 			description = #{description, jdbcType=VARCHAR},
 			assignee_no = #{assigneeNo, jdbcType=INTEGER},
@@ -82,29 +70,31 @@
 
 	<!-- 태스크 삭제 -->
 	<delete id="delete" parameterType="int">
-		DELETE FROM flowtask_task WHERE task_id = #{taskId}
+		DELETE FROM task WHERE task_id = #{taskId}
 	</delete>
 
 	<!-- 태스크 위치/컬럼 변경 -->
 	<update id="updatePosition" parameterType="task">
-		UPDATE flowtask_task
+		UPDATE task
 		SET column_id = #{columnId}, position = #{position}
 		WHERE task_id = #{taskId}
 	</update>
 
 	<!-- 컬럼 내 최대 position 조회 -->
 	<select id="getMaxPosition" parameterType="int" resultType="int">
-		SELECT COALESCE(MAX(position), 0) FROM flowtask_task WHERE column_id = #{columnId}
+		SELECT COALESCE(MAX(position), 0) FROM task WHERE column_id = #{columnId}
 	</select>
 
-	<!-- 담당자별 태스크 목록 -->
+	<!-- 담당자별 태스크 목록 (task_assignee 테이블 기준) -->
 	<select id="listByAssignee" parameterType="int" resultType="task">
 		SELECT t.task_id, t.column_id, t.title, t.description, t.position, t.created_at,
 			t.assignee_no, m.name as assignee_name, t.priority, t.start_date, t.due_date,
-			t.section_id, t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
-		FROM flowtask_task t
-		LEFT JOIN flowtask_member m ON t.assignee_no = m.no
-		WHERE t.assignee_no = #{memberNo}
+			t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
+		FROM task t
+		LEFT JOIN member m ON t.assignee_no = m.no
+		WHERE t.task_id IN (
+			SELECT ta.task_id FROM task_assignee ta WHERE ta.member_no = #{memberNo}
+		)
 		ORDER BY
 			CASE t.priority
 				WHEN 'CRITICAL' THEN 1
@@ -119,10 +109,10 @@
 	<select id="listByStatusAndTeam" parameterType="map" resultType="task">
 		SELECT t.task_id, t.column_id, t.title, t.description, t.position, t.created_at,
 			t.assignee_no, m.name as assignee_name, t.priority, t.start_date, t.due_date,
-			t.section_id, t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
-		FROM flowtask_task t
-		JOIN flowtask_column c ON t.column_id = c.column_id
-		LEFT JOIN flowtask_member m ON t.assignee_no = m.no
+			t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
+		FROM task t
+		JOIN columns c ON t.column_id = c.column_id
+		LEFT JOIN member m ON t.assignee_no = m.no
 		WHERE c.team_id = #{teamId}
 		AND t.workflow_status = #{workflowStatus}
 		ORDER BY
@@ -137,14 +127,14 @@
 
 	<!-- 워크플로우 상태 변경 -->
 	<update id="updateWorkflowStatus" parameterType="task">
-		UPDATE flowtask_task
+		UPDATE task
 		SET workflow_status = #{workflowStatus}
 		WHERE task_id = #{taskId}
 	</update>
 
 	<!-- 반려 처리 -->
 	<update id="updateRejection" parameterType="task">
-		UPDATE flowtask_task
+		UPDATE task
 		SET workflow_status = 'REJECTED',
 			rejection_reason = #{rejectionReason},
 			rejected_at = CURRENT_TIMESTAMP,
@@ -154,7 +144,7 @@
 
 	<!-- 담당자만 변경 -->
 	<update id="updateAssignee" parameterType="task">
-		UPDATE flowtask_task
+		UPDATE task
 		SET assignee_no = #{assigneeNo, jdbcType=INTEGER}
 		WHERE task_id = #{taskId}
 	</update>
@@ -163,10 +153,10 @@
 	<select id="listPendingVerification" parameterType="int" resultType="task">
 		SELECT t.task_id, t.column_id, t.title, t.description, t.position, t.created_at,
 			t.assignee_no, m.name as assignee_name, t.priority, t.start_date, t.due_date,
-			t.section_id, t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
-		FROM flowtask_task t
-		LEFT JOIN flowtask_member m ON t.assignee_no = m.no
-		JOIN flowtask_task_verifier tv ON t.task_id = tv.task_id
+			t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
+		FROM task t
+		LEFT JOIN member m ON t.assignee_no = m.no
+		JOIN task_verifier tv ON t.task_id = tv.task_id
 		WHERE tv.member_no = #{memberNo}
 		AND tv.approved = false
 		AND t.workflow_status = 'REVIEW'
@@ -184,37 +174,19 @@
 	<select id="listByDateRange" parameterType="map" resultType="task">
 		SELECT t.task_id, t.column_id, t.title, t.description, t.position, t.created_at,
 			t.assignee_no, m.name as assignee_name, t.priority, t.start_date, t.due_date,
-			t.section_id, t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
-		FROM flowtask_task t
-		JOIN flowtask_column c ON t.column_id = c.column_id
-		LEFT JOIN flowtask_member m ON t.assignee_no = m.no
+			t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
+		FROM task t
+		JOIN columns c ON t.column_id = c.column_id
+		LEFT JOIN member m ON t.assignee_no = m.no
 		WHERE c.team_id = #{teamId}
 		AND t.due_date IS NOT NULL
 		AND t.due_date BETWEEN #{startDate} AND #{endDate}
 		ORDER BY t.due_date ASC, t.priority ASC
 	</select>
 
-	<!-- 섹션별 태스크 목록 -->
-	<select id="listBySection" parameterType="int" resultType="task">
-		SELECT t.task_id, t.column_id, t.title, t.description, t.position, t.created_at,
-			t.assignee_no, m.name as assignee_name, t.priority, t.start_date, t.due_date,
-			t.section_id, t.workflow_status, t.rejection_reason, t.rejected_at, t.rejected_by
-		FROM flowtask_task t
-		LEFT JOIN flowtask_member m ON t.assignee_no = m.no
-		WHERE t.section_id = #{sectionId}
-		ORDER BY t.position ASC
-	</select>
-
-	<!-- 섹션 변경 -->
-	<update id="updateSection" parameterType="task">
-		UPDATE flowtask_task
-		SET section_id = #{sectionId, jdbcType=INTEGER}
-		WHERE task_id = #{taskId}
-	</update>
-
 	<!-- 날짜 변경 (타임라인용) -->
 	<update id="updateDates" parameterType="task">
-		UPDATE flowtask_task
+		UPDATE task
 		SET start_date = #{startDate, jdbcType=TIMESTAMP},
 			due_date = #{dueDate, jdbcType=TIMESTAMP}
 		WHERE task_id = #{taskId}

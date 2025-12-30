@@ -12,6 +12,8 @@ import MyActivity from './pages/MyActivity';
 import CreateTeam from './pages/CreateTeam';
 import OAuth2Redirect from './pages/OAuth2Redirect';
 
+import NotificationsPage from './pages/NotificationsPage';
+import Invite from './pages/Invite';
 import './App.css';
 
 function AppContent() {
@@ -23,6 +25,8 @@ function AppContent() {
   const isMyPage = location.pathname === '/mypage';
   const isMyActivity = location.pathname === '/activity';
   const isCreateTeam = location.pathname === '/create-team';
+  const isNotifications = location.pathname === '/notifications';
+  const isInvite = location.pathname.startsWith('/invite/');
   const hideHeader = ['/', '/login', '/register', '/find-id', '/find-password'].includes(location.pathname);
 
   // 🔥 반드시 최위에 두어야 한다!
@@ -49,12 +53,22 @@ function AppContent() {
   if (isCreateTeam) {
     return <CreateTeam />;
   }
+  if (isNotifications) {
+    return <NotificationsPage />;
+  }
+  if (isInvite) {
+    return (
+      <Routes>
+        <Route path="/invite/:teamCode" element={<Invite />} />
+      </Routes>
+    );
+  }
 
   return (
     <div className="App">
       {!hideHeader && (
         <header className="App-header">
-          <h1>Flowtask</h1>
+          <h1>Synodos</h1>
         </header>
       )}
       <main className={hideHeader ? 'no-header' : ''}>

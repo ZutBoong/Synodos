@@ -1,12 +1,26 @@
 package com.example.demo.controller;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.HashMap;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.example.demo.dto.AuthResponse;
 import com.example.demo.model.Member;
 import com.example.demo.security.JwtTokenProvider;
 import com.example.demo.service.MemberService;
+import com.example.demo.dao.TeamDao;
 
 @RestController
 @RequestMapping("/api")
@@ -14,10 +28,15 @@ public class MemberController {
 
 	private final MemberService service;
 	private final JwtTokenProvider jwtTokenProvider;
+	private final TeamDao teamDao;
 
-	public MemberController(MemberService service, JwtTokenProvider jwtTokenProvider) {
+	@Value("${synodos.upload.path:uploads}")
+	private String uploadPath;
+
+	public MemberController(MemberService service, JwtTokenProvider jwtTokenProvider, TeamDao teamDao) {
 		this.service = service;
 		this.jwtTokenProvider = jwtTokenProvider;
+		this.teamDao = teamDao;
 	}
 
 	// 회원가입
@@ -252,5 +271,185 @@ public class MemberController {
 	public java.util.List<Member> getAllMembers() {
 		System.out.println("모든 회원 목록 조회");
 		return service.findAll();
+	}
+
+	// 회원 탈퇴
+	@DeleteMapping("member/delete/{no}")
+	public Map<String, Object> deleteMember(@PathVariable int no) {
+		System.out.println("회원 탈퇴 요청 - no: " + no);
+		Map<String, Object> result = new HashMap<>();
+
+		// 팀 리더인지 확인
+		int leaderCount = teamDao.countLeaderTeams(no);
+		if (leaderCount > 0) {
+			result.put("success", false);
+			result.put("message", "팀 리더로 있는 팀이 있습니다. 팀을 삭제하거나 리더를 위임한 후 탈퇴해주세요.");
+			return result;
+		}
+
+		int deleteResult = service.delete(no);
+		if (deleteResult == 1) {
+			result.put("success", true);
+			result.put("message", "회원 탈퇴가 완료되었습니다.");
+		} else {
+			result.put("success", false);
+			result.put("message", "회원 탈퇴에 실패했습니다.");
+		}
+
+		return result;
+	}
+
+	// 이메일 변경 (인증 완료 후)
+	@PutMapping("member/change-email")
+	public Map<String, Object> changeEmail(@RequestBody Map<String, Object> request) {
+		int no = (Integer) request.get("no");
+		String newEmail = (String) request.get("newEmail");
+
+		System.out.println("이메일 변경 요청 - no: " + no + ", newEmail: " + newEmail);
+		Map<String, Object> result = new HashMap<>();
+
+		// 이메일 중복 체크
+		int emailCount = service.checkEmail(newEmail);
+		if (emailCount > 0) {
+			result.put("success", false);
+			result.put("message", "이미 사용 중인 이메일입니다.");
+			return result;
+		}
+
+		Member member = new Member();
+		member.setNo(no);
+		member.setEmail(newEmail);
+
+		int updateResult = service.updateEmail(member);
+		if (updateResult == 1) {
+			Member updatedMember = service.findByNo(no);
+			updatedMember.setPassword(null);
+			result.put("success", true);
+			result.put("message", "이메일이 변경되었습니다.");
+			result.put("member", updatedMember);
+		} else {
+			result.put("success", false);
+			result.put("message", "이메일 변경에 실패했습니다.");
+		}
+
+		return result;
+	}
+
+	// 비밀번호 변경 (이메일 인증 완료 후)
+	@PutMapping("member/change-password-verified")
+	public Map<String, Object> changePasswordVerified(@RequestBody Map<String, Object> request) {
+		int no = (Integer) request.get("no");
+		String newPassword = (String) request.get("newPassword");
+
+		System.out.println("비밀번호 변경 요청 (인증 완료) - no: " + no);
+		Map<String, Object> result = new HashMap<>();
+
+		Member member = new Member();
+		member.setNo(no);
+		member.setPassword(newPassword);
+
+		int updateResult = service.updatePassword(member);
+		if (updateResult == 1) {
+			result.put("success", true);
+			result.put("message", "비밀번호가 변경되었습니다.");
+		} else {
+			result.put("success", false);
+			result.put("message", "비밀번호 변경에 실패했습니다.");
+		}
+
+		return result;
+	}
+
+	// 프로필 이미지 업로드
+	@PostMapping("member/profile-image/upload")
+	public Map<String, Object> uploadProfileImage(
+			@RequestParam("file") MultipartFile file,
+			@RequestParam("memberNo") int memberNo) {
+		System.out.println("프로필 이미지 업로드 요청 - memberNo: " + memberNo);
+		Map<String, Object> result = new HashMap<>();
+
+		// 파일 타입 검증
+		String contentType = file.getContentType();
+		if (contentType == null || !contentType.startsWith("image/")) {
+			result.put("success", false);
+			result.put("message", "이미지 파일만 업로드 가능합니다.");
+			return result;
+		}
+
+		// 파일 크기 검증 (5MB)
+		if (file.getSize() > 5 * 1024 * 1024) {
+			result.put("success", false);
+			result.put("message", "파일 크기는 5MB 이하만 가능합니다.");
+			return result;
+		}
+
+		try {
+			String profileImagePath = service.uploadProfileImage(memberNo, file);
+			Member updatedMember = service.findByNo(memberNo);
+			updatedMember.setPassword(null);
+
+			result.put("success", true);
+			result.put("message", "프로필 이미지가 업로드되었습니다.");
+			result.put("profileImage", profileImagePath);
+			result.put("member", updatedMember);
+		} catch (IOException e) {
+			System.err.println("프로필 이미지 업로드 실패: " + e.getMessage());
+			result.put("success", false);
+			result.put("message", "파일 업로드에 실패했습니다.");
+		}
+
+		return result;
+	}
+
+	// 프로필 이미지 조회 (다운로드)
+	@GetMapping("member/profile-image/{memberNo}")
+	public ResponseEntity<Resource> getProfileImage(@PathVariable int memberNo) {
+		try {
+			Member member = service.findByNo(memberNo);
+			if (member == null || member.getProfileImage() == null) {
+				return ResponseEntity.notFound().build();
+			}
+
+			Path filePath = Paths.get(uploadPath, member.getProfileImage());
+			if (!Files.exists(filePath)) {
+				return ResponseEntity.notFound().build();
+			}
+
+			Resource resource = new UrlResource(filePath.toUri());
+			String contentType = Files.probeContentType(filePath);
+			if (contentType == null) {
+				contentType = "application/octet-stream";
+			}
+
+			return ResponseEntity.ok()
+					.contentType(MediaType.parseMediaType(contentType))
+					.header(HttpHeaders.CACHE_CONTROL, "max-age=86400")
+					.body(resource);
+		} catch (Exception e) {
+			System.err.println("프로필 이미지 조회 실패: " + e.getMessage());
+			return ResponseEntity.notFound().build();
+		}
+	}
+
+	// 프로필 이미지 삭제
+	@DeleteMapping("member/profile-image/{memberNo}")
+	public Map<String, Object> deleteProfileImage(@PathVariable int memberNo) {
+		System.out.println("프로필 이미지 삭제 요청 - memberNo: " + memberNo);
+		Map<String, Object> result = new HashMap<>();
+
+		boolean deleted = service.deleteProfileImage(memberNo);
+		if (deleted) {
+			Member updatedMember = service.findByNo(memberNo);
+			updatedMember.setPassword(null);
+
+			result.put("success", true);
+			result.put("message", "프로필 이미지가 삭제되었습니다.");
+			result.put("member", updatedMember);
+		} else {
+			result.put("success", false);
+			result.put("message", "삭제할 프로필 이미지가 없습니다.");
+		}
+
+		return result;
 	}
 }

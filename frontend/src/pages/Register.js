@@ -354,7 +354,7 @@ function Register() {
             <div className="complete-icon">✓</div>
             <h3>회원가입이 완료되었습니다!</h3>
             <p>{form.name}님, 환영합니다.</p>
-            <p>이제 로그인하여 Flowtask를 이용해보세요.</p>
+            <p>이제 로그인하여 Synodos를 이용해보세요.</p>
             <button
                 type="button"
                 className="btn btn-primary"

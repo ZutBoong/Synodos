@@ -1,0 +1,86 @@
+.linked-commits {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.linked-commits-loading {
+    text-align: center;
+    padding: 12px;
+    color: #888;
+}
+
+.linked-commit-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s;
+}
+
+.linked-commit-item:hover {
+    background: #f0f4f8;
+    border-color: #dee2e6;
+}
+
+.commit-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: inherit;
+    flex: 1;
+    min-width: 0;
+}
+
+.commit-link:hover .commit-message {
+    color: #4a90d9;
+}
+
+.linked-commit-item .commit-sha {
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    font-size: 11px;
+    color: #555;
+    background: #e9ecef;
+    padding: 2px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.linked-commit-item .commit-message {
+    font-size: 13px;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.2s;
+}
+
+.linked-commit-item .commit-meta {
+    width: 100%;
+    display: flex;
+    gap: 6px;
+    font-size: 11px;
+    color: #888;
+    padding-left: 2px;
+}
+
+.unlink-btn {
+    background: none;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    margin-left: auto;
+}
+
+.unlink-btn:hover {
+    background: #ffebee;
+    color: #e53935;
+}

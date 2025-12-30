@@ -1,27 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { taskupdate, updateTaskAssignees, updateTaskVerifiers, acceptTask, completeTask, approveTask, rejectTask, restartTask, archiveTask } from '../api/boardApi';
-import { getTeamMembers } from '../api/teamApi';
+import { taskupdate, updateTaskAssignees, updateTaskVerifiers, archiveTask, unarchiveTask, toggleTaskFavorite, checkTaskFavorite } from '../api/boardApi';
+import { getTeamMembers, getTeam } from '../api/teamApi';
 import { uploadFile, getFilesByTask, deleteFile, formatFileSize, getFileIcon } from '../api/fileApi';
+import { analyzeCode } from '../api/analysisApi';
 import CommentSection from './CommentSection';
+import CommitBrowser from './CommitBrowser';
+import LinkedCommits from './LinkedCommits';
 import './TaskModal.css';
 
-// 워크플로우 상태 상수
-const WORKFLOW_STATUSES = {
-    WAITING: { label: '대기', color: '#94a3b8' },
-    IN_PROGRESS: { label: '진행', color: '#3b82f6' },
-    REVIEW: { label: '검토', color: '#f59e0b' },
-    DONE: { label: '완료', color: '#10b981' },
-    REJECTED: { label: '반려', color: '#ef4444' }
-};
-
-const PRIORITIES = [
-    { value: 'CRITICAL', label: '긴급', color: '#dc2626' },
-    { value: 'HIGH', label: '높음', color: '#f59e0b' },
-    { value: 'MEDIUM', label: '보통', color: '#3b82f6' },
-    { value: 'LOW', label: '낮음', color: '#6b7280' }
-];
-
-function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
+function TaskModal({ task, teamId, onClose, onSave, loginMember, isArchived: propIsArchived, onArchiveChange }) {
     // 오늘 날짜 기본값
     const today = new Date().toISOString().split('T')[0];
 
@@ -29,13 +16,10 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
         taskId: task?.taskId || 0,
         title: task?.title || '',
         description: task?.description || '',
-        status: task?.status || 'OPEN',
         assigneeNo: task?.assigneeNo || null,
         priority: task?.priority || 'MEDIUM',
         startDate: task?.startDate || today,
-        dueDate: task?.dueDate || '',
-        workflowStatus: task?.workflowStatus || 'WAITING',
-        rejectionReason: task?.rejectionReason || ''
+        dueDate: task?.dueDate || ''
     });
 
     const [selectedAssignees, setSelectedAssignees] = useState(
@@ -46,7 +30,6 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
     );
     const [teamMembers, setTeamMembers] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [rejectReason, setRejectReason] = useState('');
     const [assigneeSearch, setAssigneeSearch] = useState('');
     const [verifierSearch, setVerifierSearch] = useState('');
     const [startTime, setStartTime] = useState('');
@@ -57,12 +40,35 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
     const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef(null);
 
+    // 즐겨찾기 상태
+    const [isFavorite, setIsFavorite] = useState(false);
+
+    // AI 코드 분석 상태
+    const [githubUrl, setGithubUrl] = useState('');
+    const [analyzing, setAnalyzing] = useState(false);
+    const commentSectionRef = useRef(null);  // CommentSection 새로고침용
+
+    // GitHub 커밋 연결 상태
+    const [showCommitBrowser, setShowCommitBrowser] = useState(false);
+    const [hasGithubRepo, setHasGithubRepo] = useState(false);
+    const linkedCommitsRef = useRef(null);
+
+    // 아카이브 상태 (props에서 초기값 받음)
+    const [isArchived, setIsArchived] = useState(propIsArchived || false);
+
+    // props 변경 시 아카이브 상태 동기화
+    useEffect(() => {
+        setIsArchived(propIsArchived || false);
+    }, [propIsArchived]);
+
     useEffect(() => {
         if (teamId) {
             fetchTeamMembers();
+            checkGithubRepo();
         }
         if (task?.taskId) {
             fetchFiles();
+            fetchFavoriteStatus();
         }
         // 기존 task 데이터에서 시간 추출
         if (task?.startDate) {
@@ -72,6 +78,37 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
             setDueTime(extractTimeFromDateTime(task.dueDate));
         }
     }, [teamId, task?.taskId, task?.startDate, task?.dueDate]);
+
+    // 팀의 GitHub 저장소 설정 확인
+    const checkGithubRepo = async () => {
+        if (!teamId) return;
+        try {
+            const team = await getTeam(teamId);
+            setHasGithubRepo(!!team?.githubRepoUrl);
+        } catch (error) {
+            console.error('팀 정보 조회 실패:', error);
+        }
+    };
+
+    const fetchFavoriteStatus = async () => {
+        if (!task?.taskId || !loginMember?.no) return;
+        try {
+            const result = await checkTaskFavorite(task.taskId, loginMember.no);
+            setIsFavorite(result.isFavorite);
+        } catch (error) {
+            console.error('즐겨찾기 상태 확인 실패:', error);
+        }
+    };
+
+    const handleToggleFavorite = async () => {
+        if (!task?.taskId || !loginMember?.no) return;
+        try {
+            const result = await toggleTaskFavorite(task.taskId, loginMember.no);
+            setIsFavorite(result.isFavorite);
+        } catch (error) {
+            console.error('즐겨찾기 토글 실패:', error);
+        }
+    };
 
     const fetchTeamMembers = async () => {
         try {
@@ -228,124 +265,89 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
         return (hours === '00' && minutes === '00') ? '' : `${hours}:${minutes}`;
     };
 
-    // 워크플로우 액션 핸들러들
-    const handleAccept = async () => {
-        if (!window.confirm('이 태스크를 수락하시겠습니까?')) return;
-        setLoading(true);
+    const handleArchiveToggle = async () => {
+        if (!loginMember) return;
+
         try {
-            await acceptTask(form.taskId, loginMember.no);
-            setForm(prev => ({ ...prev, workflowStatus: 'IN_PROGRESS' }));
-            onSave && onSave();
+            if (isArchived) {
+                // 아카이브 해제
+                await unarchiveTask(form.taskId, loginMember.no);
+                setIsArchived(false);
+                if (onArchiveChange) {
+                    onArchiveChange(false);
+                }
+            } else {
+                // 아카이브 설정
+                await archiveTask(form.taskId, loginMember.no, '');
+                setIsArchived(true);
+                if (onArchiveChange) {
+                    onArchiveChange(true);
+                }
+            }
         } catch (error) {
-            console.error('태스크 수락 실패:', error);
-            alert(error.response?.data?.error || '수락 처리에 실패했습니다.');
-        } finally {
-            setLoading(false);
+            console.error('태스크 아카이브 토글 실패:', error);
         }
     };
 
-    const handleComplete = async () => {
-        if (!window.confirm('이 태스크의 작업을 완료 처리하시겠습니까?')) return;
-        setLoading(true);
+    // AI 코드 분석
+    const handleAnalyzeCode = async () => {
+        if (!githubUrl.trim() || !task?.taskId || !loginMember?.no) return;
+
+        setAnalyzing(true);
         try {
-            await completeTask(form.taskId, loginMember.no);
-            setForm(prev => ({ ...prev, workflowStatus: selectedVerifiers.length > 0 ? 'REVIEW' : 'DONE' }));
-            onSave && onSave();
+            await analyzeCode(task.taskId, githubUrl.trim(), loginMember.no);
+            setGithubUrl('');
+            // 댓글 섹션 새로고침
+            if (commentSectionRef.current) {
+                commentSectionRef.current.refresh();
+            }
         } catch (error) {
-            console.error('태스크 완료 처리 실패:', error);
-            alert(error.response?.data?.error || '완료 처리에 실패했습니다.');
+            console.error('코드 분석 실패:', error);
+            const errorMsg = error.response?.data || error.message || '알 수 없는 오류';
+            if (errorMsg.includes('429') || errorMsg.includes('quota')) {
+                alert('API 할당량을 초과했습니다. 잠시 후 다시 시도해주세요.');
+            } else {
+                alert('코드 분석 실패: ' + errorMsg);
+            }
         } finally {
-            setLoading(false);
+            setAnalyzing(false);
         }
     };
-
-    const handleApprove = async () => {
-        if (!window.confirm('이 태스크를 승인하시겠습니까?')) return;
-        setLoading(true);
-        try {
-            await approveTask(form.taskId, loginMember.no);
-            setForm(prev => ({ ...prev, workflowStatus: 'DONE' }));
-            onSave && onSave();
-        } catch (error) {
-            console.error('태스크 승인 실패:', error);
-            alert(error.response?.data?.error || '승인 처리에 실패했습니다.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleReject = async () => {
-        if (!rejectReason.trim()) {
-            alert('반려 사유를 입력해주세요.');
-            return;
-        }
-        if (!window.confirm('이 태스크를 반려하시겠습니까?')) return;
-        setLoading(true);
-        try {
-            await rejectTask(form.taskId, loginMember.no, rejectReason);
-            setForm(prev => ({ ...prev, workflowStatus: 'REJECTED', rejectionReason: rejectReason }));
-            onSave && onSave();
-        } catch (error) {
-            console.error('태스크 반려 실패:', error);
-            alert(error.response?.data?.error || '반려 처리에 실패했습니다.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleRestart = async () => {
-        if (!window.confirm('이 태스크의 재작업을 시작하시겠습니까?')) return;
-        setLoading(true);
-        try {
-            await restartTask(form.taskId, loginMember.no);
-            setForm(prev => ({ ...prev, workflowStatus: 'IN_PROGRESS' }));
-            onSave && onSave();
-        } catch (error) {
-            console.error('태스크 재작업 시작 실패:', error);
-            alert(error.response?.data?.error || '재작업 시작에 실패했습니다.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleArchive = async () => {
-        const archiveNote = prompt('아카이브 메모를 입력하세요 (선택사항):');
-        if (archiveNote === null) return; // 취소 버튼 클릭
-
-        if (!window.confirm('이 태스크를 아카이브하시겠습니까?')) return;
-        setLoading(true);
-        try {
-            await archiveTask(form.taskId, loginMember.no, archiveNote || '');
-            alert('태스크가 아카이브되었습니다.');
-            onClose();
-            onSave && onSave();
-        } catch (error) {
-            console.error('태스크 아카이브 실패:', error);
-            alert('아카이브에 실패했습니다.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // 현재 사용자 역할 확인
-    const isAssignee = loginMember && selectedAssignees.includes(loginMember.no);
-    const isVerifier = loginMember && selectedVerifiers.includes(loginMember.no);
-
-    // 현재 사용자의 수락/완료 상태 확인
-    const currentAssignee = task?.assignees?.find(a => a.memberNo === loginMember?.no);
-    const hasAccepted = currentAssignee?.accepted || false;
-    const hasCompleted = currentAssignee?.completed || false;
-
-    // 현재 사용자의 승인 상태 확인
-    const currentVerifier = task?.verifiers?.find(v => v.memberNo === loginMember?.no);
-    const hasApproved = currentVerifier?.approved || false;
 
     return (
         <div className="task-modal-overlay" onClick={onClose}>
             <div className="task-modal-container" onClick={e => e.stopPropagation()}>
                 <div className="task-modal-header">
                     <h3>태스크 수정</h3>
-                    <button className="close-btn" onClick={onClose}>×</button>
+                    <div className="header-actions">
+                        <button
+                            className={`urgent-btn ${form.priority === 'URGENT' ? 'active' : ''}`}
+                            onClick={() => setForm(prev => ({ ...prev, priority: prev.priority === 'URGENT' ? 'MEDIUM' : 'URGENT' }))}
+                            title={form.priority === 'URGENT' ? '긴급 해제' : '긴급 설정'}
+                        >
+                            <i className="fa-solid fa-triangle-exclamation"></i>
+                        </button>
+                        {form.taskId > 0 && (
+                            <>
+                                <button
+                                    className={`favorite-btn ${isFavorite ? 'active' : ''}`}
+                                    onClick={handleToggleFavorite}
+                                    title={isFavorite ? '즐겨찾기 해제' : '즐겨찾기'}
+                                >
+                                    <i className={isFavorite ? 'fa-solid fa-star' : 'fa-regular fa-star'}></i>
+                                </button>
+                                <button
+                                    className={`archive-btn ${isArchived ? 'active' : ''}`}
+                                    onClick={handleArchiveToggle}
+                                    disabled={loading}
+                                    title={isArchived ? '아카이브 해제' : '아카이브'}
+                                >
+                                    <i className={isArchived ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark'}></i>
+                                </button>
+                            </>
+                        )}
+                        <button className="close-btn" onClick={onClose}><i className="fa-solid fa-x"></i></button>
+                    </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="task-modal-content">
@@ -369,38 +371,6 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
                             placeholder="태스크에 대한 설명을 입력하세요..."
                             rows={4}
                         />
-                    </div>
-
-                    <div className="form-row">
-                        <div className="form-field">
-                            <label>상태</label>
-                            <select
-                                name="status"
-                                value={form.status}
-                                onChange={handleChange}
-                            >
-                                <option value="OPEN">열림</option>
-                                <option value="IN_PROGRESS">진행중</option>
-                                <option value="RESOLVED">해결됨</option>
-                                <option value="CLOSED">닫힘</option>
-                                <option value="CANNOT_REPRODUCE">재현불가</option>
-                                <option value="DUPLICATE">중복</option>
-                            </select>
-                        </div>
-
-                        <div className="form-field">
-                            <label>우선순위</label>
-                            <select
-                                name="priority"
-                                value={form.priority}
-                                onChange={handleChange}
-                            >
-                                <option value="LOW">낮음</option>
-                                <option value="MEDIUM">보통</option>
-                                <option value="HIGH">높음</option>
-                                <option value="URGENT">긴급</option>
-                            </select>
-                        </div>
                     </div>
 
                     <div className="form-row">
@@ -440,27 +410,6 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
                     <div className="form-row">
                         <div className="form-field">
                             <label>담당자</label>
-                            <div className="selected-members">
-                                {selectedAssignees.length > 0 && (
-                                    <div className="selected-tags">
-                                        {selectedAssignees.map(assigneeNo => {
-                                            const member = teamMembers?.find(m => m.memberNo === assigneeNo);
-                                            return member ? (
-                                                <span key={assigneeNo} className="selected-tag">
-                                                    {member.memberName}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setSelectedAssignees(prev => prev.filter(no => no !== assigneeNo))}
-                                                        className="remove-tag-btn"
-                                                    >
-                                                        ×
-                                                    </button>
-                                                </span>
-                                            ) : null;
-                                        })}
-                                    </div>
-                                )}
-                            </div>
                             <div className="search-wrapper">
                                 <input
                                     type="text"
@@ -490,7 +439,7 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
                                                         onChange={() => {}}
                                                         onClick={(e) => e.stopPropagation()}
                                                     />
-                                                    <span>{member.memberName}</span>
+                                                    <span>{member.memberName} <span className="member-id">@{member.memberUserid}</span></span>
                                                 </div>
                                             ))
                                         ) : (
@@ -499,21 +448,17 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
                                     </div>
                                 )}
                             </div>
-                        </div>
-
-                        <div className="form-field">
-                            <label>검증자</label>
-                            <div className="selected-members">
-                                {selectedVerifiers.length > 0 && (
+                            {selectedAssignees.length > 0 && (
+                                <div className="selected-members">
                                     <div className="selected-tags">
-                                        {selectedVerifiers.map(verifierNo => {
-                                            const member = teamMembers?.find(m => m.memberNo === verifierNo);
+                                        {selectedAssignees.map(assigneeNo => {
+                                            const member = teamMembers?.find(m => m.memberNo === assigneeNo);
                                             return member ? (
-                                                <span key={verifierNo} className="selected-tag">
-                                                    {member.memberName}
+                                                <span key={assigneeNo} className="selected-tag">
+                                                    {member.memberName} <span className="member-id">@{member.memberUserid}</span>
                                                     <button
                                                         type="button"
-                                                        onClick={() => setSelectedVerifiers(prev => prev.filter(no => no !== verifierNo))}
+                                                        onClick={() => setSelectedAssignees(prev => prev.filter(no => no !== assigneeNo))}
                                                         className="remove-tag-btn"
                                                     >
                                                         ×
@@ -522,8 +467,12 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
                                             ) : null;
                                         })}
                                     </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="form-field">
+                            <label>검증자</label>
                             <div className="search-wrapper">
                                 <input
                                     type="text"
@@ -553,7 +502,7 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
                                                         onChange={() => {}}
                                                         onClick={(e) => e.stopPropagation()}
                                                     />
-                                                    <span>{member.memberName}</span>
+                                                    <span>{member.memberName} <span className="member-id">@{member.memberUserid}</span></span>
                                                 </div>
                                             ))
                                         ) : (
@@ -562,96 +511,76 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
                                     </div>
                                 )}
                             </div>
-                        </div>
-                    </div>
-
-                    {/* 워크플로우 액션 섹션 */}
-                    {form.taskId > 0 && (
-                        <section className="workflow-actions-section">
-                            <h4>워크플로우 액션</h4>
-
-                            {/* 담당자 액션: 수락 */}
-                            {isAssignee && form.workflowStatus === 'WAITING' && !hasAccepted && (
-                                <button
-                                    type="button"
-                                    className="btn btn-workflow btn-accept"
-                                    onClick={handleAccept}
-                                    disabled={loading}
-                                >
-                                    수락
-                                </button>
-                            )}
-
-                            {/* 담당자 액션: 완료 */}
-                            {isAssignee && form.workflowStatus === 'IN_PROGRESS' && !hasCompleted && (
-                                <button
-                                    type="button"
-                                    className="btn btn-workflow btn-complete"
-                                    onClick={handleComplete}
-                                    disabled={loading}
-                                >
-                                    완료
-                                </button>
-                            )}
-
-                            {/* 검증자 액션: 승인/반려 */}
-                            {isVerifier && form.workflowStatus === 'REVIEW' && !hasApproved && (
-                                <div className="verification-actions">
-                                    <div className="form-group">
-                                        <label>반려 사유 (반려 시 필수)</label>
-                                        <textarea
-                                            value={rejectReason}
-                                            onChange={(e) => setRejectReason(e.target.value)}
-                                            placeholder="반려 사유를 입력하세요..."
-                                            rows={2}
-                                        />
-                                    </div>
-                                    <div className="verification-buttons">
-                                        <button
-                                            type="button"
-                                            className="btn btn-success"
-                                            onClick={handleApprove}
-                                            disabled={loading}
-                                        >
-                                            승인
-                                        </button>
-                                        <button
-                                            type="button"
-                                            className="btn btn-danger"
-                                            onClick={handleReject}
-                                            disabled={loading}
-                                        >
-                                            반려
-                                        </button>
+                            {selectedVerifiers.length > 0 && (
+                                <div className="selected-members">
+                                    <div className="selected-tags">
+                                        {selectedVerifiers.map(verifierNo => {
+                                            const member = teamMembers?.find(m => m.memberNo === verifierNo);
+                                            return member ? (
+                                                <span key={verifierNo} className="selected-tag">
+                                                    {member.memberName} <span className="member-id">@{member.memberUserid}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSelectedVerifiers(prev => prev.filter(no => no !== verifierNo))}
+                                                        className="remove-tag-btn"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </span>
+                                            ) : null;
+                                        })}
                                     </div>
                                 </div>
                             )}
+                        </div>
+                    </div>
 
-                            {/* 담당자 액션: 재작업 시작 */}
-                            {isAssignee && form.workflowStatus === 'REJECTED' && (
+                    {/* GitHub 커밋 연결 섹션 */}
+                    {form.taskId > 0 && hasGithubRepo && (
+                        <section className="commits-section">
+                            <div className="section-header">
+                                <h2><i className="fa-brands fa-github"></i> 연결된 커밋</h2>
                                 <button
                                     type="button"
-                                    className="btn btn-workflow btn-restart"
-                                    onClick={handleRestart}
-                                    disabled={loading}
+                                    className="link-commit-btn"
+                                    onClick={() => setShowCommitBrowser(true)}
                                 >
-                                    재작업 시작
+                                    <i className="fa-solid fa-plus"></i> 커밋 연결
                                 </button>
-                            )}
+                            </div>
+                            <LinkedCommits
+                                ref={linkedCommitsRef}
+                                taskId={form.taskId}
+                                canEdit={true}
+                            />
+                        </section>
+                    )}
 
-                            {/* 상태 안내 메시지 */}
-                            {form.workflowStatus === 'WAITING' && isAssignee && hasAccepted && (
-                                <p className="workflow-info">다른 담당자의 수락을 기다리고 있습니다.</p>
-                            )}
-                            {form.workflowStatus === 'IN_PROGRESS' && isAssignee && hasCompleted && (
-                                <p className="workflow-info">다른 담당자의 완료를 기다리고 있습니다.</p>
-                            )}
-                            {form.workflowStatus === 'REVIEW' && isVerifier && hasApproved && (
-                                <p className="workflow-info">다른 검증자의 승인을 기다리고 있습니다.</p>
-                            )}
-                            {form.workflowStatus === 'DONE' && (
-                                <p className="workflow-info success">모든 검증자가 승인하여 태스크가 완료되었습니다.</p>
-                            )}
+                    {/* AI 코드 분석 섹션 */}
+                    {form.taskId > 0 && (
+                        <section className="analysis-section">
+                            <h2>AI 코드 분석</h2>
+                            <div className="analysis-input-wrapper">
+                                <input
+                                    type="text"
+                                    className="github-url-input"
+                                    placeholder="GitHub URL을 입력하세요 (예: https://github.com/owner/repo/blob/main/file.js)"
+                                    value={githubUrl}
+                                    onChange={(e) => setGithubUrl(e.target.value)}
+                                    disabled={analyzing}
+                                />
+                                <button
+                                    type="button"
+                                    className="analyze-btn"
+                                    onClick={handleAnalyzeCode}
+                                    disabled={analyzing || !githubUrl.trim()}
+                                >
+                                    {analyzing ? '분석중...' : '🔍 AI 분석'}
+                                </button>
+                            </div>
+                            <p className="analysis-hint">
+                                Public GitHub 저장소의 파일 또는 커밋 URL을 입력하면 AI가 코드를 분석합니다.
+                            </p>
                         </section>
                     )}
 
@@ -660,6 +589,7 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
                         <section className="comments-section">
                             <h2>댓글</h2>
                             <CommentSection
+                                ref={commentSectionRef}
                                 taskId={form.taskId}
                                 loginMember={loginMember}
                             />
@@ -740,19 +670,6 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
                 </form>
 
                 <div className="task-modal-footer">
-                    <div className="footer-left">
-                        {form.taskId > 0 && (
-                            <button
-                                type="button"
-                                className="archive-btn"
-                                onClick={handleArchive}
-                                disabled={loading}
-                                title="이 태스크를 아카이브합니다"
-                            >
-                                📦 아카이브
-                            </button>
-                        )}
-                    </div>
                     <div className="footer-right">
                         <button type="button" className="cancel-btn" onClick={onClose}>
                             취소
@@ -763,6 +680,21 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
                     </div>
                 </div>
             </div>
+
+            {/* CommitBrowser 모달 */}
+            {showCommitBrowser && (
+                <CommitBrowser
+                    teamId={teamId}
+                    taskId={form.taskId}
+                    loginMember={loginMember}
+                    onClose={() => setShowCommitBrowser(false)}
+                    onCommitLinked={() => {
+                        if (linkedCommitsRef.current) {
+                            linkedCommitsRef.current.refresh();
+                        }
+                    }}
+                />
+            )}
         </div>
     );
 }

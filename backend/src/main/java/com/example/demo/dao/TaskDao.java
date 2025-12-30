@@ -12,7 +12,6 @@ public interface TaskDao {
 	List<Task> listByColumn(int columnId);
 	List<Task> listAll();
 	List<Task> listByTeam(int teamId);
-	List<Task> listByProject(int projectId);
 	Task content(int taskId);
 	int update(Task task);
 	int delete(int taskId);
@@ -31,12 +30,6 @@ public interface TaskDao {
 
 	// 캘린더용 날짜 범위 조회
 	List<Task> listByDateRange(Map<String, Object> params);
-
-	// 섹션별 조회
-	List<Task> listBySection(int sectionId);
-
-	// 섹션 업데이트
-	int updateSection(Task task);
 
 	// 날짜 업데이트 (타임라인용)
 	int updateDates(Task task);

@@ -6,10 +6,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.dao.TaskAssigneeDao;
 import com.example.demo.dao.TaskDao;
-import com.example.demo.dao.FlowtaskColumnDao;
+import com.example.demo.dao.SynodosColumnDao;
 import com.example.demo.model.Task;
 import com.example.demo.model.TaskAssignee;
-import com.example.demo.model.FlowtaskColumn;
+import com.example.demo.model.SynodosColumn;
 
 @Service
 public class TaskAssigneeService {
@@ -21,7 +21,7 @@ public class TaskAssigneeService {
 	private TaskDao taskDao;
 
 	@Autowired
-	private FlowtaskColumnDao columnDao;
+	private SynodosColumnDao columnDao;
 
 	@Autowired
 	private BoardNotificationService notificationService;
@@ -48,7 +48,7 @@ public class TaskAssigneeService {
 			if (assignee.getMemberNo() != senderNo) {
 				Task task = taskDao.content(assignee.getTaskId());
 				if (task != null) {
-					FlowtaskColumn column = columnDao.content(task.getColumnId());
+					SynodosColumn column = columnDao.content(task.getColumnId());
 					if (column != null) {
 						persistentNotificationService.notifyTaskAssignee(
 							assignee.getMemberNo(),
@@ -115,7 +115,7 @@ public class TaskAssigneeService {
 		int count = 0;
 		if (memberNos != null) {
 			Task task = taskDao.content(taskId);
-			FlowtaskColumn column = task != null ? columnDao.content(task.getColumnId()) : null;
+			SynodosColumn column = task != null ? columnDao.content(task.getColumnId()) : null;
 
 			for (Integer memberNo : memberNos) {
 				TaskAssignee assignee = new TaskAssignee();
@@ -164,7 +164,7 @@ public class TaskAssigneeService {
 	private void notifyTaskUpdate(int taskId) {
 		Task task = taskDao.content(taskId);
 		if (task != null) {
-			FlowtaskColumn column = columnDao.content(task.getColumnId());
+			SynodosColumn column = columnDao.content(task.getColumnId());
 			if (column != null) {
 				notificationService.notifyTaskUpdated(task, column.getTeamId());
 			}
