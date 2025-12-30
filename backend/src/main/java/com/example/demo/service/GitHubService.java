@@ -61,8 +61,7 @@ public class GitHubService {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
-                apiUrl, HttpMethod.GET, entity, String.class
-            );
+                    apiUrl, HttpMethod.GET, entity, String.class);
 
             List<GitHubBranch> branches = new ArrayList<>();
             JsonNode jsonArray = objectMapper.readTree(response.getBody());
@@ -85,9 +84,8 @@ public class GitHubService {
      */
     public List<GitHubCommit> listCommits(String owner, String repo, String branch, int page) {
         String apiUrl = String.format(
-            "https://api.github.com/repos/%s/%s/commits?sha=%s&per_page=20&page=%d",
-            owner, repo, branch, page
-        );
+                "https://api.github.com/repos/%s/%s/commits?sha=%s&per_page=20&page=%d",
+                owner, repo, branch, page);
         log.info("Fetching commits from: {}", apiUrl);
 
         try {
@@ -95,8 +93,7 @@ public class GitHubService {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
-                apiUrl, HttpMethod.GET, entity, String.class
-            );
+                    apiUrl, HttpMethod.GET, entity, String.class);
 
             List<GitHubCommit> commits = new ArrayList<>();
             JsonNode jsonArray = objectMapper.readTree(response.getBody());
@@ -172,31 +169,29 @@ public class GitHubService {
     public GitHubUrlInfo parseGitHubUrl(String url) {
         // File URL: https://github.com/owner/repo/blob/branch/path/to/file
         Pattern filePattern = Pattern.compile(
-            "https://github\\.com/([^/]+)/([^/]+)/blob/([^/]+)/(.+)"
-        );
+                "https://github\\.com/([^/]+)/([^/]+)/blob/([^/]+)/(.+)");
         Matcher fileMatcher = filePattern.matcher(url);
         if (fileMatcher.matches()) {
             return new GitHubUrlInfo(
-                fileMatcher.group(1),  // owner
-                fileMatcher.group(2),  // repo
-                "blob",                // type
-                fileMatcher.group(3),  // ref (branch/tag)
-                fileMatcher.group(4)   // path
+                    fileMatcher.group(1), // owner
+                    fileMatcher.group(2), // repo
+                    "blob", // type
+                    fileMatcher.group(3), // ref (branch/tag)
+                    fileMatcher.group(4) // path
             );
         }
 
         // Commit URL: https://github.com/owner/repo/commit/sha
         Pattern commitPattern = Pattern.compile(
-            "https://github\\.com/([^/]+)/([^/]+)/commit/([a-f0-9]+)"
-        );
+                "https://github\\.com/([^/]+)/([^/]+)/commit/([a-f0-9]+)");
         Matcher commitMatcher = commitPattern.matcher(url);
         if (commitMatcher.matches()) {
             return new GitHubUrlInfo(
-                commitMatcher.group(1),  // owner
-                commitMatcher.group(2),  // repo
-                "commit",                // type
-                commitMatcher.group(3),  // ref (commit sha)
-                null                     // path (not applicable)
+                    commitMatcher.group(1), // owner
+                    commitMatcher.group(2), // repo
+                    "commit", // type
+                    commitMatcher.group(3), // ref (commit sha)
+                    null // path (not applicable)
             );
         }
 
@@ -209,9 +204,8 @@ public class GitHubService {
     private String fetchRawFileContent(GitHubUrlInfo urlInfo) {
         // Use raw.githubusercontent.com for raw file content
         String rawUrl = String.format(
-            "https://raw.githubusercontent.com/%s/%s/%s/%s",
-            urlInfo.owner, urlInfo.repo, urlInfo.ref, urlInfo.path
-        );
+                "https://raw.githubusercontent.com/%s/%s/%s/%s",
+                urlInfo.owner, urlInfo.repo, urlInfo.ref, urlInfo.path);
 
         log.info("Fetching raw content from: {}", rawUrl);
 
@@ -221,8 +215,7 @@ public class GitHubService {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
-                rawUrl, HttpMethod.GET, entity, String.class
-            );
+                    rawUrl, HttpMethod.GET, entity, String.class);
 
             return response.getBody();
         } catch (Exception e) {
@@ -237,9 +230,8 @@ public class GitHubService {
     private String fetchCommitDiff(GitHubUrlInfo urlInfo) {
         // GitHub API for commit
         String apiUrl = String.format(
-            "https://api.github.com/repos/%s/%s/commits/%s",
-            urlInfo.owner, urlInfo.repo, urlInfo.ref
-        );
+                "https://api.github.com/repos/%s/%s/commits/%s",
+                urlInfo.owner, urlInfo.repo, urlInfo.ref);
 
         log.info("Fetching commit from: {}", apiUrl);
 
@@ -250,8 +242,7 @@ public class GitHubService {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
-                apiUrl, HttpMethod.GET, entity, String.class
-            );
+                    apiUrl, HttpMethod.GET, entity, String.class);
 
             String diff = response.getBody();
 
@@ -273,9 +264,9 @@ public class GitHubService {
     public static class GitHubUrlInfo {
         public final String owner;
         public final String repo;
-        public final String type;  // "blob" or "commit"
-        public final String ref;   // branch/tag or commit sha
-        public final String path;  // file path (null for commits)
+        public final String type; // "blob" or "commit"
+        public final String ref; // branch/tag or commit sha
+        public final String path; // file path (null for commits)
 
         public GitHubUrlInfo(String owner, String repo, String type, String ref, String path) {
             this.owner = owner;
@@ -327,8 +318,13 @@ public class GitHubService {
         }
 
         // JSON 직렬화를 위한 getter
-        public String getName() { return name; }
-        public String getSha() { return sha; }
+        public String getName() {
+            return name;
+        }
+
+        public String getSha() {
+            return sha;
+        }
     }
 
     /**
@@ -342,7 +338,8 @@ public class GitHubService {
         public final String date;
         public final String htmlUrl;
 
-        public GitHubCommit(String sha, String message, String authorName, String authorLogin, String date, String htmlUrl) {
+        public GitHubCommit(String sha, String message, String authorName, String authorLogin, String date,
+                String htmlUrl) {
             this.sha = sha;
             this.message = message;
             this.authorName = authorName;
@@ -352,12 +349,32 @@ public class GitHubService {
         }
 
         // JSON 직렬화를 위한 getter
-        public String getSha() { return sha; }
-        public String getMessage() { return message; }
-        public String getAuthorName() { return authorName; }
-        public String getAuthorLogin() { return authorLogin; }
-        public String getDate() { return date; }
-        public String getHtmlUrl() { return htmlUrl; }
-        public String getShortSha() { return sha.substring(0, 7); }
+        public String getSha() {
+            return sha;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public String getAuthorName() {
+            return authorName;
+        }
+
+        public String getAuthorLogin() {
+            return authorLogin;
+        }
+
+        public String getDate() {
+            return date;
+        }
+
+        public String getHtmlUrl() {
+            return htmlUrl;
+        }
+
+        public String getShortSha() {
+            return sha.substring(0, 7);
+        }
     }
 }
