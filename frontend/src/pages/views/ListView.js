@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { taskwrite, taskupdate, taskdelete, taskposition, columnposition, tasklistByTeam } from '../../api/boardApi';
-import TaskModal from '../../components/TaskModal';
+import TaskDetailView from '../../components/TaskDetailView';
 import TaskCreateModal from '../../components/TaskCreateModal';
 import './ListView.css';
 
@@ -465,28 +465,15 @@ function ListView({
             <div className={`list-view ${selectedTask ? 'task-detail-open' : ''}`}>
                 {/* 태스크 상세 패널 (전체화면) */}
                 {selectedTask ? (
-                    <div className="task-detail-panel">
-                        <div className="task-detail-header">
-                            <button
-                                className="back-btn"
-                                onClick={() => setSelectedTask(null)}
-                            >
-                                <i className="fa-solid fa-arrow-left"></i>
-                                <span>목록으로</span>
-                            </button>
-                        </div>
-                        <TaskModal
-                            task={selectedTask}
-                            teamId={team?.teamId}
-                            loginMember={loginMember}
-                            onClose={() => setSelectedTask(null)}
-                            onSave={() => {
-                                if (refreshData) refreshData();
-                                setSelectedTask(null);
-                            }}
-                            fullPanel={true}
-                        />
-                    </div>
+                    <TaskDetailView
+                        task={selectedTask}
+                        teamId={team?.teamId}
+                        loginMember={loginMember}
+                        onClose={() => setSelectedTask(null)}
+                        onUpdate={() => {
+                            if (refreshData) refreshData();
+                        }}
+                    />
                 ) : (
                     <>
                         {/* 칼럼들 */}

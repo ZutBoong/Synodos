@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { taskupdate, updateTaskAssignees, updateTaskVerifiers, archiveTask, unarchiveTask, toggleTaskFavorite, checkTaskFavorite } from '../api/boardApi';
+import { taskupdate, updateTaskAssignees, updateTaskVerifiers } from '../api/boardApi';
 import { getTeamMembers, getTeam } from '../api/teamApi';
 import { uploadFile, getFilesByTask, deleteFile, formatFileSize, getFileIcon } from '../api/fileApi';
 import CommentSection from './CommentSection';
@@ -7,7 +7,7 @@ import CommitBrowser from './CommitBrowser';
 import LinkedCommits from './LinkedCommits';
 import './TaskModal.css';
 
-function TaskModal({ task, teamId, onClose, onSave, loginMember, isArchived: propIsArchived, onArchiveChange, fullPanel = false }) {
+function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
     // 오늘 날짜 기본값
     const today = new Date().toISOString().split('T')[0];
 
@@ -39,23 +39,12 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember, isArchived: pro
     const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef(null);
 
-    // 즐겨찾기 상태
-    const [isFavorite, setIsFavorite] = useState(false);
-
     const commentSectionRef = useRef(null);  // CommentSection 새로고침용
 
     // GitHub 커밋 연결 상태
     const [showCommitBrowser, setShowCommitBrowser] = useState(false);
     const [hasGithubRepo, setHasGithubRepo] = useState(false);
     const linkedCommitsRef = useRef(null);
-
-    // 아카이브 상태 (props에서 초기값 받음)
-    const [isArchived, setIsArchived] = useState(propIsArchived || false);
-
-    // props 변경 시 아카이브 상태 동기화
-    useEffect(() => {
-        setIsArchived(propIsArchived || false);
-    }, [propIsArchived]);
 
     useEffect(() => {
         if (teamId) {
@@ -64,7 +53,6 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember, isArchived: pro
         }
         if (task?.taskId) {
             fetchFiles();
-            fetchFavoriteStatus();
         }
         // 기존 task 데이터에서 시간 추출
         if (task?.startDate) {
@@ -83,26 +71,6 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember, isArchived: pro
             setHasGithubRepo(!!team?.githubRepoUrl);
         } catch (error) {
             console.error('팀 정보 조회 실패:', error);
-        }
-    };
-
-    const fetchFavoriteStatus = async () => {
-        if (!task?.taskId || !loginMember?.no) return;
-        try {
-            const result = await checkTaskFavorite(task.taskId, loginMember.no);
-            setIsFavorite(result.isFavorite);
-        } catch (error) {
-            console.error('즐겨찾기 상태 확인 실패:', error);
-        }
-    };
-
-    const handleToggleFavorite = async () => {
-        if (!task?.taskId || !loginMember?.no) return;
-        try {
-            const result = await toggleTaskFavorite(task.taskId, loginMember.no);
-            setIsFavorite(result.isFavorite);
-        } catch (error) {
-            console.error('즐겨찾기 토글 실패:', error);
         }
     };
 
@@ -261,410 +229,7 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember, isArchived: pro
         return (hours === '00' && minutes === '00') ? '' : `${hours}:${minutes}`;
     };
 
-    const handleArchiveToggle = async () => {
-        if (!loginMember) return;
-
-        try {
-            if (isArchived) {
-                // 아카이브 해제
-                await unarchiveTask(form.taskId, loginMember.no);
-                setIsArchived(false);
-                if (onArchiveChange) {
-                    onArchiveChange(false);
-                }
-            } else {
-                // 아카이브 설정
-                await archiveTask(form.taskId, loginMember.no, '');
-                setIsArchived(true);
-                if (onArchiveChange) {
-                    onArchiveChange(true);
-                }
-            }
-        } catch (error) {
-            console.error('태스크 아카이브 토글 실패:', error);
-        }
-    };
-
-    // fullPanel 모드일 때는 overlay 없이 렌더링
-    if (fullPanel) {
-        return (
-            <div className="task-panel-container">
-                <div className="task-panel-header">
-                    <div className="header-title-row">
-                        <h3>태스크 상세</h3>
-                        {form.taskId > 0 && (
-                            <div className="task-id-actions">
-                                <span className="task-id-badge">#{form.taskId}</span>
-                                <button
-                                    type="button"
-                                    className="copy-btn"
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(`#${form.taskId}`);
-                                        alert('태스크 ID가 복사되었습니다!');
-                                    }}
-                                    title="태스크 ID 복사"
-                                >
-                                    <i className="fa-regular fa-copy"></i>
-                                </button>
-                                <button
-                                    type="button"
-                                    className="copy-btn"
-                                    onClick={() => {
-                                        const branchName = `feature/TASK-${form.taskId}-${form.title.toLowerCase().replace(/[^a-z0-9가-힣]/g, '-').substring(0, 30)}`;
-                                        navigator.clipboard.writeText(branchName);
-                                        alert('브랜치명이 복사되었습니다!\n' + branchName);
-                                    }}
-                                    title="브랜치명 복사"
-                                >
-                                    <i className="fa-solid fa-code-branch"></i>
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                    <div className="header-actions">
-                        <button
-                            className={`urgent-btn ${form.priority === 'URGENT' ? 'active' : ''}`}
-                            onClick={() => setForm(prev => ({ ...prev, priority: prev.priority === 'URGENT' ? 'MEDIUM' : 'URGENT' }))}
-                            title={form.priority === 'URGENT' ? '긴급 해제' : '긴급 설정'}
-                        >
-                            <i className="fa-solid fa-triangle-exclamation"></i>
-                        </button>
-                        {form.taskId > 0 && (
-                            <>
-                                <button
-                                    className={`favorite-btn ${isFavorite ? 'active' : ''}`}
-                                    onClick={handleToggleFavorite}
-                                    title={isFavorite ? '즐겨찾기 해제' : '즐겨찾기'}
-                                >
-                                    <i className={isFavorite ? 'fa-solid fa-star' : 'fa-regular fa-star'}></i>
-                                </button>
-                                <button
-                                    className={`archive-btn ${isArchived ? 'active' : ''}`}
-                                    onClick={handleArchiveToggle}
-                                    disabled={loading}
-                                    title={isArchived ? '아카이브 해제' : '아카이브'}
-                                >
-                                    <i className={isArchived ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark'}></i>
-                                </button>
-                            </>
-                        )}
-                    </div>
-                </div>
-
-                <form onSubmit={handleSubmit} className="task-panel-content">
-                    <div className="form-field">
-                        <label>제목 *</label>
-                        <input
-                            type="text"
-                            name="title"
-                            value={form.title}
-                            onChange={handleChange}
-                            placeholder="태스크 제목을 입력하세요..."
-                        />
-                    </div>
-
-                    <div className="form-field">
-                        <label>설명</label>
-                        <textarea
-                            name="description"
-                            value={form.description || ''}
-                            onChange={handleChange}
-                            placeholder="태스크에 대한 설명을 입력하세요..."
-                            rows={4}
-                        />
-                    </div>
-
-                    <div className="form-row">
-                        <div className="form-field">
-                            <label>시작일</label>
-                            <input
-                                type="date"
-                                name="startDate"
-                                value={formatDateForInput(form.startDate)}
-                                onChange={handleChange}
-                            />
-                            <input
-                                type="time"
-                                value={startTime}
-                                onChange={(e) => setStartTime(e.target.value)}
-                                style={{ marginTop: '8px' }}
-                            />
-                        </div>
-
-                        <div className="form-field">
-                            <label>마감일</label>
-                            <input
-                                type="date"
-                                name="dueDate"
-                                value={formatDateForInput(form.dueDate)}
-                                onChange={handleChange}
-                            />
-                            <input
-                                type="time"
-                                value={dueTime}
-                                onChange={(e) => setDueTime(e.target.value)}
-                                style={{ marginTop: '8px' }}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="form-row">
-                        <div className="form-field">
-                            <label>담당자</label>
-                            <div className="search-wrapper">
-                                <input
-                                    type="text"
-                                    className="search-input"
-                                    placeholder="담당자 검색..."
-                                    value={assigneeSearch}
-                                    onChange={(e) => setAssigneeSearch(e.target.value)}
-                                />
-                                {assigneeSearch.trim() && (
-                                    <div className="dropdown-list">
-                                        {filterMembers(assigneeSearch).length > 0 ? (
-                                            filterMembers(assigneeSearch).map(member => (
-                                                <div
-                                                    key={member.memberNo}
-                                                    className={`dropdown-item ${selectedAssignees.includes(member.memberNo) ? 'selected' : ''}`}
-                                                    onClick={() => {
-                                                        if (selectedAssignees.includes(member.memberNo)) {
-                                                            setSelectedAssignees(prev => prev.filter(no => no !== member.memberNo));
-                                                        } else {
-                                                            setSelectedAssignees(prev => [...prev, member.memberNo]);
-                                                        }
-                                                    }}
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedAssignees.includes(member.memberNo)}
-                                                        onChange={() => {}}
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    />
-                                                    <span>{member.memberName} <span className="member-id">@{member.memberUserid}</span></span>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <div className="dropdown-empty">검색 결과가 없습니다.</div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                            {selectedAssignees.length > 0 && (
-                                <div className="selected-members">
-                                    <div className="selected-tags">
-                                        {selectedAssignees.map(assigneeNo => {
-                                            const member = teamMembers?.find(m => m.memberNo === assigneeNo);
-                                            return member ? (
-                                                <span key={assigneeNo} className="selected-tag">
-                                                    {member.memberName} <span className="member-id">@{member.memberUserid}</span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setSelectedAssignees(prev => prev.filter(no => no !== assigneeNo))}
-                                                        className="remove-tag-btn"
-                                                    >
-                                                        ×
-                                                    </button>
-                                                </span>
-                                            ) : null;
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="form-field">
-                            <label>검증자</label>
-                            <div className="search-wrapper">
-                                <input
-                                    type="text"
-                                    className="search-input"
-                                    placeholder="검증자 검색..."
-                                    value={verifierSearch}
-                                    onChange={(e) => setVerifierSearch(e.target.value)}
-                                />
-                                {verifierSearch.trim() && (
-                                    <div className="dropdown-list">
-                                        {filterMembers(verifierSearch).length > 0 ? (
-                                            filterMembers(verifierSearch).map(member => (
-                                                <div
-                                                    key={member.memberNo}
-                                                    className={`dropdown-item ${selectedVerifiers.includes(member.memberNo) ? 'selected' : ''}`}
-                                                    onClick={() => {
-                                                        if (selectedVerifiers.includes(member.memberNo)) {
-                                                            setSelectedVerifiers(prev => prev.filter(no => no !== member.memberNo));
-                                                        } else {
-                                                            setSelectedVerifiers(prev => [...prev, member.memberNo]);
-                                                        }
-                                                    }}
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedVerifiers.includes(member.memberNo)}
-                                                        onChange={() => {}}
-                                                        onClick={(e) => e.stopPropagation()}
-                                                    />
-                                                    <span>{member.memberName} <span className="member-id">@{member.memberUserid}</span></span>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <div className="dropdown-empty">검색 결과가 없습니다.</div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                            {selectedVerifiers.length > 0 && (
-                                <div className="selected-members">
-                                    <div className="selected-tags">
-                                        {selectedVerifiers.map(verifierNo => {
-                                            const member = teamMembers?.find(m => m.memberNo === verifierNo);
-                                            return member ? (
-                                                <span key={verifierNo} className="selected-tag">
-                                                    {member.memberName} <span className="member-id">@{member.memberUserid}</span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setSelectedVerifiers(prev => prev.filter(no => no !== verifierNo))}
-                                                        className="remove-tag-btn"
-                                                    >
-                                                        ×
-                                                    </button>
-                                                </span>
-                                            ) : null;
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* GitHub 커밋 연결 섹션 */}
-                    {form.taskId > 0 && hasGithubRepo && (
-                        <section className="commits-section">
-                            <div className="section-header">
-                                <h2><i className="fa-brands fa-github"></i> 연결된 커밋</h2>
-                                <button
-                                    type="button"
-                                    className="link-commit-btn"
-                                    onClick={() => setShowCommitBrowser(true)}
-                                >
-                                    <i className="fa-solid fa-plus"></i> 커밋 연결
-                                </button>
-                            </div>
-                            <LinkedCommits
-                                ref={linkedCommitsRef}
-                                taskId={form.taskId}
-                                canEdit={true}
-                            />
-                        </section>
-                    )}
-
-                    {/* 댓글 섹션 */}
-                    {form.taskId > 0 && (
-                        <section className="comments-section">
-                            <h2>댓글</h2>
-                            <CommentSection
-                                ref={commentSectionRef}
-                                taskId={form.taskId}
-                                loginMember={loginMember}
-                            />
-                        </section>
-                    )}
-
-                    {/* 첨부파일 섹션 */}
-                    {form.taskId > 0 && (
-                        <section className="files-section-wrapper">
-                            <h2>첨부파일 {files.length > 0 && `(${files.length})`}</h2>
-
-                            <div className="files-section">
-                                <div className="file-upload-area">
-                                    <input
-                                        type="file"
-                                        ref={fileInputRef}
-                                        onChange={handleFileUpload}
-                                        style={{ display: 'none' }}
-                                    />
-                                    <button
-                                        type="button"
-                                        className="btn btn-upload"
-                                        onClick={() => fileInputRef.current?.click()}
-                                        disabled={uploading}
-                                    >
-                                        {uploading ? '업로드 중...' : '📎 파일 첨부'}
-                                    </button>
-                                </div>
-
-                                <div className="files-list">
-                                    {files.length === 0 ? (
-                                        <div className="no-files">
-                                            <p>첨부된 파일이 없습니다.</p>
-                                        </div>
-                                    ) : (
-                                        files.map(file => (
-                                            <div key={file.fileId} className="file-item">
-                                                <div className="file-icon">
-                                                    {getFileIcon(file.mimeType)}
-                                                </div>
-                                                <div className="file-info">
-                                                    <div className="file-name" title={file.originalName}>
-                                                        {file.originalName}
-                                                    </div>
-                                                    <div className="file-meta">
-                                                        {formatFileSize(file.fileSize)} • {file.uploaderName} • {new Date(file.uploadedAt).toLocaleDateString()}
-                                                    </div>
-                                                </div>
-                                                <div className="file-actions">
-                                                    <button
-                                                        type="button"
-                                                        className="btn-icon"
-                                                        onClick={() => handleFileDownload(file.fileId, file.originalName)}
-                                                        title="다운로드"
-                                                    >
-                                                        ⬇️
-                                                    </button>
-                                                    {loginMember?.no === file.uploaderNo && (
-                                                        <button
-                                                            type="button"
-                                                            className="btn-icon btn-delete"
-                                                            onClick={() => handleFileDelete(file.fileId)}
-                                                            title="삭제"
-                                                        >
-                                                            🗑️
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                            </div>
-                        </section>
-                    )}
-                </form>
-
-                <div className="task-panel-footer">
-                    <button type="submit" className="save-btn" disabled={loading} onClick={handleSubmit}>
-                        {loading ? '저장중...' : '저장'}
-                    </button>
-                </div>
-
-                {/* CommitBrowser 모달 */}
-                {showCommitBrowser && (
-                    <CommitBrowser
-                        teamId={teamId}
-                        taskId={form.taskId}
-                        loginMember={loginMember}
-                        onClose={() => setShowCommitBrowser(false)}
-                        onCommitLinked={() => {
-                            if (linkedCommitsRef.current) {
-                                linkedCommitsRef.current.refresh();
-                            }
-                        }}
-                    />
-                )}
-            </div>
-        );
-    }
-
-    // 기본 모달 모드
+    // 모달 모드
     return (
         <div className="task-modal-overlay" onClick={onClose}>
             <div className="task-modal-container" onClick={e => e.stopPropagation()}>
@@ -672,32 +237,7 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember, isArchived: pro
                     <div className="header-title-row">
                         <h3>태스크 수정</h3>
                         {form.taskId > 0 && (
-                            <div className="task-id-actions">
-                                <span className="task-id-badge">#{form.taskId}</span>
-                                <button
-                                    type="button"
-                                    className="copy-btn"
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(`#${form.taskId}`);
-                                        alert('태스크 ID가 복사되었습니다!');
-                                    }}
-                                    title="태스크 ID 복사"
-                                >
-                                    <i className="fa-regular fa-copy"></i>
-                                </button>
-                                <button
-                                    type="button"
-                                    className="copy-btn"
-                                    onClick={() => {
-                                        const branchName = `feature/TASK-${form.taskId}-${form.title.toLowerCase().replace(/[^a-z0-9가-힣]/g, '-').substring(0, 30)}`;
-                                        navigator.clipboard.writeText(branchName);
-                                        alert('브랜치명이 복사되었습니다!\n' + branchName);
-                                    }}
-                                    title="브랜치명 복사"
-                                >
-                                    <i className="fa-solid fa-code-branch"></i>
-                                </button>
-                            </div>
+                            <span className="task-id-badge">#{form.taskId}</span>
                         )}
                     </div>
                     <div className="header-actions">
@@ -708,25 +248,6 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember, isArchived: pro
                         >
                             <i className="fa-solid fa-triangle-exclamation"></i>
                         </button>
-                        {form.taskId > 0 && (
-                            <>
-                                <button
-                                    className={`favorite-btn ${isFavorite ? 'active' : ''}`}
-                                    onClick={handleToggleFavorite}
-                                    title={isFavorite ? '즐겨찾기 해제' : '즐겨찾기'}
-                                >
-                                    <i className={isFavorite ? 'fa-solid fa-star' : 'fa-regular fa-star'}></i>
-                                </button>
-                                <button
-                                    className={`archive-btn ${isArchived ? 'active' : ''}`}
-                                    onClick={handleArchiveToggle}
-                                    disabled={loading}
-                                    title={isArchived ? '아카이브 해제' : '아카이브'}
-                                >
-                                    <i className={isArchived ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark'}></i>
-                                </button>
-                            </>
-                        )}
                         <button className="close-btn" onClick={onClose}><i className="fa-solid fa-x"></i></button>
                     </div>
                 </div>

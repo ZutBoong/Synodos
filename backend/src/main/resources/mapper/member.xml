@@ -97,4 +97,27 @@
 		UPDATE member SET profile_image = #{profileImage} WHERE no = #{no}
 	</update>
 
+	<!-- GitHub 연동 정보 업데이트 -->
+	<update id="updateGitHubConnection" parameterType="member">
+		UPDATE member
+		SET github_username = #{githubUsername},
+			github_access_token = #{githubAccessToken},
+			github_connected_at = CURRENT_TIMESTAMP
+		WHERE no = #{no}
+	</update>
+
+	<!-- GitHub 연동 해제 -->
+	<update id="disconnectGitHub" parameterType="int">
+		UPDATE member
+		SET github_username = NULL,
+			github_access_token = NULL,
+			github_connected_at = NULL
+		WHERE no = #{no}
+	</update>
+
+	<!-- GitHub 사용자명으로 회원 조회 -->
+	<select id="findByGithubUsername" parameterType="String" resultType="member">
+		SELECT * FROM member WHERE github_username = #{githubUsername}
+	</select>
+
 </mapper>

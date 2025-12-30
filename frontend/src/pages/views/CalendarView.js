@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { tasklistByDateRange } from '../../api/boardApi';
-import TaskModal from '../../components/TaskModal';
+import TaskDetailView from '../../components/TaskDetailView';
 import './CalendarView.css';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -165,28 +165,15 @@ function CalendarView({ team, tasks: propTasks, teamMembers, loginMember, filter
         <div className={`calendar-view ${selectedTask ? 'task-detail-open' : ''}`}>
             {/* 태스크 상세 패널 (전체화면) */}
             {selectedTask ? (
-                <div className="task-detail-panel">
-                    <div className="task-detail-header">
-                        <button
-                            className="back-btn"
-                            onClick={() => setSelectedTask(null)}
-                        >
-                            <i className="fa-solid fa-arrow-left"></i>
-                            <span>캘린더로</span>
-                        </button>
-                    </div>
-                    <TaskModal
-                        task={selectedTask}
-                        teamId={team?.teamId}
-                        loginMember={loginMember}
-                        onClose={() => setSelectedTask(null)}
-                        onSave={() => {
-                            fetchTasks();
-                            setSelectedTask(null);
-                        }}
-                        fullPanel={true}
-                    />
-                </div>
+                <TaskDetailView
+                    task={selectedTask}
+                    teamId={team?.teamId}
+                    loginMember={loginMember}
+                    onClose={() => setSelectedTask(null)}
+                    onUpdate={() => {
+                        fetchTasks();
+                    }}
+                />
             ) : (
             <>
             {/* 캘린더 헤더 */}

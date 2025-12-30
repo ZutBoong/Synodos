@@ -1,6 +1,17 @@
 -- =============================================
--- Synodos - PostgreSQL Schema
--- Docker + Spring Boot 공용
+-- Synodos - PostgreSQL Schema (참조용)
+-- =============================================
+--
+-- ⚠️ 중요: 이 파일은 참조/백업용입니다!
+--
+-- 실제 자동 DB 업데이트는 아래 파일에서 관리됩니다:
+--   backend/src/main/resources/schema.sql  (테이블 생성/변경)
+--   backend/src/main/resources/data.sql    (샘플 데이터)
+--
+-- Spring Boot 시작 시 위 파일들이 자동으로 실행됩니다.
+-- 스키마 변경이 필요하면 backend/src/main/resources/schema.sql을 수정하세요.
+--
+-- 이 파일은 전체 스키마 구조 확인 및 수동 설치 시 참고용으로 사용됩니다.
 -- =============================================
 
 -- ========================================
@@ -27,6 +38,9 @@ CREATE TABLE IF NOT EXISTS member (
     phone VARCHAR(20),
     email_verified BOOLEAN DEFAULT FALSE,
     profile_image VARCHAR(500),
+    github_username VARCHAR(100),
+    github_access_token VARCHAR(500),
+    github_connected_at TIMESTAMP,
     register TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -45,6 +59,23 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns
                    WHERE table_name = 'member' AND column_name = 'profile_image') THEN
         ALTER TABLE member ADD COLUMN profile_image VARCHAR(500);
+    END IF;
+END $$;
+
+-- 기존 테이블에 GitHub 관련 컬럼 추가 (없는 경우)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'member' AND column_name = 'github_username') THEN
+        ALTER TABLE member ADD COLUMN github_username VARCHAR(100);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'member' AND column_name = 'github_access_token') THEN
+        ALTER TABLE member ADD COLUMN github_access_token VARCHAR(500);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'member' AND column_name = 'github_connected_at') THEN
+        ALTER TABLE member ADD COLUMN github_connected_at TIMESTAMP;
     END IF;
 END $$;
 

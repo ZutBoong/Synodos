@@ -16,4 +16,9 @@ public class Member {
 	private boolean emailVerified;
 	private String profileImage;
 	private Date register;
+
+	// GitHub 연동
+	private String githubUsername;
+	private String githubAccessToken;
+	private Date githubConnectedAt;
 }

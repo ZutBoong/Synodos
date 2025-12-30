@@ -1,6 +1,7 @@
 package com.example.demo.model;
 
 import org.apache.ibatis.type.Alias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import java.time.LocalDateTime;
 
@@ -16,6 +17,8 @@ public class Notification {
     private Integer teamId;
     private Integer columnId;
     private Integer taskId;
+
+    @JsonProperty("isRead")
     private boolean isRead;
     private LocalDateTime createdAt;
 

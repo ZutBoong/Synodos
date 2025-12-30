@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import TaskModal from '../../components/TaskModal';
+import TaskDetailView from '../../components/TaskDetailView';
 import './TimelineView.css';
 
 
@@ -532,28 +532,15 @@ function TimelineView({
         >
             {/* 태스크 상세 패널 (전체화면) */}
             {selectedTask ? (
-                <div className="task-detail-panel">
-                    <div className="task-detail-header">
-                        <button
-                            className="back-btn"
-                            onClick={() => setSelectedTask(null)}
-                        >
-                            <i className="fa-solid fa-arrow-left"></i>
-                            <span>타임라인으로</span>
-                        </button>
-                    </div>
-                    <TaskModal
-                        task={selectedTask}
-                        teamId={team?.teamId}
-                        loginMember={loginMember}
-                        onClose={() => setSelectedTask(null)}
-                        onSave={() => {
-                            if (refreshData) refreshData();
-                            setSelectedTask(null);
-                        }}
-                        fullPanel={true}
-                    />
-                </div>
+                <TaskDetailView
+                    task={selectedTask}
+                    teamId={team?.teamId}
+                    loginMember={loginMember}
+                    onClose={() => setSelectedTask(null)}
+                    onUpdate={() => {
+                        if (refreshData) refreshData();
+                    }}
+                />
             ) : (
             <>
             {/* 타임라인 헤더 */}

@@ -58,4 +58,13 @@ public interface MemberDao {
 
 	// 프로필 이미지 업데이트
 	int updateProfileImage(Member member);
+
+	// GitHub 연동 정보 업데이트
+	int updateGitHubConnection(Member member);
+
+	// GitHub 연동 해제
+	int disconnectGitHub(int no);
+
+	// GitHub 사용자명으로 회원 조회
+	Member findByGithubUsername(String githubUsername);
 }

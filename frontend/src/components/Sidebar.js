@@ -91,6 +91,22 @@ function Sidebar({ isOpen, onToggle, currentTeam, onSelectTeam, loginMember }) {
         }
     }, [loginMember]);
 
+    // 페이지 이동 시 알림 수 갱신 (알림 읽음 처리 후 다른 페이지로 이동 시)
+    useEffect(() => {
+        if (loginMember) {
+            fetchUnreadCount();
+        }
+    }, [location.pathname]);
+
+    // 알림 읽음 처리 시 실시간 갱신 (커스텀 이벤트 리스너)
+    useEffect(() => {
+        const handleNotificationRead = () => {
+            fetchUnreadCount();
+        };
+        window.addEventListener('notificationRead', handleNotificationRead);
+        return () => window.removeEventListener('notificationRead', handleNotificationRead);
+    }, [loginMember]);
+
     const fetchUnreadCount = async () => {
         if (!loginMember) return;
         try {
@@ -216,7 +232,7 @@ function Sidebar({ isOpen, onToggle, currentTeam, onSelectTeam, loginMember }) {
                                 </svg>
                                 <span>알림함</span>
                                 {unreadCount > 0 && (
-                                    <span className="notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+                                    <span className="notification-badge"></span>
                                 )}
                             </button>
                         </div>
@@ -346,7 +362,7 @@ function Sidebar({ isOpen, onToggle, currentTeam, onSelectTeam, loginMember }) {
                                 </svg>
                                 <span>알림함</span>
                                 {unreadCount > 0 && (
-                                    <span className="notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+                                    <span className="notification-badge"></span>
                                 )}
                             </button>
                         </div>
@@ -470,7 +486,7 @@ function Sidebar({ isOpen, onToggle, currentTeam, onSelectTeam, loginMember }) {
                             <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                         </svg>
                         {unreadCount > 0 && (
-                            <span className="notification-badge-small">{unreadCount > 99 ? '99+' : unreadCount}</span>
+                            <span className="notification-badge-small"></span>
                         )}
                     </button>
                     <button className="icon-btn primary" onClick={() => navigate('/create-team')} title="팀 생성">

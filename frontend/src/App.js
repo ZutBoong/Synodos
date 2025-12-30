@@ -12,6 +12,7 @@ import MyActivity from './pages/MyActivity';
 import CreateTeam from './pages/CreateTeam';
 import NotificationsPage from './pages/NotificationsPage';
 import Invite from './pages/Invite';
+import GitHubCallback from './pages/GitHubCallback';
 import './App.css';
 
 function AppContent() {
@@ -23,6 +24,7 @@ function AppContent() {
   const isCreateTeam = location.pathname === '/create-team';
   const isNotifications = location.pathname === '/notifications';
   const isInvite = location.pathname.startsWith('/invite/');
+  const isGitHubCallback = location.pathname === '/github/callback';
   const hideHeader = ['/', '/login', '/register', '/find-id', '/find-password'].includes(location.pathname);
 
   // TeamView, Calendar, MyPage, MyActivity, CreateTeam 페이지는 독립적인 레이아웃 사용
@@ -53,6 +55,13 @@ function AppContent() {
     return (
       <Routes>
         <Route path="/invite/:teamCode" element={<Invite />} />
+      </Routes>
+    );
+  }
+  if (isGitHubCallback) {
+    return (
+      <Routes>
+        <Route path="/github/callback" element={<GitHubCallback />} />
       </Routes>
     );
   }

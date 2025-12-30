@@ -1,4 +1,4 @@
--- 모든 테이블 삭제 후 새로 생성 (DataInitializer에서 재생성됨)
+-- 모든 테이블 삭제 후 새로 생성 (schema.sql + data.sql에서 재생성됨)
 DROP TABLE IF EXISTS email_verification CASCADE;
 DROP TABLE IF EXISTS task_verifier CASCADE;
 DROP TABLE IF EXISTS task_assignee CASCADE;

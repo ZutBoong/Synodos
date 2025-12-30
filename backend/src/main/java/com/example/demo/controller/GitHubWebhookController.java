@@ -14,9 +14,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.demo.dao.TeamDao;
 import com.example.demo.dto.GitHubWebhookPayload;
+import com.example.demo.dto.GitHubIssuePayload;
+import com.example.demo.model.Team;
 import com.example.demo.service.GitHubWebhookService;
 import com.example.demo.service.GitHubWebhookService.WebhookResult;
+import com.example.demo.service.GitHubIssueSyncService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
@@ -40,13 +44,19 @@ public class GitHubWebhookController {
     private GitHubWebhookService webhookService;
 
     @Autowired
+    private GitHubIssueSyncService issueSyncService;
+
+    @Autowired
+    private TeamDao teamDao;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     @Value("${github.webhook.secret:}")
     private String webhookSecret;
 
     /**
-     * GitHub push 이벤트 수신
+     * GitHub Webhook 이벤트 수신 (push, issues 등)
      * POST /api/webhook/github
      */
     @PostMapping("/github")
@@ -58,13 +68,7 @@ public class GitHubWebhookController {
 
         log.info("Received GitHub webhook - Event: {}, Delivery: {}", event, deliveryId);
 
-        // 1. 이벤트 타입 확인
-        if (!"push".equals(event)) {
-            log.info("Ignoring non-push event: {}", event);
-            return ResponseEntity.ok(Map.of("message", "Event ignored", "event", event));
-        }
-
-        // 2. 시크릿 검증 (설정된 경우)
+        // 시크릿 검증 (설정된 경우)
         if (webhookSecret != null && !webhookSecret.isEmpty()) {
             if (!verifySignature(rawPayload, signature)) {
                 log.warn("Invalid webhook signature");
@@ -73,17 +77,33 @@ public class GitHubWebhookController {
             }
         }
 
-        // 3. Payload 파싱
+        // 이벤트 타입별 처리
+        switch (event) {
+            case "push":
+                return handlePushEvent(rawPayload, deliveryId);
+            case "issues":
+                return handleIssuesEvent(rawPayload, deliveryId);
+            case "ping":
+                return ResponseEntity.ok(Map.of("message", "pong", "status", "Webhook configured successfully"));
+            default:
+                log.info("Ignoring event: {}", event);
+                return ResponseEntity.ok(Map.of("message", "Event ignored", "event", event));
+        }
+    }
+
+    /**
+     * Push 이벤트 처리
+     */
+    private ResponseEntity<?> handlePushEvent(String rawPayload, String deliveryId) {
         GitHubWebhookPayload payload;
         try {
             payload = objectMapper.readValue(rawPayload, GitHubWebhookPayload.class);
         } catch (Exception e) {
-            log.error("Failed to parse webhook payload: {}", e.getMessage());
+            log.error("Failed to parse push payload: {}", e.getMessage());
             return ResponseEntity.badRequest()
                 .body(Map.of("error", "Invalid payload format"));
         }
 
-        // 4. Webhook 처리
         try {
             WebhookResult result = webhookService.processWebhook(payload);
 
@@ -96,6 +116,7 @@ public class GitHubWebhookController {
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
+            response.put("event", "push");
             response.put("teamId", result.getTeamId());
             response.put("teamName", result.getTeamName());
             response.put("linked", result.getLinkedCount());
@@ -105,10 +126,66 @@ public class GitHubWebhookController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            log.error("Failed to process webhook: {}", e.getMessage(), e);
+            log.error("Failed to process push webhook: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Webhook processing failed: " + e.getMessage()));
         }
+    }
+
+    /**
+     * Issues 이벤트 처리
+     */
+    private ResponseEntity<?> handleIssuesEvent(String rawPayload, String deliveryId) {
+        GitHubIssuePayload payload;
+        try {
+            payload = objectMapper.readValue(rawPayload, GitHubIssuePayload.class);
+        } catch (Exception e) {
+            log.error("Failed to parse issues payload: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", "Invalid payload format"));
+        }
+
+        try {
+            // Repository URL로 팀 찾기
+            String repoUrl = payload.getRepository().getHtmlUrl();
+            Team team = findTeamByRepoUrl(repoUrl);
+
+            if (team == null) {
+                log.info("No team found for repo: {}", repoUrl);
+                return ResponseEntity.ok(Map.of(
+                    "success", false,
+                    "message", "No team configured for this repository"
+                ));
+            }
+
+            // Issue 동기화 처리
+            issueSyncService.processIssueWebhook(payload, team.getTeamId(), deliveryId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("event", "issues");
+            response.put("action", payload.getAction());
+            response.put("issueNumber", payload.getIssue().getNumber());
+            response.put("teamId", team.getTeamId());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("Failed to process issues webhook: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Webhook processing failed: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Repository URL로 팀 찾기
+     */
+    private Team findTeamByRepoUrl(String repoUrl) {
+        if (repoUrl == null) return null;
+        String normalizedUrl = repoUrl
+            .replaceAll("\\.git$", "")
+            .replaceAll("/$", "");
+        return teamDao.findByGithubRepoUrl(normalizedUrl);
     }
 
     /**

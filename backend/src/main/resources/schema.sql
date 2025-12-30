@@ -1,6 +1,17 @@
 -- =============================================
--- Synodos - PostgreSQL Schema
--- Docker + Spring Boot 공용
+-- Synodos - PostgreSQL Schema (자동 실행)
+-- =============================================
+--
+-- ✅ 이 파일은 Spring Boot 시작 시 자동으로 실행됩니다!
+--
+-- 위치: backend/src/main/resources/schema.sql
+-- 역할: 테이블 생성 및 스키마 마이그레이션
+--
+-- 새 컬럼 추가 시:
+--   1. CREATE TABLE 문에 컬럼 추가 (신규 설치용)
+--   2. DO $$ ... ALTER TABLE ... $$ 블록 추가 (기존 DB 업데이트용)
+--
+-- 참고: database/postgresql_schema.sql은 참조/백업용입니다.
 -- =============================================
 
 -- ========================================
@@ -29,6 +40,9 @@ CREATE TABLE IF NOT EXISTS member (
     phone VARCHAR(20),
     email_verified BOOLEAN DEFAULT FALSE,
     profile_image VARCHAR(500),
+    github_username VARCHAR(100),
+    github_access_token VARCHAR(500),
+    github_connected_at TIMESTAMP,
     register TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -50,8 +64,34 @@ BEGIN
     END IF;
 END $$;
 
+-- GitHub 연동 컬럼 추가
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'member' AND column_name = 'github_username') THEN
+        ALTER TABLE member ADD COLUMN github_username VARCHAR(100);
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'member' AND column_name = 'github_access_token') THEN
+        ALTER TABLE member ADD COLUMN github_access_token VARCHAR(500);
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'member' AND column_name = 'github_connected_at') THEN
+        ALTER TABLE member ADD COLUMN github_connected_at TIMESTAMP;
+    END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_member_userid ON member(userid);
 CREATE INDEX IF NOT EXISTS idx_member_email ON member(email);
+CREATE INDEX IF NOT EXISTS idx_member_github ON member(github_username);
 
 -- ========================================
 -- 팀 테이블
@@ -63,17 +103,11 @@ CREATE TABLE IF NOT EXISTS team (
     leader_no INTEGER NOT NULL REFERENCES member(no),
     description TEXT,
     github_repo_url VARCHAR(500),
+    github_access_token VARCHAR(500),
+    github_issue_sync_enabled BOOLEAN DEFAULT FALSE,
+    github_default_column_id INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- 기존 테이블에 github_repo_url 컬럼 추가 (없는 경우)
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
-                   WHERE table_name = 'team' AND column_name = 'github_repo_url') THEN
-        ALTER TABLE team ADD COLUMN github_repo_url VARCHAR(500);
-    END IF;
-END $$;
 
 CREATE INDEX IF NOT EXISTS idx_team_leader ON team(leader_no);
 CREATE INDEX IF NOT EXISTS idx_team_code ON team(team_code);
@@ -129,6 +163,7 @@ CREATE TABLE IF NOT EXISTS task (
     description TEXT,
     position INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by INTEGER REFERENCES member(no) ON DELETE SET NULL,
     -- Issue tracker fields
     assignee_no INTEGER REFERENCES member(no) ON DELETE SET NULL,
     priority VARCHAR(20) DEFAULT 'MEDIUM',
@@ -140,6 +175,15 @@ CREATE TABLE IF NOT EXISTS task (
     rejected_at TIMESTAMP,
     rejected_by INTEGER REFERENCES member(no) ON DELETE SET NULL
 );
+
+-- 기존 테이블에 created_by 컬럼 추가 (없는 경우)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'task' AND column_name = 'created_by') THEN
+        ALTER TABLE task ADD COLUMN created_by INTEGER REFERENCES member(no) ON DELETE SET NULL;
+    END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_task_column ON task(column_id);
 CREATE INDEX IF NOT EXISTS idx_task_position ON task(column_id, position);
@@ -330,3 +374,72 @@ CREATE TABLE IF NOT EXISTS task_commit (
 
 CREATE INDEX IF NOT EXISTS idx_task_commit_task ON task_commit(task_id);
 CREATE INDEX IF NOT EXISTS idx_task_commit_sha ON task_commit(commit_sha);
+
+-- ========================================
+-- GitHub Issue 동기화 관련 테이블
+-- ========================================
+
+-- Task-GitHub Issue 매핑 테이블
+CREATE SEQUENCE IF NOT EXISTS task_github_issue_seq START WITH 1 INCREMENT BY 1;
+
+CREATE TABLE IF NOT EXISTS task_github_issue (
+    id INTEGER PRIMARY KEY DEFAULT nextval('task_github_issue_seq'),
+    task_id INTEGER NOT NULL REFERENCES task(task_id) ON DELETE CASCADE,
+    team_id INTEGER NOT NULL REFERENCES team(team_id) ON DELETE CASCADE,
+    issue_number INTEGER NOT NULL,
+    issue_id BIGINT NOT NULL,
+    issue_title VARCHAR(500),
+    issue_url VARCHAR(500),
+    sync_status VARCHAR(20) DEFAULT 'SYNCED',
+    last_synced_at TIMESTAMP,
+    synodos_updated_at TIMESTAMP,
+    github_updated_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_task_github_issue UNIQUE(task_id),
+    CONSTRAINT unique_team_issue UNIQUE(team_id, issue_number)
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_github_issue_task ON task_github_issue(task_id);
+CREATE INDEX IF NOT EXISTS idx_task_github_issue_team ON task_github_issue(team_id);
+CREATE INDEX IF NOT EXISTS idx_task_github_issue_status ON task_github_issue(sync_status);
+
+-- GitHub 사용자 매핑 테이블
+CREATE SEQUENCE IF NOT EXISTS github_user_mapping_seq START WITH 1 INCREMENT BY 1;
+
+CREATE TABLE IF NOT EXISTS github_user_mapping (
+    id INTEGER PRIMARY KEY DEFAULT nextval('github_user_mapping_seq'),
+    member_no INTEGER NOT NULL REFERENCES member(no) ON DELETE CASCADE,
+    github_username VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_member_github UNIQUE(member_no),
+    CONSTRAINT unique_github_username UNIQUE(github_username)
+);
+
+CREATE INDEX IF NOT EXISTS idx_github_user_mapping_member ON github_user_mapping(member_no);
+CREATE INDEX IF NOT EXISTS idx_github_user_mapping_github ON github_user_mapping(github_username);
+
+-- GitHub Issue 동기화 로그 테이블
+CREATE SEQUENCE IF NOT EXISTS github_issue_sync_log_seq START WITH 1 INCREMENT BY 1;
+
+CREATE TABLE IF NOT EXISTS github_issue_sync_log (
+    id INTEGER PRIMARY KEY DEFAULT nextval('github_issue_sync_log_seq'),
+    task_github_issue_id INTEGER REFERENCES task_github_issue(id) ON DELETE SET NULL,
+    task_id INTEGER,
+    issue_number INTEGER,
+    team_id INTEGER,
+    sync_direction VARCHAR(20),
+    sync_type VARCHAR(20),
+    field_changed VARCHAR(50),
+    old_value TEXT,
+    new_value TEXT,
+    sync_status VARCHAR(20),
+    error_message TEXT,
+    triggered_by VARCHAR(20),
+    webhook_delivery_id VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_github_sync_log_mapping ON github_issue_sync_log(task_github_issue_id);
+CREATE INDEX IF NOT EXISTS idx_github_sync_log_task ON github_issue_sync_log(task_id);
+CREATE INDEX IF NOT EXISTS idx_github_sync_log_created ON github_issue_sync_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_github_sync_log_webhook ON github_issue_sync_log(webhook_delivery_id);
