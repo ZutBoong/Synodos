@@ -51,9 +51,10 @@ function OverviewView({ team, tasks, teamMembers, loginMember, isLeader, updateT
     const loadFavoriteTasks = async () => {
         try {
             const favorites = await getTaskFavoritesByTeam(loginMember.no, team.teamId);
-            setFavoriteTasks(favorites || []);
+            setFavoriteTasks(Array.isArray(favorites) ? favorites : []);
         } catch (error) {
             console.error('즐겨찾기 로드 실패:', error);
+            setFavoriteTasks([]);
         }
     };
 

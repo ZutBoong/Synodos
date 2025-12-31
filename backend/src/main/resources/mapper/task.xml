@@ -4,9 +4,12 @@
 
 	<!-- 태스크 생성 -->
 	<insert id="insert" parameterType="task">
+		<selectKey keyProperty="taskId" resultType="int" order="BEFORE">
+			SELECT nextval('task_seq')
+		</selectKey>
 		INSERT INTO task (task_id, column_id, title, description, position, created_at,
 			assignee_no, priority, start_date, due_date, workflow_status)
-		VALUES (nextval('task_seq'), #{columnId}, #{title}, #{description, jdbcType=VARCHAR},
+		VALUES (#{taskId}, #{columnId}, #{title}, #{description, jdbcType=VARCHAR},
 			#{position}, CURRENT_TIMESTAMP,
 			#{assigneeNo, jdbcType=INTEGER}, #{priority, jdbcType=VARCHAR},
 			COALESCE(#{startDate, jdbcType=DATE}, CURRENT_DATE),

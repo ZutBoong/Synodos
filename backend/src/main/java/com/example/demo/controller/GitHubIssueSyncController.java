@@ -260,6 +260,73 @@ public class GitHubIssueSyncController {
         }
     }
 
+    // ==================== Bulk Sync ====================
+
+    /**
+     * GitHub Issues 일괄 가져오기
+     * POST /api/github/issue/bulk/import/{teamId}
+     */
+    @PostMapping("/bulk/import/{teamId}")
+    public ResponseEntity<?> importAllIssues(
+            @PathVariable int teamId,
+            @RequestParam int memberNo) {
+        log.info("Bulk importing GitHub issues for team {} by member {}", teamId, memberNo);
+        try {
+            GitHubIssueSyncService.BulkSyncResult result = syncService.importAllIssues(teamId, memberNo);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "imported", result.getSuccessCount(),
+                "skipped", result.getSkipCount(),
+                "failed", result.getFailCount(),
+                "errors", result.getErrors()
+            ));
+        } catch (Exception e) {
+            log.error("Failed to bulk import issues: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Tasks 일괄 내보내기
+     * POST /api/github/issue/bulk/export/{teamId}
+     */
+    @PostMapping("/bulk/export/{teamId}")
+    public ResponseEntity<?> exportAllTasks(
+            @PathVariable int teamId,
+            @RequestParam int memberNo) {
+        log.info("Bulk exporting tasks to GitHub for team {} by member {}", teamId, memberNo);
+        try {
+            GitHubIssueSyncService.BulkSyncResult result = syncService.exportAllTasks(teamId, memberNo);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "exported", result.getSuccessCount(),
+                "skipped", result.getSkipCount(),
+                "failed", result.getFailCount(),
+                "errors", result.getErrors()
+            ));
+        } catch (Exception e) {
+            log.error("Failed to bulk export tasks: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * 연결되지 않은 Issue/Task 개수 조회
+     * GET /api/github/issue/bulk/counts/{teamId}
+     */
+    @GetMapping("/bulk/counts/{teamId}")
+    public ResponseEntity<?> getUnlinkedCounts(
+            @PathVariable int teamId,
+            @RequestParam int memberNo) {
+        try {
+            var counts = syncService.getUnlinkedCounts(teamId, memberNo);
+            return ResponseEntity.ok(counts);
+        } catch (Exception e) {
+            log.error("Failed to get unlinked counts: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     // ==================== DTOs ====================
 
     @Data

@@ -84,6 +84,7 @@ CREATE INDEX IF NOT EXISTS idx_github_sync_log_created ON github_issue_sync_log(
 ALTER TABLE team ADD COLUMN IF NOT EXISTS github_access_token VARCHAR(500);
 ALTER TABLE team ADD COLUMN IF NOT EXISTS github_issue_sync_enabled BOOLEAN DEFAULT FALSE;
 ALTER TABLE team ADD COLUMN IF NOT EXISTS github_default_column_id INTEGER REFERENCES columns(column_id) ON DELETE SET NULL;
+ALTER TABLE team ADD COLUMN IF NOT EXISTS github_column_mappings TEXT;
 
 -- 코멘트 추가
 COMMENT ON TABLE task_github_issue IS 'Synodos Task와 GitHub Issue 간의 1:1 매핑 테이블';
@@ -92,3 +93,4 @@ COMMENT ON TABLE github_issue_sync_log IS 'GitHub Issue 동기화 작업 로그'
 COMMENT ON COLUMN team.github_access_token IS '팀의 GitHub Personal Access Token (암호화 권장)';
 COMMENT ON COLUMN team.github_issue_sync_enabled IS 'GitHub Issue 동기화 활성화 여부';
 COMMENT ON COLUMN team.github_default_column_id IS 'GitHub Issue에서 Task 생성 시 기본 컬럼';
+COMMENT ON COLUMN team.github_column_mappings IS 'Issue 제목 명령어 → 컬럼ID 매핑 규칙 (JSON)';

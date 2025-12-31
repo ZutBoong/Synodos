@@ -20,7 +20,8 @@
 	<!-- 팀 코드로 팀 조회 -->
 	<select id="findByCode" parameterType="String" resultType="team">
 		SELECT t.team_id, t.team_name, t.team_code, t.leader_no, t.description,
-			   t.github_repo_url, t.github_access_token, t.github_issue_sync_enabled, t.github_default_column_id,
+			   t.github_repo_url, t.github_access_token, t.github_issue_sync_enabled,
+			   t.github_default_column_id, t.github_column_mappings,
 			   t.created_at, m.name as leader_name
 		FROM team t
 		JOIN member m ON t.leader_no = m.no
@@ -30,7 +31,8 @@
 	<!-- 팀 ID로 팀 조회 -->
 	<select id="findById" parameterType="int" resultType="team">
 		SELECT t.team_id, t.team_name, t.team_code, t.leader_no, t.description,
-			   t.github_repo_url, t.github_access_token, t.github_issue_sync_enabled, t.github_default_column_id,
+			   t.github_repo_url, t.github_access_token, t.github_issue_sync_enabled,
+			   t.github_default_column_id, t.github_column_mappings,
 			   t.created_at, m.name as leader_name
 		FROM team t
 		JOIN member m ON t.leader_no = m.no
@@ -40,7 +42,8 @@
 	<!-- 내가 속한 팀 목록 -->
 	<select id="findMyTeams" parameterType="int" resultType="team">
 		SELECT t.team_id, t.team_name, t.team_code, t.leader_no, t.description,
-			   t.github_repo_url, t.github_access_token, t.github_issue_sync_enabled, t.github_default_column_id,
+			   t.github_repo_url, t.github_access_token, t.github_issue_sync_enabled,
+			   t.github_default_column_id, t.github_column_mappings,
 			   t.created_at, m.name as leader_name
 		FROM team t
 		JOIN team_member tm ON t.team_id = tm.team_id
@@ -84,7 +87,8 @@
 			github_repo_url = #{githubRepoUrl, jdbcType=VARCHAR},
 			github_access_token = #{githubAccessToken, jdbcType=VARCHAR},
 			github_issue_sync_enabled = #{githubIssueSyncEnabled, jdbcType=BOOLEAN},
-			github_default_column_id = #{githubDefaultColumnId, jdbcType=INTEGER}
+			github_default_column_id = #{githubDefaultColumnId, jdbcType=INTEGER},
+			github_column_mappings = #{githubColumnMappings, jdbcType=VARCHAR}
 		WHERE team_id = #{teamId}
 	</update>
 
@@ -110,7 +114,8 @@
 	<!-- GitHub 저장소 URL로 팀 조회 -->
 	<select id="findByGithubRepoUrl" parameterType="String" resultType="team">
 		SELECT t.team_id, t.team_name, t.team_code, t.leader_no, t.description,
-			   t.github_repo_url, t.github_access_token, t.github_issue_sync_enabled, t.github_default_column_id,
+			   t.github_repo_url, t.github_access_token, t.github_issue_sync_enabled,
+			   t.github_default_column_id, t.github_column_mappings,
 			   t.created_at, m.name as leader_name
 		FROM team t
 		JOIN member m ON t.leader_no = m.no

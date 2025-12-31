@@ -40,6 +40,8 @@ CREATE TABLE IF NOT EXISTS member (
     phone VARCHAR(20),
     email_verified BOOLEAN DEFAULT FALSE,
     profile_image VARCHAR(500),
+    provider VARCHAR(20),
+    provider_id VARCHAR(100),
     github_username VARCHAR(100),
     github_access_token VARCHAR(500),
     github_connected_at TIMESTAMP,
@@ -89,9 +91,48 @@ BEGIN
     END IF;
 END $$;
 
+-- 소셜 로그인 provider 컬럼 추가
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'member' AND column_name = 'provider') THEN
+        ALTER TABLE member ADD COLUMN provider VARCHAR(20);
+    END IF;
+END $$;
+
+-- 소셜 로그인 provider_id 컬럼 추가
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'member' AND column_name = 'provider_id') THEN
+        ALTER TABLE member ADD COLUMN provider_id VARCHAR(100);
+    END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_member_userid ON member(userid);
 CREATE INDEX IF NOT EXISTS idx_member_email ON member(email);
 CREATE INDEX IF NOT EXISTS idx_member_github ON member(github_username);
+CREATE INDEX IF NOT EXISTS idx_member_provider ON member(provider, provider_id);
+
+-- ========================================
+-- 소셜 계정 연동 테이블 (다중 소셜 연동 지원)
+-- ========================================
+CREATE SEQUENCE IF NOT EXISTS member_social_link_seq START WITH 1 INCREMENT BY 1;
+
+CREATE TABLE IF NOT EXISTS member_social_link (
+    id INTEGER PRIMARY KEY DEFAULT nextval('member_social_link_seq'),
+    member_no INTEGER NOT NULL REFERENCES member(no) ON DELETE CASCADE,
+    provider VARCHAR(20) NOT NULL,
+    provider_id VARCHAR(100) NOT NULL,
+    email VARCHAR(100),
+    name VARCHAR(100),
+    linked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_member_provider UNIQUE(member_no, provider),
+    CONSTRAINT unique_provider_id UNIQUE(provider, provider_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_social_link_member ON member_social_link(member_no);
+CREATE INDEX IF NOT EXISTS idx_social_link_provider ON member_social_link(provider, provider_id);
 
 -- ========================================
 -- 팀 테이블
@@ -106,8 +147,42 @@ CREATE TABLE IF NOT EXISTS team (
     github_access_token VARCHAR(500),
     github_issue_sync_enabled BOOLEAN DEFAULT FALSE,
     github_default_column_id INTEGER,
+    github_column_mappings TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 기존 테이블에 GitHub Issue 동기화 관련 컬럼 추가 (없는 경우)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'team' AND column_name = 'github_access_token') THEN
+        ALTER TABLE team ADD COLUMN github_access_token VARCHAR(500);
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'team' AND column_name = 'github_issue_sync_enabled') THEN
+        ALTER TABLE team ADD COLUMN github_issue_sync_enabled BOOLEAN DEFAULT FALSE;
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'team' AND column_name = 'github_default_column_id') THEN
+        ALTER TABLE team ADD COLUMN github_default_column_id INTEGER;
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'team' AND column_name = 'github_column_mappings') THEN
+        ALTER TABLE team ADD COLUMN github_column_mappings TEXT;
+    END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_team_leader ON team(leader_no);
 CREATE INDEX IF NOT EXISTS idx_team_code ON team(team_code);
@@ -146,12 +221,25 @@ CREATE TABLE IF NOT EXISTS columns (
     title VARCHAR(100) NOT NULL,
     position INTEGER NOT NULL,
     team_id INTEGER REFERENCES team(team_id) ON DELETE CASCADE,
-    project_id INTEGER REFERENCES project(project_id) ON DELETE CASCADE
+    project_id INTEGER REFERENCES project(project_id) ON DELETE CASCADE,
+    github_prefix VARCHAR(50) -- GitHub Issue 제목 명령어 (예: [버그])
 );
 
 CREATE INDEX IF NOT EXISTS idx_column_position ON columns(position);
 CREATE INDEX IF NOT EXISTS idx_column_team ON columns(team_id);
 CREATE INDEX IF NOT EXISTS idx_column_project ON columns(project_id);
+
+-- github_prefix 컬럼 추가 (기존 DB 마이그레이션)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'columns' AND column_name = 'github_prefix') THEN
+        ALTER TABLE columns ADD COLUMN github_prefix VARCHAR(50);
+    END IF;
+END $$;
+
+-- 기존 컬럼에 기본값 설정: [컬럼명]
+UPDATE columns SET github_prefix = '[' || title || ']' WHERE github_prefix IS NULL;
 
 -- ========================================
 -- 태스크 테이블
@@ -166,7 +254,7 @@ CREATE TABLE IF NOT EXISTS task (
     created_by INTEGER REFERENCES member(no) ON DELETE SET NULL,
     -- Issue tracker fields
     assignee_no INTEGER REFERENCES member(no) ON DELETE SET NULL,
-    priority VARCHAR(20) DEFAULT 'MEDIUM',
+    priority VARCHAR(20),
     start_date TIMESTAMP,
     due_date TIMESTAMP,
     -- Workflow fields
@@ -192,6 +280,9 @@ CREATE INDEX IF NOT EXISTS idx_task_workflow_status ON task(workflow_status);
 CREATE INDEX IF NOT EXISTS idx_task_priority ON task(priority);
 CREATE INDEX IF NOT EXISTS idx_task_due_date ON task(due_date);
 CREATE INDEX IF NOT EXISTS idx_task_start_date ON task(start_date);
+
+-- priority 컬럼의 기본값 제거 (기존 DB 마이그레이션)
+ALTER TABLE task ALTER COLUMN priority DROP DEFAULT;
 
 -- ========================================
 -- 댓글 테이블

@@ -78,3 +78,5 @@ application-local.properties
 *~
 
 docs
+
+backend/uploads

@@ -81,54 +81,49 @@ function Sidebar({ isOpen, onToggle, currentTeam, onSelectTeam, loginMember }) {
         };
     }, [showUserMenu]);
 
+    // 팀 목록 로드
     useEffect(() => {
-        if (loginMember) {
-            fetchTeams();
-            fetchUnreadCount();
-            // 30초마다 읽지 않은 알림 수 갱신
-            const interval = setInterval(fetchUnreadCount, 30000);
-            return () => clearInterval(interval);
-        }
-    }, [loginMember]);
+        if (!loginMember?.no) return;
 
-    // 페이지 이동 시 알림 수 갱신 (알림 읽음 처리 후 다른 페이지로 이동 시)
-    useEffect(() => {
-        if (loginMember) {
-            fetchUnreadCount();
-        }
-    }, [location.pathname]);
+        const loadTeams = async () => {
+            try {
+                console.log('팀 목록 로드 시작:', loginMember.no);
+                const data = await getMyTeams(loginMember.no);
+                console.log('팀 목록 응답:', data);
+                const teamsArray = Array.isArray(data) ? data : [];
+                setTeams(teamsArray);
+                // 현재 팀 페이지가 아닐 때만 첫 번째 팀 선택
+                if (!currentTeam && teamsArray.length > 0 && !location.pathname.startsWith('/team/')) {
+                    onSelectTeam(teamsArray[0]);
+                }
+            } catch (error) {
+                console.error('팀 목록 조회 실패:', error);
+                setTeams([]);
+            }
+        };
+
+        loadTeams();
+
+        // 알림 수 조회
+        getUnreadCount(loginMember.no).then(setUnreadCount).catch(console.error);
+
+        // 30초마다 읽지 않은 알림 수 갱신
+        const interval = setInterval(() => {
+            getUnreadCount(loginMember.no).then(setUnreadCount).catch(console.error);
+        }, 30000);
+        return () => clearInterval(interval);
+    }, [loginMember?.no, location.pathname]);
 
     // 알림 읽음 처리 시 실시간 갱신 (커스텀 이벤트 리스너)
     useEffect(() => {
+        if (!loginMember?.no) return;
+
         const handleNotificationRead = () => {
-            fetchUnreadCount();
+            getUnreadCount(loginMember.no).then(setUnreadCount).catch(console.error);
         };
         window.addEventListener('notificationRead', handleNotificationRead);
         return () => window.removeEventListener('notificationRead', handleNotificationRead);
-    }, [loginMember]);
-
-    const fetchUnreadCount = async () => {
-        if (!loginMember) return;
-        try {
-            const count = await getUnreadCount(loginMember.no);
-            setUnreadCount(count);
-        } catch (error) {
-            console.error('알림 수 조회 실패:', error);
-        }
-    };
-
-    const fetchTeams = async () => {
-        try {
-            const data = await getMyTeams(loginMember.no);
-            setTeams(data || []);
-            // 현재 팀 페이지가 아닐 때만 첫 번째 팀 선택
-            if (!currentTeam && data && data.length > 0 && !location.pathname.startsWith('/team/')) {
-                onSelectTeam(data[0]);
-            }
-        } catch (error) {
-            console.error('팀 목록 조회 실패:', error);
-        }
-    };
+    }, [loginMember?.no]);
 
     const handleLeaveTeam = async (team, e) => {
         e.stopPropagation();

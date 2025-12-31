@@ -80,11 +80,12 @@ function GitHubCallback() {
                             member.githubConnectedAt = result.connectedAt;
                             localStorage.setItem('member', JSON.stringify(member));
                         }
-                        // 2초 후 이전 페이지로 이동
+                        // 2초 후 이전 페이지로 이동 (강제 새로고침으로 state 동기화)
                         setTimeout(() => {
                             const returnUrl = localStorage.getItem('github_return_url');
                             localStorage.removeItem('github_return_url');
-                            navigate(returnUrl || '/');
+                            // navigate 대신 window.location으로 페이지 새로고침
+                            window.location.href = returnUrl || '/';
                         }, 2000);
                     } else {
                         setStatus('error');

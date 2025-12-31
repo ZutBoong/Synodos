@@ -67,4 +67,8 @@ public interface MemberDao {
 
 	// GitHub 사용자명으로 회원 조회
 	Member findByGithubUsername(String githubUsername);
+
+	// 소셜 로그인 - provider + provider_id로 회원 조회
+	Member findByProviderAndProviderId(@org.apache.ibatis.annotations.Param("provider") String provider,
+									   @org.apache.ibatis.annotations.Param("providerId") String providerId);
 }

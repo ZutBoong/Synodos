@@ -283,20 +283,28 @@ public class GitHubIssueSyncService {
             return;
         }
 
+        // 팀의 컬럼 목록 로드 (github_prefix 포함)
+        List<SynodosColumn> columns = columnDao.listByTeam(teamId);
+        if (columns.isEmpty()) {
+            log.warn("No columns found for team {}", teamId);
+            return;
+        }
+
         // 기본 컬럼 확인
         Integer defaultColumnId = team.getGithubDefaultColumnId();
         if (defaultColumnId == null) {
-            // 팀의 첫 번째 컬럼 사용
-            List<SynodosColumn> columns = columnDao.listByTeam(teamId);
-            if (columns.isEmpty()) {
-                log.warn("No columns found for team {}", teamId);
-                return;
-            }
             defaultColumnId = columns.get(0).getColumnId();
         }
 
-        // Task 생성
-        Task task = createTaskFromIssue(payload, teamId, defaultColumnId);
+        // 제목에서 명령어로 컬럼 결정
+        String issueTitle = payload.getIssue().getTitle();
+        Integer targetColumnId = findColumnByTitlePrefix(issueTitle, columns);
+        if (targetColumnId == null) {
+            targetColumnId = defaultColumnId;
+        }
+
+        // Task 생성 (명령어가 있으면 제거)
+        Task task = createTaskFromIssue(payload, teamId, targetColumnId, columns);
 
         // 매핑 생성
         TaskGitHubIssue newMapping = new TaskGitHubIssue();
@@ -326,12 +334,15 @@ public class GitHubIssueSyncService {
     /**
      * Issue에서 Task 생성
      */
-    private Task createTaskFromIssue(GitHubIssuePayload payload, int teamId, int columnId) {
+    private Task createTaskFromIssue(GitHubIssuePayload payload, int teamId, int columnId, List<SynodosColumn> columns) {
         GitHubIssuePayload.Issue issue = payload.getIssue();
+
+        // 제목에서 명령어 제거
+        String cleanTitle = removePrefixFromTitle(issue.getTitle(), columns);
 
         Task task = new Task();
         task.setColumnId(columnId);
-        task.setTitle(issue.getTitle());
+        task.setTitle(cleanTitle);
         task.setDescription(issue.getBody());
         task.setPosition(taskDao.getMaxPosition(columnId) + 1);
 
@@ -344,7 +355,7 @@ public class GitHubIssueSyncService {
         task.setWorkflowStatus(status != null ? status : "WAITING");
 
         String priority = labelService.extractPriorityFromLabels(labels);
-        task.setPriority(priority != null ? priority : "MEDIUM");
+        task.setPriority(priority); // null이면 우선순위 미설정
 
         // Milestone에서 마감일 추출
         if (issue.getMilestone() != null && issue.getMilestone().getDueOn() != null) {
@@ -782,5 +793,348 @@ public class GitHubIssueSyncService {
         return gitHubIssueService.listIssues(
             repoInfo.owner, repoInfo.repo, member.getGithubAccessToken(), state, 1
         );
+    }
+
+    // ==================== Bulk Sync ====================
+
+    /**
+     * 결과 DTO
+     */
+    public static class BulkSyncResult {
+        private int successCount;
+        private int skipCount;
+        private int failCount;
+        private List<String> errors = new ArrayList<>();
+
+        public int getSuccessCount() { return successCount; }
+        public void setSuccessCount(int successCount) { this.successCount = successCount; }
+        public int getSkipCount() { return skipCount; }
+        public void setSkipCount(int skipCount) { this.skipCount = skipCount; }
+        public int getFailCount() { return failCount; }
+        public void setFailCount(int failCount) { this.failCount = failCount; }
+        public List<String> getErrors() { return errors; }
+        public void setErrors(List<String> errors) { this.errors = errors; }
+        public void addError(String error) { this.errors.add(error); }
+    }
+
+    /**
+     * 제목에서 명령어(prefix)를 찾아 해당하는 컬럼 ID 반환
+     * 예: "[버그] 로그인 오류" → github_prefix가 "[버그]"인 컬럼 ID 반환
+     */
+    private Integer findColumnByTitlePrefix(String title, List<SynodosColumn> columns) {
+        if (title == null || columns == null || columns.isEmpty()) {
+            return null;
+        }
+
+        String trimmedTitle = title.trim();
+
+        // 각 컬럼의 github_prefix 확인 (대소문자 구분 없이)
+        for (SynodosColumn column : columns) {
+            String prefix = column.getGithubPrefix();
+            if (prefix == null || prefix.trim().isEmpty()) continue;
+            prefix = prefix.trim();
+
+            // 제목이 해당 prefix로 시작하는지 확인 (대소문자 무시)
+            if (trimmedTitle.toLowerCase().startsWith(prefix.toLowerCase())) {
+                log.debug("Title '{}' matched prefix '{}' -> column {}", title, prefix, column.getColumnId());
+                return column.getColumnId();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 제목에서 명령어를 제거한 실제 제목 반환
+     * 예: "[버그] 로그인 오류" → "로그인 오류"
+     */
+    private String removePrefixFromTitle(String title, List<SynodosColumn> columns) {
+        if (title == null || columns == null || columns.isEmpty()) {
+            return title;
+        }
+
+        String trimmedTitle = title.trim();
+
+        for (SynodosColumn column : columns) {
+            String prefix = column.getGithubPrefix();
+            if (prefix == null || prefix.trim().isEmpty()) continue;
+            String trimmedPrefix = prefix.trim();
+
+            if (trimmedTitle.toLowerCase().startsWith(trimmedPrefix.toLowerCase())) {
+                // prefix 제거 후 앞뒤 공백 제거
+                String result = trimmedTitle.substring(trimmedPrefix.length()).trim();
+                return result.isEmpty() ? title : result;
+            }
+        }
+
+        return title;
+    }
+
+    /**
+     * GitHub의 모든 Issues를 Synodos Tasks로 가져오기
+     * (이미 연결된 Issue는 건너뜀)
+     */
+    @Transactional
+    public BulkSyncResult importAllIssues(int teamId, int memberNo) {
+        BulkSyncResult result = new BulkSyncResult();
+
+        // 멤버 및 팀 검증
+        Member member = memberDao.findByNo(memberNo);
+        if (member == null || member.getGithubAccessToken() == null) {
+            result.addError("GitHub 계정이 연결되지 않았습니다.");
+            return result;
+        }
+
+        Team team = teamDao.findById(teamId);
+        if (team == null || team.getGithubRepoUrl() == null) {
+            result.addError("팀 또는 GitHub 저장소 설정을 찾을 수 없습니다.");
+            return result;
+        }
+
+        GitHubService.RepoInfo repoInfo = gitHubService.parseRepoUrl(team.getGithubRepoUrl());
+        if (repoInfo == null) {
+            result.addError("잘못된 GitHub 저장소 URL입니다.");
+            return result;
+        }
+
+        // 팀의 컬럼 목록 로드 (github_prefix 포함)
+        List<SynodosColumn> columns = columnDao.listByTeam(teamId);
+        if (columns.isEmpty()) {
+            result.addError("팀에 컬럼이 없습니다. 먼저 컬럼을 생성해주세요.");
+            return result;
+        }
+        log.info("Columns for team {}: {}", teamId, columns.stream()
+            .map(c -> c.getTitle() + "=" + c.getGithubPrefix())
+            .collect(Collectors.joining(", ")));
+
+        // 기본 컬럼 확인
+        Integer defaultColumnId = team.getGithubDefaultColumnId();
+        if (defaultColumnId == null) {
+            defaultColumnId = columns.get(0).getColumnId();
+        }
+
+        String token = member.getGithubAccessToken();
+
+        // 모든 open issues 가져오기 (여러 페이지)
+        List<GitHubIssueService.GitHubIssue> allIssues = new ArrayList<>();
+        int page = 1;
+        while (true) {
+            List<GitHubIssueService.GitHubIssue> issues =
+                gitHubIssueService.listIssues(repoInfo.owner, repoInfo.repo, token, "all", page);
+            if (issues.isEmpty()) break;
+            allIssues.addAll(issues);
+            if (issues.size() < 30) break; // GitHub API default per_page
+            page++;
+            if (page > 10) break; // 최대 300개 제한
+        }
+
+        log.info("Found {} GitHub issues for team {}", allIssues.size(), teamId);
+
+        for (GitHubIssueService.GitHubIssue issue : allIssues) {
+            try {
+                // 이미 연결된 Issue인지 확인
+                if (taskGitHubIssueDao.countByTeamAndIssue(teamId, issue.getNumber()) > 0) {
+                    result.setSkipCount(result.getSkipCount() + 1);
+                    continue;
+                }
+
+                // 제목에서 명령어로 컬럼 결정
+                Integer targetColumnId = findColumnByTitlePrefix(issue.getTitle(), columns);
+                if (targetColumnId == null) {
+                    targetColumnId = defaultColumnId;
+                }
+
+                // 제목에서 명령어 제거 (선택적)
+                String cleanTitle = removePrefixFromTitle(issue.getTitle(), columns);
+
+                // Task 생성
+                Task task = new Task();
+                task.setColumnId(targetColumnId);
+                task.setTitle(cleanTitle);
+                task.setDescription(issue.getBody());
+                task.setPosition(taskDao.getMaxPosition(targetColumnId) + 1);
+                task.setWorkflowStatus("closed".equals(issue.getState()) ? "DONE" : "WAITING");
+                // Label에서 우선순위 추출 (없으면 null)
+                String priority = labelService.extractPriorityFromLabels(issue.getLabels());
+                task.setPriority(priority);
+
+                taskDao.insert(task);
+
+                // 매핑 생성
+                TaskGitHubIssue mapping = new TaskGitHubIssue();
+                mapping.setTaskId(task.getTaskId());
+                mapping.setTeamId(teamId);
+                mapping.setIssueNumber(issue.getNumber());
+                mapping.setIssueId(issue.getId());
+                mapping.setIssueTitle(issue.getTitle());
+                mapping.setIssueUrl(issue.getHtmlUrl());
+                mapping.setSyncStatus(TaskGitHubIssue.STATUS_SYNCED);
+                mapping.setLastSyncedAt(LocalDateTime.now());
+                mapping.setGithubUpdatedAt(LocalDateTime.now());
+
+                taskGitHubIssueDao.insert(mapping);
+
+                // WebSocket 알림
+                boardNotificationService.notifyTaskCreated(task, teamId);
+
+                result.setSuccessCount(result.getSuccessCount() + 1);
+                log.info("Imported GitHub Issue #{} as Task #{}", issue.getNumber(), task.getTaskId());
+
+            } catch (Exception e) {
+                result.setFailCount(result.getFailCount() + 1);
+                result.addError("Issue #" + issue.getNumber() + ": " + e.getMessage());
+                log.error("Failed to import issue #{}: {}", issue.getNumber(), e.getMessage());
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Synodos의 모든 Tasks를 GitHub Issues로 내보내기
+     * (이미 연결된 Task는 건너뜀)
+     */
+    @Transactional
+    public BulkSyncResult exportAllTasks(int teamId, int memberNo) {
+        BulkSyncResult result = new BulkSyncResult();
+
+        // 멤버 및 팀 검증
+        Member member = memberDao.findByNo(memberNo);
+        if (member == null || member.getGithubAccessToken() == null) {
+            result.addError("GitHub 계정이 연결되지 않았습니다.");
+            return result;
+        }
+
+        Team team = teamDao.findById(teamId);
+        if (team == null || team.getGithubRepoUrl() == null) {
+            result.addError("팀 또는 GitHub 저장소 설정을 찾을 수 없습니다.");
+            return result;
+        }
+
+        GitHubService.RepoInfo repoInfo = gitHubService.parseRepoUrl(team.getGithubRepoUrl());
+        if (repoInfo == null) {
+            result.addError("잘못된 GitHub 저장소 URL입니다.");
+            return result;
+        }
+
+        String token = member.getGithubAccessToken();
+
+        // Label 자동 생성 확인
+        labelService.ensureAllLabels(repoInfo.owner, repoInfo.repo, token);
+
+        // 팀의 모든 태스크 조회
+        List<Task> tasks = taskDao.listByTeam(teamId);
+        log.info("Found {} tasks for team {}", tasks.size(), teamId);
+
+        for (Task task : tasks) {
+            try {
+                // 이미 연결된 Task인지 확인
+                if (taskGitHubIssueDao.countByTaskId(task.getTaskId()) > 0) {
+                    result.setSkipCount(result.getSkipCount() + 1);
+                    continue;
+                }
+
+                // Issue 생성 요청 구성
+                GitHubIssueService.CreateIssueRequest request = new GitHubIssueService.CreateIssueRequest();
+                request.setTitle(task.getTitle());
+                request.setBody(buildIssueBody(task));
+                request.setLabels(labelService.buildLabelsFromTask(task.getWorkflowStatus(), task.getPriority()));
+
+                // Assignees 매핑
+                List<TaskAssignee> assignees = taskAssigneeDao.listByTask(task.getTaskId());
+                if (!assignees.isEmpty()) {
+                    List<String> githubAssignees = mapMembersToGitHubUsers(
+                        assignees.stream().map(TaskAssignee::getMemberNo).collect(Collectors.toList())
+                    );
+                    if (!githubAssignees.isEmpty()) {
+                        request.setAssignees(githubAssignees);
+                    }
+                }
+
+                // GitHub Issue 생성
+                GitHubIssueService.GitHubIssue issue = gitHubIssueService.createIssue(
+                    repoInfo.owner, repoInfo.repo, token, request
+                );
+
+                // DONE 상태면 Issue 닫기
+                if ("DONE".equals(task.getWorkflowStatus())) {
+                    GitHubIssueService.UpdateIssueRequest closeRequest = new GitHubIssueService.UpdateIssueRequest();
+                    closeRequest.setState("closed");
+                    gitHubIssueService.updateIssue(repoInfo.owner, repoInfo.repo, token, issue.getNumber(), closeRequest);
+                }
+
+                // 매핑 저장
+                TaskGitHubIssue mapping = new TaskGitHubIssue();
+                mapping.setTaskId(task.getTaskId());
+                mapping.setTeamId(teamId);
+                mapping.setIssueNumber(issue.getNumber());
+                mapping.setIssueId(issue.getId());
+                mapping.setIssueTitle(issue.getTitle());
+                mapping.setIssueUrl(issue.getHtmlUrl());
+                mapping.setSyncStatus(TaskGitHubIssue.STATUS_SYNCED);
+                mapping.setLastSyncedAt(LocalDateTime.now());
+                mapping.setSynodosUpdatedAt(LocalDateTime.now());
+                mapping.setGithubUpdatedAt(LocalDateTime.now());
+
+                taskGitHubIssueDao.insert(mapping);
+
+                result.setSuccessCount(result.getSuccessCount() + 1);
+                log.info("Exported Task #{} as GitHub Issue #{}", task.getTaskId(), issue.getNumber());
+
+            } catch (Exception e) {
+                result.setFailCount(result.getFailCount() + 1);
+                result.addError("Task #" + task.getTaskId() + ": " + e.getMessage());
+                log.error("Failed to export task #{}: {}", task.getTaskId(), e.getMessage());
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * 연결되지 않은 Issue/Task 개수 조회
+     */
+    public Map<String, Integer> getUnlinkedCounts(int teamId, int memberNo) {
+        Map<String, Integer> counts = new HashMap<>();
+
+        try {
+            // 연결되지 않은 Tasks 수
+            List<Task> allTasks = taskDao.listByTeam(teamId);
+            int unlinkedTasks = 0;
+            for (Task task : allTasks) {
+                if (taskGitHubIssueDao.countByTaskId(task.getTaskId()) == 0) {
+                    unlinkedTasks++;
+                }
+            }
+            counts.put("unlinkedTasks", unlinkedTasks);
+
+            // 연결되지 않은 Issues 수
+            Member member = memberDao.findByNo(memberNo);
+            Team team = teamDao.findById(teamId);
+            if (member != null && member.getGithubAccessToken() != null &&
+                team != null && team.getGithubRepoUrl() != null) {
+
+                GitHubService.RepoInfo repoInfo = gitHubService.parseRepoUrl(team.getGithubRepoUrl());
+                if (repoInfo != null) {
+                    List<GitHubIssueService.GitHubIssue> issues =
+                        gitHubIssueService.listIssues(repoInfo.owner, repoInfo.repo,
+                            member.getGithubAccessToken(), "all", 1);
+
+                    int unlinkedIssues = 0;
+                    for (GitHubIssueService.GitHubIssue issue : issues) {
+                        if (taskGitHubIssueDao.countByTeamAndIssue(teamId, issue.getNumber()) == 0) {
+                            unlinkedIssues++;
+                        }
+                    }
+                    counts.put("unlinkedIssues", unlinkedIssues);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to get unlinked counts: {}", e.getMessage());
+        }
+
+        counts.putIfAbsent("unlinkedTasks", 0);
+        counts.putIfAbsent("unlinkedIssues", 0);
+        return counts;
     }
 }

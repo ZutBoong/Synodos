@@ -1,8 +1,11 @@
 package com.example.demo.controller;
 
 import com.example.demo.dao.MemberDao;
+import com.example.demo.dao.TeamDao;
 import com.example.demo.model.Member;
+import com.example.demo.model.Team;
 import com.example.demo.security.JwtTokenProvider;
+import com.example.demo.service.GitHubService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +32,13 @@ public class GitHubOAuthController {
     private MemberDao memberDao;
 
     @Autowired
+    private TeamDao teamDao;
+
+    @Autowired
     private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private GitHubService gitHubService;
 
     @Value("${github.oauth.client-id:}")
     private String clientId;
@@ -39,6 +48,12 @@ public class GitHubOAuthController {
 
     @Value("${github.oauth.redirect-uri:http://localhost:3000/github/callback}")
     private String redirectUri;
+
+    @Value("${github.webhook.secret:}")
+    private String webhookSecret;
+
+    @Value("${github.webhook.base-url:}")
+    private String webhookBaseUrl;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -123,12 +138,17 @@ public class GitHubOAuthController {
             member.setGithubAccessToken(accessToken);
             memberDao.updateGitHubConnection(member);
 
+            // 업데이트된 member 다시 조회해서 connectedAt 가져오기
+            Member updatedMember = memberDao.findByNo(memberNo);
+
             log.info("GitHub connected: member={} -> github={}", memberNo, githubUser.login);
 
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "githubUsername", githubUser.login,
-                "avatarUrl", githubUser.avatarUrl != null ? githubUser.avatarUrl : ""
+                "avatarUrl", githubUser.avatarUrl != null ? githubUser.avatarUrl : "",
+                "connectedAt", updatedMember.getGithubConnectedAt() != null ?
+                    updatedMember.getGithubConnectedAt().toString() : ""
             ));
 
         } catch (Exception e) {
@@ -162,6 +182,13 @@ public class GitHubOAuthController {
     /**
      * GitHub 연동 상태 조회
      * GET /api/github/oauth/status/{memberNo}
+     *
+     * GitHub 연동 상태를 확인합니다.
+     * 1. member 테이블의 github_username 확인 (GitHubOAuthController를 통한 연동)
+     * 2. member_social_link 테이블 확인 (소셜 로그인을 통한 연동)
+     *
+     * 둘 중 하나라도 연동되어 있으면 connected=true를 반환합니다.
+     * repo scope가 필요한 경우 hasRepoAccess 필드도 확인해야 합니다.
      */
     @GetMapping("/status/{memberNo}")
     public ResponseEntity<?> getStatus(@PathVariable int memberNo) {
@@ -170,13 +197,195 @@ public class GitHubOAuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "회원을 찾을 수 없습니다."));
         }
 
-        boolean connected = member.getGithubUsername() != null && !member.getGithubUsername().isEmpty();
+        // 1. member 테이블에서 GitHub 연동 확인 (repo 권한 포함)
+        boolean hasGithubInMember = member.getGithubUsername() != null && !member.getGithubUsername().isEmpty();
+        boolean hasAccessToken = member.getGithubAccessToken() != null && !member.getGithubAccessToken().isEmpty();
+
+        // GitHub 연동됨 = username이 있고 access token도 있음
+        boolean connected = hasGithubInMember && hasAccessToken;
+
+        String githubUsername = member.getGithubUsername() != null ? member.getGithubUsername() : "";
+        String connectedAt = member.getGithubConnectedAt() != null ? member.getGithubConnectedAt().toString() : "";
+
+        log.debug("GitHub status for member {}: hasUsername={}, hasAccessToken={}, connected={}",
+            memberNo, hasGithubInMember, hasAccessToken, connected);
 
         return ResponseEntity.ok(Map.of(
             "connected", connected,
-            "githubUsername", member.getGithubUsername() != null ? member.getGithubUsername() : "",
-            "connectedAt", member.getGithubConnectedAt() != null ? member.getGithubConnectedAt().toString() : ""
+            "githubUsername", githubUsername,
+            "connectedAt", connectedAt,
+            "hasRepoAccess", hasAccessToken  // repo 접근 가능 여부
         ));
+    }
+
+    // ==================== 저장소 관리 (팀 연동용) ====================
+
+    /**
+     * Webhook 설정 정보 조회
+     * GET /api/github/oauth/webhook-config
+     */
+    @GetMapping("/webhook-config")
+    public ResponseEntity<?> getWebhookConfig() {
+        boolean configured = webhookBaseUrl != null && !webhookBaseUrl.trim().isEmpty();
+        return ResponseEntity.ok(Map.of(
+            "configured", configured,
+            "baseUrl", configured ? webhookBaseUrl : ""
+        ));
+    }
+
+    /**
+     * 사용자의 GitHub 저장소 목록 조회
+     * GET /api/github/oauth/repos/{memberNo}
+     */
+    @GetMapping("/repos/{memberNo}")
+    public ResponseEntity<?> listRepositories(@PathVariable int memberNo) {
+        try {
+            Member member = memberDao.findByNo(memberNo);
+            if (member == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "회원을 찾을 수 없습니다."));
+            }
+
+            if (member.getGithubAccessToken() == null || member.getGithubAccessToken().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "GitHub 계정이 연결되지 않았습니다."));
+            }
+
+            var repos = gitHubService.listUserRepositories(member.getGithubAccessToken());
+            return ResponseEntity.ok(repos);
+        } catch (Exception e) {
+            log.error("Failed to list repositories: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * 팀에 GitHub 저장소 연결 (자동 Webhook 등록)
+     * POST /api/github/oauth/connect-repo
+     */
+    @PostMapping("/connect-repo")
+    public ResponseEntity<?> connectRepository(@RequestBody ConnectRepoRequest request) {
+        log.info("Connecting repo {} to team {} by member {}",
+            request.getRepoFullName(), request.getTeamId(), request.getMemberNo());
+
+        try {
+            // 1. 멤버 확인
+            Member member = memberDao.findByNo(request.getMemberNo());
+            if (member == null || member.getGithubAccessToken() == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "GitHub 계정이 연결되지 않았습니다."));
+            }
+
+            // 2. 팀 확인
+            Team team = teamDao.findById(request.getTeamId());
+            if (team == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "팀을 찾을 수 없습니다."));
+            }
+
+            // 3. 팀장 권한 확인
+            if (team.getLeaderNo() != request.getMemberNo()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "팀장만 저장소를 연결할 수 있습니다."));
+            }
+
+            // 4. 저장소 URL 파싱
+            String[] parts = request.getRepoFullName().split("/");
+            if (parts.length != 2) {
+                return ResponseEntity.badRequest().body(Map.of("error", "잘못된 저장소 형식입니다."));
+            }
+            String owner = parts[0];
+            String repo = parts[1];
+            String repoUrl = "https://github.com/" + request.getRepoFullName();
+
+            // 5. Webhook URL 결정 (설정된 URL 우선, 없으면 request에서)
+            String webhookUrl = request.getWebhookUrl();
+            if ((webhookUrl == null || webhookUrl.isEmpty()) && webhookBaseUrl != null && !webhookBaseUrl.isEmpty()) {
+                webhookUrl = webhookBaseUrl;
+            }
+            if (webhookUrl == null || webhookUrl.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Webhook URL이 필요합니다. 서버 설정을 확인하세요."));
+            }
+
+            // 6. 기존 Webhook 확인 및 삭제 (Synodos용)
+            try {
+                var existingWebhooks = gitHubService.listWebhooks(member.getGithubAccessToken(), owner, repo);
+                for (var hook : existingWebhooks) {
+                    if (hook.getUrl() != null && hook.getUrl().contains("/api/webhook/github")) {
+                        gitHubService.deleteWebhook(member.getGithubAccessToken(), owner, repo, hook.getId());
+                        log.info("Deleted existing Synodos webhook: {}", hook.getId());
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to check/delete existing webhooks: {}", e.getMessage());
+            }
+
+            // 7. 새 Webhook 등록
+            GitHubService.GitHubWebhook webhook;
+            try {
+                webhook = gitHubService.createWebhook(
+                    member.getGithubAccessToken(),
+                    owner,
+                    repo,
+                    webhookUrl + "/api/webhook/github",
+                    webhookSecret
+                );
+            } catch (Exception e) {
+                log.error("Failed to create webhook: {}", e.getMessage());
+                // Webhook 실패해도 저장소 연결은 진행
+                webhook = null;
+            }
+
+            // 8. 팀 정보 업데이트
+            team.setGithubRepoUrl(repoUrl);
+            team.setGithubIssueSyncEnabled(true);
+            teamDao.updateTeam(team);
+
+            log.info("Repository connected successfully: {} -> team {}", repoUrl, request.getTeamId());
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "repoUrl", repoUrl,
+                "webhookCreated", webhook != null,
+                "webhookId", webhook != null ? webhook.getId() : 0
+            ));
+
+        } catch (Exception e) {
+            log.error("Failed to connect repository: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().body(Map.of("error", "저장소 연결 실패: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 팀의 GitHub 저장소 연결 해제
+     * DELETE /api/github/oauth/disconnect-repo/{teamId}
+     */
+    @DeleteMapping("/disconnect-repo/{teamId}")
+    public ResponseEntity<?> disconnectRepository(
+            @PathVariable int teamId,
+            @RequestParam int memberNo) {
+        log.info("Disconnecting repo from team {} by member {}", teamId, memberNo);
+
+        try {
+            // 1. 팀 확인
+            Team team = teamDao.findById(teamId);
+            if (team == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "팀을 찾을 수 없습니다."));
+            }
+
+            // 2. 팀장 권한 확인
+            if (team.getLeaderNo() != memberNo) {
+                return ResponseEntity.badRequest().body(Map.of("error", "팀장만 저장소를 연결 해제할 수 있습니다."));
+            }
+
+            // 3. 팀 정보 업데이트
+            team.setGithubRepoUrl(null);
+            team.setGithubIssueSyncEnabled(false);
+            teamDao.updateTeam(team);
+
+            log.info("Repository disconnected from team {}", teamId);
+
+            return ResponseEntity.ok(Map.of("success", true));
+
+        } catch (Exception e) {
+            log.error("Failed to disconnect repository: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", "저장소 연결 해제 실패: " + e.getMessage()));
+        }
     }
 
     // ==================== GitHub 로그인 ====================
@@ -412,5 +621,13 @@ public class GitHubOAuthController {
         String avatarUrl;
         String name;
         String email;
+    }
+
+    @lombok.Data
+    public static class ConnectRepoRequest {
+        private int teamId;
+        private int memberNo;
+        private String repoFullName;  // "owner/repo" 형식
+        private String webhookUrl;    // 예: "https://xxx.ngrok.io"
     }
 }

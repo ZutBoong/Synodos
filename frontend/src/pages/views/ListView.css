@@ -489,6 +489,58 @@
     background: #e2e8f0;
 }
 
+/* 칼럼 추가 섹션 */
+.add-column-section {
+    display: flex;
+    gap: 12px;
+    padding: 16px 20px;
+    background: white;
+    border-radius: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.add-column-section input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    background: #f8fafc;
+    transition: all 0.2s ease;
+}
+
+.add-column-section input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.add-column-section input::placeholder {
+    color: #94a3b8;
+}
+
+.add-column-section button {
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
+    white-space: nowrap;
+}
+
+.add-column-section button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
 /* 칼럼 없음 */
 .no-columns {
     text-align: center;
@@ -652,6 +704,21 @@
 
     .no-columns p {
         font-size: 14px;
+    }
+
+    /* 모바일 칼럼 추가 */
+    .add-column-section {
+        flex-direction: column;
+        padding: 12px 16px;
+    }
+
+    .add-column-section input {
+        width: 100%;
+    }
+
+    .add-column-section button {
+        width: 100%;
+        padding: 12px;
     }
 
     /* 모바일 아바타 */

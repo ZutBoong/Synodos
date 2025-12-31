@@ -32,7 +32,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
     const [form, setForm] = useState({
         title: '',
         description: '',
-        priority: 'MEDIUM',
+        priority: null, // 우선순위 미설정
         startDate: '',
         startTime: '',
         dueDate: '',
@@ -57,7 +57,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
             setForm({
                 title: task.title || '',
                 description: task.description || '',
-                priority: task.priority || 'MEDIUM',
+                priority: task.priority || null, // 우선순위 미설정이면 null
                 startDate: formatDateForInput(task.startDate),
                 startTime: extractTimeFromDateTime(task.startDate),
                 dueDate: formatDateForInput(task.dueDate),
@@ -356,7 +356,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
                         <button
                             className={`action-btn urgent-btn ${form.priority === 'URGENT' ? 'active' : ''}`}
                             onClick={() => {
-                                const newPriority = form.priority === 'URGENT' ? 'MEDIUM' : 'URGENT';
+                                const newPriority = form.priority === 'URGENT' ? null : 'URGENT';
                                 const updatedForm = { ...form, priority: newPriority };
                                 setForm(updatedForm);
                                 debouncedSave(updatedForm, selectedAssignees, selectedVerifiers);

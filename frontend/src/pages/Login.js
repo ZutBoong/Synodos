@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../api/memberApi';
-import { getGitHubLoginUrl } from '../api/githubIssueApi';
 import './Auth.css';
 
 function Login() {
@@ -11,7 +10,6 @@ function Login() {
         password: ''
     });
     const [error, setError] = useState('');
-    const [githubLoading, setGithubLoading] = useState(false);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -53,24 +51,8 @@ function Login() {
         }
     };
 
-    const handleGitHubLogin = async () => {
-        setGithubLoading(true);
-        try {
-            const data = await getGitHubLoginUrl();
-            if (data.url) {
-                // 로그인 모드 저장
-                localStorage.setItem('github_oauth_mode', 'login');
-                localStorage.setItem('github_return_url', '/activity');
-                window.location.href = data.url;
-            } else if (data.error) {
-                setError(data.error);
-            }
-        } catch (error) {
-            console.error('GitHub 로그인 URL 가져오기 실패:', error);
-            setError('GitHub 로그인을 시작할 수 없습니다.');
-        } finally {
-            setGithubLoading(false);
-        }
+    const handleGitHubLogin = () => {
+        window.location.href = 'http://localhost:8081/oauth2/authorization/github';
     };
 
     // 소셜 로그인
@@ -162,7 +144,6 @@ function Login() {
                         type="button"
                         className="social-btn github"
                         onClick={handleGitHubLogin}
-                        disabled={githubLoading}
                         title="GitHub로 로그인"
                     >
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">

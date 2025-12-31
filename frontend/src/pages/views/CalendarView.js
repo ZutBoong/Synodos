@@ -44,9 +44,10 @@ function CalendarView({ team, tasks: propTasks, teamMembers, loginMember, filter
                 formatDateForApi(startDate),
                 formatDateForApi(endDate)
             );
-            setTasks(data || []);
+            setTasks(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('캘린더 데이터 로드 실패:', error);
+            setTasks([]);
         } finally {
             setLoading(false);
         }

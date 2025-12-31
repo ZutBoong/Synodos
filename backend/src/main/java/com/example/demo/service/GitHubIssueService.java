@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -28,7 +29,8 @@ public class GitHubIssueService {
     private static final String GITHUB_API_BASE = "https://api.github.com";
 
     public GitHubIssueService() {
-        this.restTemplate = new RestTemplate();
+        // PATCH 메서드 지원을 위해 Apache HttpClient 사용
+        this.restTemplate = new RestTemplate(new HttpComponentsClientHttpRequestFactory());
         this.objectMapper = new ObjectMapper();
     }
 

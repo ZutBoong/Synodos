@@ -29,7 +29,6 @@ function MyActivity() {
         }
 
         const memberData = JSON.parse(storedMember);
-        console.log("저장된 member: ", memberData);
         setLoginMember(memberData);
         fetchData(Number(memberData.no || memberData.memberNo));
 
@@ -44,14 +43,14 @@ function MyActivity() {
         try {
             setLoading(true);
             const [teamsRes, taskArchivesRes, tasksRes] = await Promise.all([
-                getMyTeams(memberNo),
+                getMyTeams(memberNo).catch(() => []),
                 getTaskArchives(memberNo).catch(() => []),
                 tasklistByAssignee(memberNo).catch(() => [])
             ]);
 
-            setTeams(teamsRes || []);
-            setTaskArchives(taskArchivesRes || []);
-            setMyTasks(tasksRes || []);
+            setTeams(Array.isArray(teamsRes) ? teamsRes : []);
+            setTaskArchives(Array.isArray(taskArchivesRes) ? taskArchivesRes : []);
+            setMyTasks(Array.isArray(tasksRes) ? tasksRes : []);
         } catch (error) {
             console.error('데이터 로딩 실패:', error);
         } finally {

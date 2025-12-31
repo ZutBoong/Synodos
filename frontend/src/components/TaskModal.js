@@ -16,7 +16,7 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
         title: task?.title || '',
         description: task?.description || '',
         assigneeNo: task?.assigneeNo || null,
-        priority: task?.priority || 'MEDIUM',
+        priority: task?.priority || null, // 우선순위 미설정이면 null
         startDate: task?.startDate || today,
         dueDate: task?.dueDate || ''
     });
@@ -77,9 +77,10 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
     const fetchTeamMembers = async () => {
         try {
             const members = await getTeamMembers(teamId);
-            setTeamMembers(members || []);
+            setTeamMembers(Array.isArray(members) ? members : []);
         } catch (error) {
             console.error('팀 멤버 조회 실패:', error);
+            setTeamMembers([]);
         }
     };
 
@@ -88,9 +89,10 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
         if (!task?.taskId) return;
         try {
             const fileList = await getFilesByTask(task.taskId);
-            setFiles(fileList || []);
+            setFiles(Array.isArray(fileList) ? fileList : []);
         } catch (error) {
             console.error('파일 목록 조회 실패:', error);
+            setFiles([]);
         }
     };
 
@@ -243,7 +245,7 @@ function TaskModal({ task, teamId, onClose, onSave, loginMember }) {
                     <div className="header-actions">
                         <button
                             className={`urgent-btn ${form.priority === 'URGENT' ? 'active' : ''}`}
-                            onClick={() => setForm(prev => ({ ...prev, priority: prev.priority === 'URGENT' ? 'MEDIUM' : 'URGENT' }))}
+                            onClick={() => setForm(prev => ({ ...prev, priority: prev.priority === 'URGENT' ? null : 'URGENT' }))}
                             title={form.priority === 'URGENT' ? '긴급 해제' : '긴급 설정'}
                         >
                             <i className="fa-solid fa-triangle-exclamation"></i>
