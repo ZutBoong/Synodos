@@ -9,6 +9,7 @@ backend/.mvn/
 backend/mvnw
 backend/mvnw.cmd
 
+
 # Frontend (React/Node)
 frontend/node_modules/
 frontend/build/
@@ -70,6 +71,7 @@ pgdata/
 *.pid
 .springBeans
 application-local.properties
+application.properties
 
 # Misc
 *.bak
