@@ -205,34 +205,6 @@
     gap: 12px;
 }
 
-.expanded-info {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: #667eea;
-    font-weight: 500;
-}
-
-.expanded-info svg {
-    color: #667eea;
-}
-
-.depth-select {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    color: #475569;
-    padding: 6px 10px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.15s;
-}
-
-.depth-select:hover {
-    border-color: #cbd5e1;
-}
-
 .toolbar-icon-btn {
     display: flex;
     align-items: center;
@@ -674,6 +646,12 @@
     background: #fef2f2;
 }
 
+.menu-branch-hint {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-left: 4px;
+}
+
 /* 다이얼로그 스타일 */
 .dialog-overlay {
     position: fixed;
@@ -771,6 +749,71 @@
     white-space: nowrap;
 }
 
+.dialog-info p {
+    color: #374151;
+    margin: 0 0 12px 0;
+    font-size: 14px;
+}
+
+.commit-info-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    margin: 12px 0;
+}
+
+.commit-info-box code {
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-size: 12px;
+    color: #6e40c9;
+    background: #f3e8ff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.commit-info-box .commit-message {
+    color: #1e293b;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dialog-hint {
+    font-size: 12px;
+    color: #64748b;
+    margin: 8px 0 0 0;
+    line-height: 1.5;
+}
+
+.dialog-hint strong {
+    color: #475569;
+}
+
+.dialog-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    margin: 16px 0;
+    font-size: 12px;
+    color: #1e40af;
+    line-height: 1.4;
+}
+
+.dialog-note svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
 .dialog-field {
     margin-bottom: 16px;
 }
@@ -842,6 +885,91 @@
 
 .dialog-warning strong {
     color: #1e293b;
+}
+
+/* 다이얼로그 넓은 버전 */
+.dialog.dialog-wide {
+    width: 480px;
+    max-width: 95vw;
+}
+
+/* 머지 타입 선택 */
+.merge-type-selector {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.merge-type-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 16px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.merge-type-btn:hover:not(:disabled) {
+    border-color: #cbd5e1;
+    background: #f1f5f9;
+}
+
+.merge-type-btn.active {
+    border-color: #667eea;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+}
+
+.merge-type-btn.active svg {
+    color: #667eea;
+}
+
+.merge-type-btn svg {
+    color: #64748b;
+    transition: color 0.2s;
+}
+
+.merge-type-btn span {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.merge-type-btn small {
+    font-size: 11px;
+    color: #64748b;
+}
+
+.merge-type-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* 다이얼로그 textarea */
+.dialog-field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 60px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.dialog-field textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.dialog-field textarea::placeholder {
+    color: #94a3b8;
 }
 
 .dialog-footer {

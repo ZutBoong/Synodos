@@ -765,3 +765,350 @@
         justify-content: flex-end;
     }
 }
+
+/* ===== PR Section ===== */
+.pr-section .section-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.pr-section .link-commit-btn.primary {
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+    color: white;
+    border-color: transparent;
+}
+
+.pr-section .link-commit-btn.primary:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+}
+
+/* PR List */
+.pr-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pr-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.pr-item:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.pr-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    width: 24px;
+    text-align: center;
+}
+
+.pr-icon i.open {
+    color: #22c55e;
+}
+
+.pr-icon i.closed {
+    color: #ef4444;
+}
+
+.pr-icon i.merged {
+    color: #8b5cf6;
+}
+
+.pr-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.pr-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.pr-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1f2937;
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pr-title:hover {
+    color: #8b5cf6;
+    text-decoration: underline;
+}
+
+.pr-source-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.pr-source-badge.github {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    color: #0369a1;
+    border: 1px solid #7dd3fc;
+}
+
+.pr-source-badge.github i {
+    font-size: 10px;
+}
+
+.pr-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #6b7280;
+}
+
+.pr-meta i {
+    font-size: 8px;
+    color: #9ca3af;
+}
+
+.pr-branch {
+    background: #e5e7eb;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 10px;
+}
+
+.pr-status {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.pr-status.open {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.pr-status.closed {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.pr-status.merged {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+/* PR Dialog */
+.pr-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(2px);
+}
+
+.pr-dialog {
+    background: white;
+    border-radius: 12px;
+    width: 500px;
+    max-width: 90vw;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    animation: prDialogSlideIn 0.2s ease-out;
+}
+
+@keyframes prDialogSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.pr-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.pr-dialog-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pr-dialog-header h3 i {
+    color: #8b5cf6;
+}
+
+.pr-dialog-header .close-btn {
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    color: #6b7280;
+    border-radius: 4px;
+}
+
+.pr-dialog-header .close-btn:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.pr-dialog-body {
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.pr-branch-select {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.branch-field {
+    flex: 1;
+}
+
+.branch-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    margin-bottom: 6px;
+}
+
+.branch-field select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 13px;
+    background: white;
+    cursor: pointer;
+}
+
+.branch-field select:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.branch-arrow {
+    padding-bottom: 10px;
+    color: #9ca3af;
+}
+
+.pr-form-field {
+    margin-bottom: 16px;
+}
+
+.pr-form-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    margin-bottom: 6px;
+}
+
+.pr-form-field input,
+.pr-form-field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 13px;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.pr-form-field input:focus,
+.pr-form-field textarea:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.pr-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 20px;
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
+    border-radius: 0 0 12px 12px;
+}
+
+.pr-dialog-footer .cancel-btn {
+    padding: 10px 20px;
+    border: 1px solid #d1d5db;
+    background: white;
+    color: #374151;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pr-dialog-footer .cancel-btn:hover {
+    background: #f3f4f6;
+}
+
+.pr-dialog-footer .submit-btn {
+    padding: 10px 20px;
+    border: none;
+    background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+    color: white;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pr-dialog-footer .submit-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+    transform: translateY(-1px);
+}
+
+.pr-dialog-footer .submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

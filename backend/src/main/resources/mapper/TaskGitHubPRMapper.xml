@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.dao.TaskGitHubPRDao">
+
+    <resultMap id="taskGitHubPRResultMap" type="taskGitHubPR">
+        <id property="id" column="id"/>
+        <result property="taskId" column="task_id"/>
+        <result property="teamId" column="team_id"/>
+        <result property="prNumber" column="pr_number"/>
+        <result property="prId" column="pr_id"/>
+        <result property="prTitle" column="pr_title"/>
+        <result property="prUrl" column="pr_url"/>
+        <result property="prState" column="pr_state"/>
+        <result property="merged" column="merged"/>
+        <result property="headBranch" column="head_branch"/>
+        <result property="baseBranch" column="base_branch"/>
+        <result property="mergedAt" column="merged_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="taskTitle" column="task_title"/>
+        <result property="teamName" column="team_name"/>
+        <result property="issueNumber" column="issue_number"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO task_github_pr (
+            task_id, team_id, pr_number, pr_id, pr_title, pr_url,
+            pr_state, merged, head_branch, base_branch, merged_at
+        ) VALUES (
+            #{taskId}, #{teamId}, #{prNumber}, #{prId}, #{prTitle}, #{prUrl},
+            #{prState}, #{merged}, #{headBranch}, #{baseBranch}, #{mergedAt}
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE task_github_pr SET
+            pr_title = #{prTitle},
+            pr_url = #{prUrl},
+            pr_state = #{prState},
+            merged = #{merged},
+            merged_at = #{mergedAt},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM task_github_pr WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByTaskId">
+        DELETE FROM task_github_pr WHERE task_id = #{taskId}
+    </delete>
+
+    <select id="findById" resultMap="taskGitHubPRResultMap">
+        SELECT p.*, t.title as task_title, tm.team_name,
+               tgi.issue_number
+        FROM task_github_pr p
+        LEFT JOIN task t ON p.task_id = t.task_id
+        LEFT JOIN team tm ON p.team_id = tm.team_id
+        LEFT JOIN task_github_issue tgi ON p.task_id = tgi.task_id
+        WHERE p.id = #{id}
+    </select>
+
+    <select id="findByTaskId" resultMap="taskGitHubPRResultMap">
+        SELECT p.*, t.title as task_title, tm.team_name,
+               tgi.issue_number
+        FROM task_github_pr p
+        LEFT JOIN task t ON p.task_id = t.task_id
+        LEFT JOIN team tm ON p.team_id = tm.team_id
+        LEFT JOIN task_github_issue tgi ON p.task_id = tgi.task_id
+        WHERE p.task_id = #{taskId}
+        ORDER BY p.created_at DESC
+        LIMIT 1
+    </select>
+
+    <select id="findByPrNumber" resultMap="taskGitHubPRResultMap">
+        SELECT p.*, t.title as task_title, tm.team_name,
+               tgi.issue_number
+        FROM task_github_pr p
+        LEFT JOIN task t ON p.task_id = t.task_id
+        LEFT JOIN team tm ON p.team_id = tm.team_id
+        LEFT JOIN task_github_issue tgi ON p.task_id = tgi.task_id
+        WHERE p.team_id = #{teamId} AND p.pr_number = #{prNumber}
+    </select>
+
+    <select id="listByTask" resultMap="taskGitHubPRResultMap">
+        SELECT p.*, t.title as task_title, tm.team_name,
+               tgi.issue_number
+        FROM task_github_pr p
+        LEFT JOIN task t ON p.task_id = t.task_id
+        LEFT JOIN team tm ON p.team_id = tm.team_id
+        LEFT JOIN task_github_issue tgi ON p.task_id = tgi.task_id
+        WHERE p.task_id = #{taskId}
+        ORDER BY p.created_at DESC
+    </select>
+
+    <select id="listByTeam" resultMap="taskGitHubPRResultMap">
+        SELECT p.*, t.title as task_title, tm.team_name,
+               tgi.issue_number
+        FROM task_github_pr p
+        LEFT JOIN task t ON p.task_id = t.task_id
+        LEFT JOIN team tm ON p.team_id = tm.team_id
+        LEFT JOIN task_github_issue tgi ON p.task_id = tgi.task_id
+        WHERE p.team_id = #{teamId}
+        ORDER BY p.created_at DESC
+    </select>
+
+    <select id="listOpenByTeam" resultMap="taskGitHubPRResultMap">
+        SELECT p.*, t.title as task_title, tm.team_name,
+               tgi.issue_number
+        FROM task_github_pr p
+        LEFT JOIN task t ON p.task_id = t.task_id
+        LEFT JOIN team tm ON p.team_id = tm.team_id
+        LEFT JOIN task_github_issue tgi ON p.task_id = tgi.task_id
+        WHERE p.team_id = #{teamId} AND p.pr_state = 'open'
+        ORDER BY p.created_at DESC
+    </select>
+
+    <select id="countByTaskId" resultType="int">
+        SELECT COUNT(*) FROM task_github_pr WHERE task_id = #{taskId}
+    </select>
+
+    <select id="countByTeamAndPr" resultType="int">
+        SELECT COUNT(*) FROM task_github_pr
+        WHERE team_id = #{teamId} AND pr_number = #{prNumber}
+    </select>
+
+    <update id="updateState">
+        UPDATE task_github_pr SET
+            pr_state = #{state},
+            merged = #{merged},
+            merged_at = #{mergedAt},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE team_id = #{teamId} AND pr_number = #{prNumber}
+    </update>
+
+    <select id="findByHeadBranch" resultMap="taskGitHubPRResultMap">
+        SELECT p.*, t.title as task_title, tm.team_name,
+               tgi.issue_number
+        FROM task_github_pr p
+        LEFT JOIN task t ON p.task_id = t.task_id
+        LEFT JOIN team tm ON p.team_id = tm.team_id
+        LEFT JOIN task_github_issue tgi ON p.task_id = tgi.task_id
+        WHERE p.team_id = #{teamId} AND p.head_branch = #{headBranch}
+        ORDER BY p.created_at DESC
+        LIMIT 1
+    </select>
+
+</mapper>

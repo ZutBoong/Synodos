@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { tasklistByDateRange } from '../api/boardApi';
 import Sidebar from '../components/Sidebar';
-import TaskModal from '../components/TaskModal';
+import TaskDetailView from '../components/TaskDetailView';
 import Header from '../components/Header';
 import './Calendar.css';
 
@@ -263,16 +263,17 @@ function Calendar() {
 
             {/* 태스크 상세 모달 */}
             {selectedTask && (
-                <TaskModal
-                    task={selectedTask}
-                    teamId={currentTeam?.teamId}
-                    loginMember={loginMember}
-                    onClose={() => setSelectedTask(null)}
-                    onSave={() => {
-                        fetchTasks();
-                        setSelectedTask(null);
-                    }}
-                />
+                <div className="task-modal-overlay" onClick={() => setSelectedTask(null)}>
+                    <div className="task-modal-container" onClick={e => e.stopPropagation()}>
+                        <TaskDetailView
+                            task={selectedTask}
+                            teamId={currentTeam?.teamId}
+                            loginMember={loginMember}
+                            onClose={() => setSelectedTask(null)}
+                            onUpdate={() => fetchTasks()}
+                        />
+                    </div>
+                </div>
             )}
         </div>
     );

@@ -7,6 +7,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.core.ParameterizedTypeReference;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -26,7 +27,8 @@ public class GitHubService {
     private final ObjectMapper objectMapper;
 
     public GitHubService() {
-        this.restTemplate = new RestTemplate();
+        // Apache HttpClient를 사용하여 PATCH 메서드 지원
+        this.restTemplate = new RestTemplate(new HttpComponentsClientHttpRequestFactory());
         this.objectMapper = new ObjectMapper();
     }
 
@@ -574,61 +576,84 @@ public class GitHubService {
 
     /**
      * 커밋 목록을 parent 정보와 함께 조회합니다 (그래프 시각화용).
+     * 페이지네이션을 사용하여 maxCommits 개수까지 모든 커밋을 가져옵니다.
      */
-    public List<GitHubGraphCommit> listCommitsWithParents(String accessToken, String owner, String repo, String branch, int depth) {
-        String apiUrl = String.format(
-            "https://api.github.com/repos/%s/%s/commits?sha=%s&per_page=%d",
-            owner, repo, branch, depth
-        );
-        log.info("Fetching commits with parents for {}/{} branch {} (depth={})", owner, repo, branch, depth);
+    public List<GitHubGraphCommit> listCommitsWithParents(String accessToken, String owner, String repo, String branch, int maxCommits) {
+        List<GitHubGraphCommit> allCommits = new ArrayList<>();
+        int perPage = 100; // GitHub API 최대값
+        int page = 1;
+
+        log.info("Fetching commits with parents for {}/{} branch {} (maxCommits={})", owner, repo, branch, maxCommits);
 
         try {
             HttpHeaders headers = accessToken != null ? createAuthHeaders(accessToken) : createGitHubHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            ResponseEntity<String> response = restTemplate.exchange(
-                apiUrl, HttpMethod.GET, entity, String.class
-            );
+            while (allCommits.size() < maxCommits) {
+                String apiUrl = String.format(
+                    "https://api.github.com/repos/%s/%s/commits?sha=%s&per_page=%d&page=%d",
+                    owner, repo, branch, perPage, page
+                );
 
-            List<GitHubGraphCommit> commits = new ArrayList<>();
-            JsonNode jsonArray = objectMapper.readTree(response.getBody());
+                ResponseEntity<String> response = restTemplate.exchange(
+                    apiUrl, HttpMethod.GET, entity, String.class
+                );
 
-            for (JsonNode node : jsonArray) {
-                GitHubGraphCommit commit = new GitHubGraphCommit();
-                commit.setSha(node.path("sha").asText());
-                commit.setShortSha(node.path("sha").asText().substring(0, 7));
+                JsonNode jsonArray = objectMapper.readTree(response.getBody());
 
-                String message = node.path("commit").path("message").asText();
-                // 첫 줄만 사용
-                int newlineIndex = message.indexOf('\n');
-                if (newlineIndex > 0) {
-                    message = message.substring(0, newlineIndex);
+                if (!jsonArray.isArray() || jsonArray.size() == 0) {
+                    break; // 더 이상 커밋 없음
                 }
-                if (message.length() > 60) {
-                    message = message.substring(0, 57) + "...";
-                }
-                commit.setMessage(message);
 
-                commit.setAuthorName(node.path("commit").path("author").path("name").asText());
-                commit.setAuthorLogin(node.path("author").path("login").asText(""));
-                commit.setDate(node.path("commit").path("author").path("date").asText());
-                commit.setHtmlUrl(node.path("html_url").asText());
-                commit.setBranch(branch);
-
-                // Parent 커밋 SHA 목록 추출
-                List<String> parents = new ArrayList<>();
-                JsonNode parentsNode = node.path("parents");
-                if (parentsNode.isArray()) {
-                    for (JsonNode parent : parentsNode) {
-                        parents.add(parent.path("sha").asText());
+                for (JsonNode node : jsonArray) {
+                    if (allCommits.size() >= maxCommits) {
+                        break;
                     }
-                }
-                commit.setParents(parents);
 
-                commits.add(commit);
+                    GitHubGraphCommit commit = new GitHubGraphCommit();
+                    commit.setSha(node.path("sha").asText());
+                    commit.setShortSha(node.path("sha").asText().substring(0, 7));
+
+                    String message = node.path("commit").path("message").asText();
+                    // 첫 줄만 사용
+                    int newlineIndex = message.indexOf('\n');
+                    if (newlineIndex > 0) {
+                        message = message.substring(0, newlineIndex);
+                    }
+                    if (message.length() > 60) {
+                        message = message.substring(0, 57) + "...";
+                    }
+                    commit.setMessage(message);
+
+                    commit.setAuthorName(node.path("commit").path("author").path("name").asText());
+                    commit.setAuthorLogin(node.path("author").path("login").asText(""));
+                    commit.setDate(node.path("commit").path("author").path("date").asText());
+                    commit.setHtmlUrl(node.path("html_url").asText());
+                    commit.setBranch(branch);
+
+                    // Parent 커밋 SHA 목록 추출
+                    List<String> parents = new ArrayList<>();
+                    JsonNode parentsNode = node.path("parents");
+                    if (parentsNode.isArray()) {
+                        for (JsonNode parent : parentsNode) {
+                            parents.add(parent.path("sha").asText());
+                        }
+                    }
+                    commit.setParents(parents);
+
+                    allCommits.add(commit);
+                }
+
+                // 마지막 페이지면 종료
+                if (jsonArray.size() < perPage) {
+                    break;
+                }
+
+                page++;
             }
 
-            return commits;
+            log.info("Fetched {} commits for branch {}", allCommits.size(), branch);
+            return allCommits;
         } catch (Exception e) {
             log.error("Failed to fetch commits with parents: {}", e.getMessage());
             throw new RuntimeException("커밋 목록을 가져오는데 실패했습니다.", e);
@@ -855,5 +880,568 @@ public class GitHubService {
         private String sha;           // 머지 커밋 SHA
         private boolean merged;       // 성공 여부
         private String message;       // 상태 메시지
+    }
+
+    /**
+     * 커밋을 되돌립니다 (Revert).
+     * 지정된 커밋의 변경사항을 되돌리는 새 커밋을 생성합니다.
+     * @param accessToken GitHub 액세스 토큰
+     * @param owner 저장소 소유자
+     * @param repo 저장소 이름
+     * @param branch 브랜치 이름
+     * @param commitSha 되돌릴 커밋 SHA
+     * @return Revert 결과
+     */
+    public GitHubRevertResult revertCommit(String accessToken, String owner, String repo,
+                                            String branch, String commitSha) {
+        log.info("Reverting commit {} on branch {} in {}/{}", commitSha, branch, owner, repo);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            headers.set("Content-Type", "application/json");
+
+            // 1. 되돌릴 커밋 정보 조회
+            String commitUrl = String.format("https://api.github.com/repos/%s/%s/commits/%s", owner, repo, commitSha);
+            HttpEntity<String> getEntity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> commitResponse = restTemplate.exchange(
+                commitUrl, HttpMethod.GET, getEntity, String.class
+            );
+            JsonNode commitNode = objectMapper.readTree(commitResponse.getBody());
+            String commitMessage = commitNode.path("commit").path("message").asText();
+            String shortSha = commitSha.substring(0, 7);
+
+            // 부모 커밋이 없으면 revert 불가
+            JsonNode parentsNode = commitNode.path("parents");
+            if (!parentsNode.isArray() || parentsNode.size() == 0) {
+                GitHubRevertResult result = new GitHubRevertResult();
+                result.setSuccess(false);
+                result.setMessage("최초 커밋은 되돌릴 수 없습니다.");
+                return result;
+            }
+            String parentSha = parentsNode.get(0).path("sha").asText();
+
+            // 2. 현재 브랜치의 최신 커밋(HEAD) 조회
+            String branchUrl = String.format("https://api.github.com/repos/%s/%s/git/refs/heads/%s", owner, repo, branch);
+            ResponseEntity<String> branchResponse = restTemplate.exchange(
+                branchUrl, HttpMethod.GET, getEntity, String.class
+            );
+            JsonNode branchNode = objectMapper.readTree(branchResponse.getBody());
+            String headSha = branchNode.path("object").path("sha").asText();
+
+            // 3. 커밋에서 변경된 파일 목록 조회 (상세 diff 포함)
+            String compareUrl = String.format("https://api.github.com/repos/%s/%s/compare/%s...%s",
+                owner, repo, parentSha, commitSha);
+            ResponseEntity<String> compareResponse = restTemplate.exchange(
+                compareUrl, HttpMethod.GET, getEntity, String.class
+            );
+            JsonNode compareNode = objectMapper.readTree(compareResponse.getBody());
+            JsonNode filesNode = compareNode.path("files");
+
+            if (!filesNode.isArray() || filesNode.size() == 0) {
+                GitHubRevertResult result = new GitHubRevertResult();
+                result.setSuccess(false);
+                result.setMessage("되돌릴 변경사항이 없습니다.");
+                return result;
+            }
+
+            // 4. 현재 HEAD의 트리 조회
+            String headCommitUrl = String.format("https://api.github.com/repos/%s/%s/git/commits/%s", owner, repo, headSha);
+            ResponseEntity<String> headCommitResponse = restTemplate.exchange(
+                headCommitUrl, HttpMethod.GET, getEntity, String.class
+            );
+            JsonNode headCommitNode = objectMapper.readTree(headCommitResponse.getBody());
+            String baseTreeSha = headCommitNode.path("tree").path("sha").asText();
+
+            // 5. 변경된 파일들을 되돌리는 새 트리 생성
+            List<Map<String, Object>> treeItems = new ArrayList<>();
+
+            for (JsonNode fileNode : filesNode) {
+                String filename = fileNode.path("filename").asText();
+                String status = fileNode.path("status").asText();
+
+                Map<String, Object> treeItem = new java.util.HashMap<>();
+                treeItem.put("path", filename);
+                treeItem.put("mode", "100644");  // 일반 파일
+                treeItem.put("type", "blob");
+
+                if ("added".equals(status)) {
+                    // 추가된 파일 -> 삭제
+                    treeItem.put("sha", (Object) null);
+                } else if ("removed".equals(status)) {
+                    // 삭제된 파일 -> 부모 커밋에서 복원
+                    String blobSha = getFileBlobSha(accessToken, owner, repo, parentSha, filename);
+                    if (blobSha != null) {
+                        treeItem.put("sha", blobSha);
+                    } else {
+                        continue; // 복원할 수 없으면 건너뛰기
+                    }
+                } else if ("modified".equals(status) || "renamed".equals(status)) {
+                    // 수정/이름변경된 파일 -> 부모 커밋 상태로 복원
+                    String previousFilename = fileNode.path("previous_filename").asText(filename);
+                    String blobSha = getFileBlobSha(accessToken, owner, repo, parentSha, previousFilename);
+                    if (blobSha != null) {
+                        if ("renamed".equals(status)) {
+                            // 이름 변경된 경우: 현재 파일 삭제하고 이전 이름으로 복원
+                            Map<String, Object> deleteItem = new java.util.HashMap<>();
+                            deleteItem.put("path", filename);
+                            deleteItem.put("mode", "100644");
+                            deleteItem.put("type", "blob");
+                            deleteItem.put("sha", (Object) null);
+                            treeItems.add(deleteItem);
+
+                            treeItem.put("path", previousFilename);
+                        }
+                        treeItem.put("sha", blobSha);
+                    } else {
+                        continue;
+                    }
+                }
+
+                treeItems.add(treeItem);
+            }
+
+            if (treeItems.isEmpty()) {
+                GitHubRevertResult result = new GitHubRevertResult();
+                result.setSuccess(false);
+                result.setMessage("되돌릴 변경사항을 처리할 수 없습니다.");
+                return result;
+            }
+
+            // 6. 새 트리 생성
+            String createTreeUrl = String.format("https://api.github.com/repos/%s/%s/git/trees", owner, repo);
+            Map<String, Object> treeBody = new java.util.HashMap<>();
+            treeBody.put("base_tree", baseTreeSha);
+            treeBody.put("tree", treeItems);
+
+            String treeJson = objectMapper.writeValueAsString(treeBody);
+            HttpEntity<String> treeEntity = new HttpEntity<>(treeJson, headers);
+
+            ResponseEntity<String> treeResponse = restTemplate.exchange(
+                createTreeUrl, HttpMethod.POST, treeEntity, String.class
+            );
+            JsonNode newTreeNode = objectMapper.readTree(treeResponse.getBody());
+            String newTreeSha = newTreeNode.path("sha").asText();
+
+            // 7. Revert 커밋 생성
+            String createCommitUrl = String.format("https://api.github.com/repos/%s/%s/git/commits", owner, repo);
+
+            // 커밋 메시지 첫 줄만 사용
+            String firstLine = commitMessage.split("\n")[0];
+            if (firstLine.length() > 50) {
+                firstLine = firstLine.substring(0, 47) + "...";
+            }
+            String revertMessage = String.format("Revert \"%s\"\n\nThis reverts commit %s.", firstLine, shortSha);
+
+            Map<String, Object> commitBody = new java.util.HashMap<>();
+            commitBody.put("message", revertMessage);
+            commitBody.put("tree", newTreeSha);
+            commitBody.put("parents", List.of(headSha));
+
+            String commitJson = objectMapper.writeValueAsString(commitBody);
+            HttpEntity<String> commitEntity = new HttpEntity<>(commitJson, headers);
+
+            ResponseEntity<String> newCommitResponse = restTemplate.exchange(
+                createCommitUrl, HttpMethod.POST, commitEntity, String.class
+            );
+            JsonNode newCommitNode = objectMapper.readTree(newCommitResponse.getBody());
+            String newCommitSha = newCommitNode.path("sha").asText();
+
+            // 8. 브랜치 참조 업데이트
+            String updateRefUrl = String.format("https://api.github.com/repos/%s/%s/git/refs/heads/%s", owner, repo, branch);
+            Map<String, Object> refBody = Map.of("sha", newCommitSha, "force", false);
+
+            String refJson = objectMapper.writeValueAsString(refBody);
+            HttpEntity<String> refEntity = new HttpEntity<>(refJson, headers);
+
+            restTemplate.exchange(updateRefUrl, HttpMethod.PATCH, refEntity, String.class);
+
+            log.info("Commit reverted successfully: {}", newCommitSha);
+
+            GitHubRevertResult result = new GitHubRevertResult();
+            result.setSuccess(true);
+            result.setSha(newCommitSha);
+            result.setMessage(String.format("커밋 %s이(가) 성공적으로 되돌려졌습니다.", shortSha));
+            result.setRevertedCommitSha(commitSha);
+            return result;
+
+        } catch (Exception e) {
+            log.error("Failed to revert commit: {}", e.getMessage());
+
+            GitHubRevertResult result = new GitHubRevertResult();
+            result.setSuccess(false);
+
+            if (e.getMessage().contains("409")) {
+                result.setMessage("충돌이 발생했습니다. 수동으로 해결해주세요.");
+            } else if (e.getMessage().contains("404")) {
+                result.setMessage("커밋 또는 브랜치를 찾을 수 없습니다.");
+            } else if (e.getMessage().contains("422")) {
+                result.setMessage("유효하지 않은 요청입니다. 브랜치가 보호되어 있을 수 있습니다.");
+            } else {
+                result.setMessage("커밋 되돌리기에 실패했습니다: " + e.getMessage());
+            }
+
+            return result;
+        }
+    }
+
+    /**
+     * 특정 커밋에서 파일의 blob SHA를 조회합니다.
+     */
+    private String getFileBlobSha(String accessToken, String owner, String repo, String commitSha, String path) {
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            String url = String.format("https://api.github.com/repos/%s/%s/contents/%s?ref=%s",
+                owner, repo, java.net.URLEncoder.encode(path, "UTF-8"), commitSha);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                url, HttpMethod.GET, entity, String.class
+            );
+
+            JsonNode node = objectMapper.readTree(response.getBody());
+            return node.path("sha").asText();
+        } catch (Exception e) {
+            log.warn("Failed to get blob SHA for {}: {}", path, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Revert 결과
+     */
+    @lombok.Data
+    public static class GitHubRevertResult {
+        private boolean success;
+        private String sha;              // 새로 생성된 revert 커밋 SHA
+        private String message;
+        private String revertedCommitSha; // 되돌린 원래 커밋 SHA
+    }
+
+    // ==================== Pull Request API ====================
+
+    /**
+     * Pull Request 생성
+     * @param accessToken GitHub 액세스 토큰
+     * @param owner 저장소 소유자
+     * @param repo 저장소 이름
+     * @param title PR 제목
+     * @param body PR 본문
+     * @param head 소스 브랜치 (예: feature/xxx)
+     * @param base 대상 브랜치 (예: main)
+     * @return 생성된 PR 정보
+     */
+    public GitHubPullRequest createPullRequest(String accessToken, String owner, String repo,
+                                                String title, String body, String head, String base) {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/pulls", owner, repo);
+        log.info("Creating PR in {}/{}: {} <- {}", owner, repo, base, head);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            headers.set("Content-Type", "application/json");
+
+            Map<String, String> requestBody = new java.util.HashMap<>();
+            requestBody.put("title", title);
+            requestBody.put("body", body);
+            requestBody.put("head", head);
+            requestBody.put("base", base);
+
+            String jsonBody = objectMapper.writeValueAsString(requestBody);
+            HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl, HttpMethod.POST, entity, String.class
+            );
+
+            JsonNode node = objectMapper.readTree(response.getBody());
+            return parsePullRequest(node);
+        } catch (Exception e) {
+            log.error("Failed to create PR: {}", e.getMessage());
+            if (e.getMessage().contains("422")) {
+                if (e.getMessage().contains("already exists")) {
+                    throw new RuntimeException("이미 동일한 브랜치에서 생성된 PR이 있습니다.", e);
+                }
+                throw new RuntimeException("PR 생성에 실패했습니다. 브랜치를 확인해주세요.", e);
+            }
+            throw new RuntimeException("PR 생성에 실패했습니다: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Pull Request 목록 조회
+     * @param accessToken GitHub 액세스 토큰
+     * @param owner 저장소 소유자
+     * @param repo 저장소 이름
+     * @param state 상태 필터 (open, closed, all)
+     * @param page 페이지 번호
+     * @return PR 목록
+     */
+    public List<GitHubPullRequest> listPullRequests(String accessToken, String owner, String repo,
+                                                     String state, int page) {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/pulls?state=%s&page=%d&per_page=30",
+                                      owner, repo, state, page);
+        log.debug("Listing PRs in {}/{}, state={}", owner, repo, state);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl, HttpMethod.GET, entity, String.class
+            );
+
+            JsonNode arrayNode = objectMapper.readTree(response.getBody());
+            List<GitHubPullRequest> prs = new ArrayList<>();
+
+            for (JsonNode node : arrayNode) {
+                prs.add(parsePullRequest(node));
+            }
+
+            return prs;
+        } catch (Exception e) {
+            log.error("Failed to list PRs: {}", e.getMessage());
+            throw new RuntimeException("PR 목록 조회에 실패했습니다: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Pull Request 상세 조회
+     * @param accessToken GitHub 액세스 토큰
+     * @param owner 저장소 소유자
+     * @param repo 저장소 이름
+     * @param prNumber PR 번호
+     * @return PR 정보
+     */
+    public GitHubPullRequest getPullRequest(String accessToken, String owner, String repo, int prNumber) {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/pulls/%d", owner, repo, prNumber);
+        log.debug("Getting PR #{} in {}/{}", prNumber, owner, repo);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl, HttpMethod.GET, entity, String.class
+            );
+
+            JsonNode node = objectMapper.readTree(response.getBody());
+            return parsePullRequest(node);
+        } catch (Exception e) {
+            log.error("Failed to get PR: {}", e.getMessage());
+            throw new RuntimeException("PR 조회에 실패했습니다: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Pull Request 머지
+     * @param accessToken GitHub 액세스 토큰
+     * @param owner 저장소 소유자
+     * @param repo 저장소 이름
+     * @param prNumber PR 번호
+     * @param commitTitle 머지 커밋 제목
+     * @param mergeMethod 머지 방법 (merge, squash, rebase)
+     * @return 머지 결과
+     */
+    public GitHubMergeResult mergePullRequest(String accessToken, String owner, String repo,
+                                               int prNumber, String commitTitle, String mergeMethod) {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/pulls/%d/merge", owner, repo, prNumber);
+        log.info("Merging PR #{} in {}/{}", prNumber, owner, repo);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            headers.set("Content-Type", "application/json");
+
+            Map<String, String> body = new java.util.HashMap<>();
+            if (commitTitle != null && !commitTitle.isEmpty()) {
+                body.put("commit_title", commitTitle);
+            }
+            if (mergeMethod != null && !mergeMethod.isEmpty()) {
+                body.put("merge_method", mergeMethod); // merge, squash, rebase
+            }
+
+            String jsonBody = objectMapper.writeValueAsString(body);
+            HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl, HttpMethod.PUT, entity, String.class
+            );
+
+            JsonNode node = objectMapper.readTree(response.getBody());
+
+            GitHubMergeResult result = new GitHubMergeResult();
+            result.setSha(node.path("sha").asText());
+            result.setMerged(node.path("merged").asBoolean());
+            result.setMessage(node.path("message").asText("PR이 머지되었습니다."));
+
+            log.info("PR merge successful: {}", result.getSha());
+            return result;
+        } catch (Exception e) {
+            log.error("Failed to merge PR: {}", e.getMessage());
+
+            GitHubMergeResult result = new GitHubMergeResult();
+            result.setMerged(false);
+
+            if (e.getMessage().contains("405")) {
+                result.setMessage("이 PR은 머지할 수 없습니다. (충돌 또는 리뷰 필요)");
+            } else if (e.getMessage().contains("409")) {
+                result.setMessage("PR의 HEAD가 변경되었습니다. 새로고침 후 다시 시도해주세요.");
+            } else {
+                result.setMessage("PR 머지에 실패했습니다: " + e.getMessage());
+            }
+
+            return result;
+        }
+    }
+
+    /**
+     * Issue/PR에 연결된 PR 목록 조회 (특정 Issue를 참조하는 PR들)
+     * @param accessToken GitHub 액세스 토큰
+     * @param owner 저장소 소유자
+     * @param repo 저장소 이름
+     * @param issueNumber Issue 번호
+     * @return 연결된 PR 목록
+     */
+    public List<GitHubPullRequest> listPullRequestsForIssue(String accessToken, String owner, String repo,
+                                                            int issueNumber) {
+        // GitHub Search API를 사용하여 Issue를 참조하는 PR 검색
+        String query = String.format("repo:%s/%s is:pr %d in:body", owner, repo, issueNumber);
+        String apiUrl = "https://api.github.com/search/issues?q=" + java.net.URLEncoder.encode(query, java.nio.charset.StandardCharsets.UTF_8);
+
+        log.debug("Searching PRs for issue #{} in {}/{}", issueNumber, owner, repo);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl, HttpMethod.GET, entity, String.class
+            );
+
+            JsonNode root = objectMapper.readTree(response.getBody());
+            JsonNode items = root.path("items");
+            List<GitHubPullRequest> prs = new ArrayList<>();
+
+            for (JsonNode node : items) {
+                if (node.has("pull_request")) {
+                    // 검색 결과는 간략한 정보만 제공하므로 필요한 필드 추출
+                    GitHubPullRequest pr = new GitHubPullRequest();
+                    pr.setNumber(node.path("number").asInt());
+                    pr.setTitle(node.path("title").asText());
+                    pr.setState(node.path("state").asText());
+                    pr.setHtmlUrl(node.path("html_url").asText());
+                    pr.setCreatedAt(node.path("created_at").asText());
+                    pr.setUpdatedAt(node.path("updated_at").asText());
+
+                    JsonNode userNode = node.path("user");
+                    if (!userNode.isMissingNode()) {
+                        pr.setUserLogin(userNode.path("login").asText());
+                        pr.setUserAvatarUrl(userNode.path("avatar_url").asText());
+                    }
+
+                    prs.add(pr);
+                }
+            }
+
+            return prs;
+        } catch (Exception e) {
+            log.error("Failed to search PRs for issue: {}", e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * 브랜치에서 생성된 PR 조회
+     * @param accessToken GitHub 액세스 토큰
+     * @param owner 저장소 소유자
+     * @param repo 저장소 이름
+     * @param head 소스 브랜치 이름
+     * @return PR 정보 (없으면 null)
+     */
+    public GitHubPullRequest getPullRequestByHead(String accessToken, String owner, String repo, String head) {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/pulls?head=%s:%s&state=all",
+                                      owner, repo, owner, head);
+        log.debug("Getting PR by head branch {} in {}/{}", head, owner, repo);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl, HttpMethod.GET, entity, String.class
+            );
+
+            JsonNode arrayNode = objectMapper.readTree(response.getBody());
+            if (arrayNode.isArray() && arrayNode.size() > 0) {
+                return parsePullRequest(arrayNode.get(0));
+            }
+            return null;
+        } catch (Exception e) {
+            log.error("Failed to get PR by head: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private GitHubPullRequest parsePullRequest(JsonNode node) {
+        GitHubPullRequest pr = new GitHubPullRequest();
+        pr.setId(node.path("id").asLong());
+        pr.setNumber(node.path("number").asInt());
+        pr.setTitle(node.path("title").asText());
+        pr.setBody(node.path("body").asText());
+        pr.setState(node.path("state").asText());
+        pr.setHtmlUrl(node.path("html_url").asText());
+        pr.setDiffUrl(node.path("diff_url").asText());
+        pr.setCreatedAt(node.path("created_at").asText());
+        pr.setUpdatedAt(node.path("updated_at").asText());
+        pr.setMergedAt(node.path("merged_at").asText(null));
+        pr.setClosedAt(node.path("closed_at").asText(null));
+        pr.setMerged(node.path("merged").asBoolean(false));
+        pr.setMergeable(node.path("mergeable").asBoolean(true));
+        pr.setMergeableState(node.path("mergeable_state").asText());
+
+        JsonNode headNode = node.path("head");
+        if (!headNode.isMissingNode()) {
+            pr.setHeadRef(headNode.path("ref").asText());
+            pr.setHeadSha(headNode.path("sha").asText());
+        }
+
+        JsonNode baseNode = node.path("base");
+        if (!baseNode.isMissingNode()) {
+            pr.setBaseRef(baseNode.path("ref").asText());
+        }
+
+        JsonNode userNode = node.path("user");
+        if (!userNode.isMissingNode()) {
+            pr.setUserLogin(userNode.path("login").asText());
+            pr.setUserAvatarUrl(userNode.path("avatar_url").asText());
+        }
+
+        return pr;
+    }
+
+    /**
+     * Pull Request 정보
+     */
+    @lombok.Data
+    public static class GitHubPullRequest {
+        private long id;
+        private int number;
+        private String title;
+        private String body;
+        private String state;          // open, closed
+        private String htmlUrl;
+        private String diffUrl;
+        private String createdAt;
+        private String updatedAt;
+        private String mergedAt;
+        private String closedAt;
+        private boolean merged;
+        private boolean mergeable;
+        private String mergeableState; // clean, dirty, unstable, blocked, unknown
+        private String headRef;        // 소스 브랜치
+        private String headSha;
+        private String baseRef;        // 대상 브랜치
+        private String userLogin;
+        private String userAvatarUrl;
     }
 }

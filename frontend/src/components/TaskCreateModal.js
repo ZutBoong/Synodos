@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import './TaskModal.css';
 import './TaskCreateModal.css';
 
 function TaskCreateModal({ columnId, teamId, teamMembers, onClose, onCreate }) {

@@ -536,3 +536,31 @@ CREATE INDEX IF NOT EXISTS idx_github_sync_log_mapping ON github_issue_sync_log(
 CREATE INDEX IF NOT EXISTS idx_github_sync_log_task ON github_issue_sync_log(task_id);
 CREATE INDEX IF NOT EXISTS idx_github_sync_log_created ON github_issue_sync_log(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_github_sync_log_webhook ON github_issue_sync_log(webhook_delivery_id);
+
+-- ========================================
+-- GitHub Pull Request 연동 테이블
+-- ========================================
+CREATE SEQUENCE IF NOT EXISTS task_github_pr_seq START WITH 1 INCREMENT BY 1;
+
+CREATE TABLE IF NOT EXISTS task_github_pr (
+    id INTEGER PRIMARY KEY DEFAULT nextval('task_github_pr_seq'),
+    task_id INTEGER NOT NULL REFERENCES task(task_id) ON DELETE CASCADE,
+    team_id INTEGER NOT NULL REFERENCES team(team_id) ON DELETE CASCADE,
+    pr_number INTEGER NOT NULL,
+    pr_id BIGINT,
+    pr_title VARCHAR(500),
+    pr_url VARCHAR(500),
+    pr_state VARCHAR(20) DEFAULT 'open',
+    merged BOOLEAN DEFAULT FALSE,
+    head_branch VARCHAR(200),
+    base_branch VARCHAR(200),
+    merged_at VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_github_pr_task ON task_github_pr(task_id);
+CREATE INDEX IF NOT EXISTS idx_task_github_pr_team ON task_github_pr(team_id);
+CREATE INDEX IF NOT EXISTS idx_task_github_pr_number ON task_github_pr(team_id, pr_number);
+CREATE INDEX IF NOT EXISTS idx_task_github_pr_state ON task_github_pr(pr_state);
+CREATE INDEX IF NOT EXISTS idx_task_github_pr_head ON task_github_pr(team_id, head_branch);

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { taskupdate, updateTaskAssignees, updateTaskVerifiers, archiveTask, unarchiveTask, toggleTaskFavorite, checkTaskFavorite } from '../api/boardApi';
 import { getTeamMembers, getTeam } from '../api/teamApi';
 import { uploadFile, getFilesByTask, deleteFile, formatFileSize, getFileIcon } from '../api/fileApi';
+import { createTaskBranch, createTaskPR, getTaskPRs, getBranches, getDefaultBranch } from '../api/githubApi';
 import CommentSection from './CommentSection';
 import CommitBrowser from './CommitBrowser';
 import LinkedCommits from './LinkedCommits';
@@ -44,6 +45,20 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
     const [verifierSearch, setVerifierSearch] = useState('');
 
     const [showCommitBrowser, setShowCommitBrowser] = useState(false);
+
+    // PR 관련 상태
+    const [taskPRs, setTaskPRs] = useState([]);
+    const [showPRDialog, setShowPRDialog] = useState(false);
+    const [branches, setBranches] = useState([]);
+    const [defaultBranch, setDefaultBranchState] = useState('main');
+    const [prLoading, setPRLoading] = useState(false);
+    const [prForm, setPRForm] = useState({
+        headBranch: '',
+        baseBranch: '',
+        title: '',
+        body: ''
+    });
+
     const commentSectionRef = useRef(null);
     const linkedCommitsRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -168,10 +183,103 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
     const checkGithubRepo = async () => {
         try {
             const team = await getTeam(teamId);
-            setHasGithubRepo(!!team?.githubRepoUrl);
+            const hasRepo = !!team?.githubRepoUrl;
+            setHasGithubRepo(hasRepo);
+            if (hasRepo) {
+                fetchBranches();
+                fetchTaskPRs();
+            }
         } catch (error) {
             console.error('팀 정보 조회 실패:', error);
         }
+    };
+
+    // 브랜치 목록 조회
+    const fetchBranches = async () => {
+        if (!teamId) return;
+        try {
+            const branchList = await getBranches(teamId);
+            setBranches(Array.isArray(branchList) ? branchList : []);
+            const defBranch = await getDefaultBranch(teamId);
+            if (defBranch) {
+                setDefaultBranchState(defBranch);
+                setPRForm(prev => ({ ...prev, baseBranch: defBranch }));
+            }
+        } catch (error) {
+            console.error('브랜치 목록 조회 실패:', error);
+        }
+    };
+
+    // Task의 PR 목록 조회
+    const fetchTaskPRs = async () => {
+        if (!task?.taskId || !teamId) return;
+        try {
+            const prs = await getTaskPRs(task.taskId, teamId);
+            setTaskPRs(Array.isArray(prs) ? prs : []);
+        } catch (error) {
+            console.error('PR 목록 조회 실패:', error);
+            setTaskPRs([]);
+        }
+    };
+
+    // 작업 브랜치 생성
+    const handleCreateBranch = async () => {
+        if (!task?.taskId || !teamId) return;
+        setPRLoading(true);
+        try {
+            const result = await createTaskBranch(task.taskId, teamId);
+            if (result.success) {
+                alert(`브랜치가 생성되었습니다: ${result.branchName}`);
+                fetchBranches();
+                setPRForm(prev => ({ ...prev, headBranch: result.branchName }));
+            }
+        } catch (error) {
+            console.error('브랜치 생성 실패:', error);
+            alert(error.response?.data || '브랜치 생성에 실패했습니다.');
+        } finally {
+            setPRLoading(false);
+        }
+    };
+
+    // PR 생성
+    const handleCreatePR = async () => {
+        if (!prForm.headBranch || !prForm.title.trim()) {
+            alert('소스 브랜치와 제목을 입력해주세요.');
+            return;
+        }
+        setPRLoading(true);
+        try {
+            const result = await createTaskPR(
+                task.taskId,
+                teamId,
+                prForm.headBranch,
+                prForm.baseBranch || defaultBranch,
+                prForm.title,
+                prForm.body
+            );
+            if (result.success) {
+                alert(`PR이 생성되었습니다: #${result.pr.number}`);
+                setShowPRDialog(false);
+                setPRForm({ headBranch: '', baseBranch: defaultBranch, title: '', body: '' });
+                fetchTaskPRs();
+            }
+        } catch (error) {
+            console.error('PR 생성 실패:', error);
+            alert(error.response?.data || 'PR 생성에 실패했습니다.');
+        } finally {
+            setPRLoading(false);
+        }
+    };
+
+    // PR 다이얼로그 열기
+    const openPRDialog = () => {
+        setPRForm(prev => ({
+            ...prev,
+            baseBranch: defaultBranch,
+            title: form.title || '',
+            body: form.description || ''
+        }));
+        setShowPRDialog(true);
     };
 
     const fetchFiles = async () => {
@@ -607,6 +715,78 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
                         </div>
                     )}
 
+                    {/* GitHub PR */}
+                    {hasGithubRepo && (
+                        <div className="task-section pr-section">
+                            <div className="section-header-row">
+                                <label><i className="fa-solid fa-code-pull-request"></i> Pull Requests</label>
+                                <div className="section-actions">
+                                    <button
+                                        type="button"
+                                        className="link-commit-btn"
+                                        onClick={handleCreateBranch}
+                                        disabled={prLoading}
+                                        title="작업 브랜치 생성"
+                                    >
+                                        <i className="fa-solid fa-code-branch"></i> 브랜치 생성
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="link-commit-btn primary"
+                                        onClick={openPRDialog}
+                                        disabled={prLoading}
+                                    >
+                                        <i className="fa-solid fa-plus"></i> PR 생성
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="pr-list">
+                                {taskPRs.length === 0 ? (
+                                    <p className="no-data">연결된 PR이 없습니다.</p>
+                                ) : (
+                                    taskPRs.map(pr => (
+                                        <div key={pr.id || `gh-${pr.prNumber}`} className={`pr-item ${pr.prState}`}>
+                                            <div className="pr-icon">
+                                                {pr.merged ? (
+                                                    <i className="fa-solid fa-code-merge merged"></i>
+                                                ) : pr.prState === 'open' ? (
+                                                    <i className="fa-solid fa-code-pull-request open"></i>
+                                                ) : (
+                                                    <i className="fa-solid fa-code-pull-request closed"></i>
+                                                )}
+                                            </div>
+                                            <div className="pr-info">
+                                                <div className="pr-title-row">
+                                                    <a
+                                                        href={pr.prUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="pr-title"
+                                                    >
+                                                        #{pr.prNumber} {pr.prTitle}
+                                                    </a>
+                                                    {pr.fromGitHub && (
+                                                        <span className="pr-source-badge github" title="GitHub Issue 참조로 발견된 PR">
+                                                            <i className="fa-brands fa-github"></i> Issue 참조
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="pr-meta">
+                                                    <span className="pr-branch">{pr.headBranch}</span>
+                                                    <i className="fa-solid fa-arrow-right"></i>
+                                                    <span className="pr-branch">{pr.baseBranch}</span>
+                                                    {pr.merged && <span className="pr-status merged">Merged</span>}
+                                                    {!pr.merged && pr.prState === 'closed' && <span className="pr-status closed">Closed</span>}
+                                                    {pr.prState === 'open' && <span className="pr-status open">Open</span>}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* 첨부파일 */}
                     <div className="task-section">
                         <div className="section-header-row">
@@ -689,6 +869,90 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
                         }
                     }}
                 />
+            )}
+
+            {/* PR 생성 다이얼로그 */}
+            {showPRDialog && (
+                <div className="pr-dialog-overlay" onClick={() => !prLoading && setShowPRDialog(false)}>
+                    <div className="pr-dialog" onClick={e => e.stopPropagation()}>
+                        <div className="pr-dialog-header">
+                            <h3><i className="fa-solid fa-code-pull-request"></i> Pull Request 생성</h3>
+                            <button
+                                className="close-btn"
+                                onClick={() => setShowPRDialog(false)}
+                                disabled={prLoading}
+                            >
+                                <i className="fa-solid fa-x"></i>
+                            </button>
+                        </div>
+                        <div className="pr-dialog-body">
+                            <div className="pr-branch-select">
+                                <div className="branch-field">
+                                    <label>소스 브랜치 (head)</label>
+                                    <select
+                                        value={prForm.headBranch}
+                                        onChange={e => setPRForm(prev => ({ ...prev, headBranch: e.target.value }))}
+                                    >
+                                        <option value="">브랜치 선택...</option>
+                                        {branches.filter(b => b.name !== defaultBranch).map(b => (
+                                            <option key={b.name} value={b.name}>{b.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="branch-arrow">
+                                    <i className="fa-solid fa-arrow-right"></i>
+                                </div>
+                                <div className="branch-field">
+                                    <label>대상 브랜치 (base)</label>
+                                    <select
+                                        value={prForm.baseBranch}
+                                        onChange={e => setPRForm(prev => ({ ...prev, baseBranch: e.target.value }))}
+                                    >
+                                        {branches.map(b => (
+                                            <option key={b.name} value={b.name}>{b.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="pr-form-field">
+                                <label>PR 제목 *</label>
+                                <input
+                                    type="text"
+                                    value={prForm.title}
+                                    onChange={e => setPRForm(prev => ({ ...prev, title: e.target.value }))}
+                                    placeholder="Pull Request 제목..."
+                                />
+                            </div>
+                            <div className="pr-form-field">
+                                <label>설명</label>
+                                <textarea
+                                    value={prForm.body}
+                                    onChange={e => setPRForm(prev => ({ ...prev, body: e.target.value }))}
+                                    placeholder="변경사항에 대한 설명..."
+                                    rows={4}
+                                />
+                            </div>
+                        </div>
+                        <div className="pr-dialog-footer">
+                            <button
+                                type="button"
+                                className="cancel-btn"
+                                onClick={() => setShowPRDialog(false)}
+                                disabled={prLoading}
+                            >
+                                취소
+                            </button>
+                            <button
+                                type="button"
+                                className="submit-btn"
+                                onClick={handleCreatePR}
+                                disabled={prLoading || !prForm.headBranch || !prForm.title.trim()}
+                            >
+                                {prLoading ? 'PR 생성 중...' : 'PR 생성'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

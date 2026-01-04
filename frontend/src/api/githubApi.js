@@ -118,3 +118,88 @@ export const deleteBranch = async (teamId, branchName) => {
     const response = await axiosInstance.delete(`${API_PATH}/branch/${teamId}/${encodeURIComponent(branchName)}`);
     return response.data;
 };
+
+/**
+ * 커밋을 되돌립니다 (Revert).
+ * @param {number} teamId - 팀 ID
+ * @param {string} branch - 브랜치 이름
+ * @param {string} commitSha - 되돌릴 커밋 SHA
+ */
+export const revertCommit = async (teamId, branch, commitSha) => {
+    const response = await axiosInstance.post(`${API_PATH}/revert/${teamId}`, {
+        branch,
+        commitSha
+    });
+    return response.data;
+};
+
+// ==================== Pull Request API ====================
+
+/**
+ * Task에서 작업용 브랜치를 생성합니다.
+ * @param {number} taskId - Task ID
+ * @param {number} teamId - 팀 ID
+ * @param {string} branchName - 브랜치 이름 (선택, 없으면 자동 생성)
+ * @param {string} baseSha - 분기할 커밋 SHA (선택)
+ */
+export const createTaskBranch = async (taskId, teamId, branchName = null, baseSha = null) => {
+    const response = await axiosInstance.post(`${API_PATH}/task/${taskId}/branch?teamId=${teamId}`, {
+        branchName,
+        baseSha
+    });
+    return response.data;
+};
+
+/**
+ * Task에서 Pull Request를 생성합니다.
+ * @param {number} taskId - Task ID
+ * @param {number} teamId - 팀 ID
+ * @param {string} head - 소스 브랜치
+ * @param {string} base - 대상 브랜치 (선택, 기본: 기본 브랜치)
+ * @param {string} title - PR 제목
+ * @param {string} body - PR 본문 (선택)
+ */
+export const createTaskPR = async (taskId, teamId, head, base, title, body = '') => {
+    const response = await axiosInstance.post(`${API_PATH}/task/${taskId}/pr?teamId=${teamId}`, {
+        head,
+        base,
+        title,
+        body
+    });
+    return response.data;
+};
+
+/**
+ * Task에 연결된 PR 목록을 조회합니다.
+ * @param {number} taskId - Task ID
+ * @param {number} teamId - 팀 ID
+ */
+export const getTaskPRs = async (taskId, teamId) => {
+    const response = await axiosInstance.get(`${API_PATH}/task/${taskId}/prs?teamId=${teamId}`);
+    return response.data;
+};
+
+/**
+ * 팀의 모든 PR 목록을 조회합니다.
+ * @param {number} teamId - 팀 ID
+ * @param {string} state - 상태 필터 (open, closed, all)
+ */
+export const getTeamPRs = async (teamId, state = 'all') => {
+    const response = await axiosInstance.get(`${API_PATH}/prs/${teamId}?state=${state}`);
+    return response.data;
+};
+
+/**
+ * PR을 머지합니다.
+ * @param {number} teamId - 팀 ID
+ * @param {number} prNumber - PR 번호
+ * @param {string} commitTitle - 머지 커밋 제목 (선택)
+ * @param {string} mergeMethod - 머지 방법 (merge, squash, rebase)
+ */
+export const mergePR = async (teamId, prNumber, commitTitle = null, mergeMethod = 'merge') => {
+    const response = await axiosInstance.put(`${API_PATH}/pr/${teamId}/${prNumber}/merge`, {
+        commitTitle,
+        mergeMethod
+    });
+    return response.data;
+};

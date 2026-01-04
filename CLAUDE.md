@@ -68,15 +68,26 @@ psql -U flow -d synodos -f database/postgresql_schema.sql
 docker-compose up --build              # Start all services
 docker-compose up -d --build           # Start in background
 docker-compose down                    # Stop all services
-docker-compose down -v                 # Stop and remove volumes
+docker-compose down -v                 # Stop and remove volumes (DB 리셋)
 ```
 
-### Test Accounts
-Sample data is loaded from `data.sql` via Spring Boot's SQL initialization on startup.
+**Docker 데이터베이스 동작:**
+- 첫 실행 시 `schema.sql`로 테이블 생성 (시드 데이터 없음)
+- `postgres_data` 볼륨으로 데이터 영속화
+- **리셋하려면**: `docker-compose down -v` (볼륨 삭제 필수)
+- 재시작만으로는 데이터 유지됨
+
+### Test Accounts (로컬 개발용)
+로컬 개발 시 `sample-data.sql`을 수동으로 실행하여 테스트 데이터 생성:
+```bash
+psql -U flow -d synodos -f backend/src/main/resources/sample-data.sql
+```
 - **Users**: admin, user1~user8 (password: `1234`)
 - **Teams**: Sample team with columns and tasks
 
-Database is reset on each startup via `reset.sql` → `schema.sql` → `data.sql`.
+**로컬 스키마 초기화:**
+- Spring Boot 시작 시 `schema.sql` 자동 실행 (`spring.sql.init.mode=always`)
+- `CREATE TABLE IF NOT EXISTS` 사용으로 기존 데이터 유지
 
 ## Architecture
 
@@ -91,7 +102,7 @@ backend/src/main/java/com/example/demo/
 ├── security/       # JWT token provider and authentication filter
 └── dto/            # Data transfer objects (AuthResponse, BoardEvent, AnalysisRequest)
 ```
-Key entities: Member, Team, TeamMember, SynodosColumn, Task, Comment, ChatMessage, Notification, TaskAssignee, TaskVerifier, TaskFavorite, TaskArchive, ProjectFile
+Key entities: Member, Team, TeamMember, SynodosColumn, Task, Comment, ChatMessage, Notification, TaskAssignee, TaskVerifier, TaskFavorite, TaskArchive, ProjectFile, TaskGitHubIssue, TaskGitHubPR
 
 ### External Integrations
 - **Gemini AI**: `GeminiService` calls Gemini API for AI-powered analysis (model: `gemini-2.0-flash`)
@@ -125,11 +136,16 @@ notificationService.notifyTaskUpdated(task, teamId);
 ### Frontend Structure (React 18 + React Router)
 ```
 frontend/src/
-├── api/            # Axios API clients (axiosInstance, boardApi, teamApi, etc.)
-├── components/     # Reusable UI (Sidebar, Header, TaskModal, ChatPanel, etc.)
+├── api/            # Axios API clients (axiosInstance, boardApi, teamApi, githubApi, etc.)
+├── components/     # Reusable UI (Sidebar, Header, TaskDetailView, ChatPanel, etc.)
 ├── pages/          # Route components (Login, Register, Home, TeamView, etc.)
-└── pages/views/    # Board sub-views (BoardView, ListView, CalendarView, etc.)
+└── pages/views/    # Board sub-views (BoardView, ListView, CalendarView, BranchView, etc.)
 ```
+
+**주요 컴포넌트:**
+- `TaskDetailView`: 태스크 상세/편집 패널 (BoardView, ListView, Calendar에서 공통 사용)
+- `TaskCreateModal`: 새 태스크 생성 모달
+- `BranchView`: GitHub 브랜치/커밋 시각화, PR 생성, 머지 기능
 
 ### Frontend State Management
 - Component-level state with React Hooks (no Redux/Context)
@@ -160,6 +176,14 @@ frontend/src/
    - 설정 안 됨 + localhost → 프론트에서 ngrok URL 입력 프롬프트
    - 설정됨 → 자동으로 해당 URL 사용
 5. Webhook 이벤트: `issues`, `issue_comment`, `push`
+
+### GitHub PR Integration
+- `TaskGitHubPR` 엔티티로 Task-PR 연결 관리
+- `BranchView`에서 브랜치 머지 시 Direct Merge / PR 생성 선택 가능
+- PR 생성 시 Task 연결 옵션 제공
+- `TaskDetailView`에서 연결된 PR 목록 표시
+  - Synodos에서 생성한 PR
+  - GitHub Issue를 참조하는 PR (자동 발견, "Issue 참조" 배지 표시)
 
 ### API Endpoint Pattern
 Backend endpoints: `/api/{resource}{action}` (e.g., `/api/taskwrite`, `/api/tasklist`, `/api/taskdelete/{id}`)

@@ -76,14 +76,17 @@ public class SecurityConfig {
 
             // 5️⃣ API 요청에 대해 401 반환 (OAuth 리다이렉트 방지)
             .exceptionHandling(exception -> exception
-                // API 경로는 무조건 401 반환 (OAuth 리다이렉트 방지)
-                .defaultAuthenticationEntryPointFor(
-                    new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
-                    new AntPathRequestMatcher("/api/**")
-                )
-                // 그 외 경로는 OAuth2 로그인 페이지로 리다이렉트
                 .authenticationEntryPoint((request, response, authException) -> {
-                    response.sendRedirect("/oauth2/authorization/github");
+                    String requestUri = request.getRequestURI();
+                    // API 경로는 401 반환 (OAuth 리다이렉트 방지)
+                    if (requestUri.startsWith("/api/")) {
+                        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"인증이 필요합니다.\"}");
+                    } else {
+                        // 그 외 경로는 OAuth2 로그인 페이지로 리다이렉트
+                        response.sendRedirect("/oauth2/authorization/github");
+                    }
                 })
             )
 
