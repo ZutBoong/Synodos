@@ -17,6 +17,7 @@ import com.example.demo.service.GitHubService.GitHubBranch;
 import com.example.demo.service.GitHubService.GitHubBranchComparison;
 import com.example.demo.service.GitHubService.GitHubCommit;
 import com.example.demo.service.GitHubService.GitHubGraphCommit;
+import com.example.demo.service.GitHubService.GitHubMergeResult;
 import com.example.demo.service.GitHubService.RepoInfo;
 import com.example.demo.service.TaskCommitService;
 import com.example.demo.service.TeamService;
@@ -329,6 +330,173 @@ public class GitHubController {
         } catch (Exception e) {
             log.error("Failed to compare branches: {}", e.getMessage());
             return ResponseEntity.status(503).body(e.getMessage());
+        }
+    }
+
+    // ==================== 브랜치 작업 API ====================
+
+    /**
+     * 새 브랜치를 생성합니다.
+     * POST /api/github/branch/{teamId}
+     * Body: { "branchName": "feature/xxx", "fromSha": "abc123" }
+     */
+    @PostMapping("/branch/{teamId}")
+    public ResponseEntity<?> createBranch(
+            @PathVariable int teamId,
+            @RequestBody Map<String, String> request) {
+        try {
+            Team team = teamService.findById(teamId);
+            if (team == null) {
+                return ResponseEntity.badRequest().body("팀을 찾을 수 없습니다.");
+            }
+
+            String repoUrl = team.getGithubRepoUrl();
+            if (repoUrl == null || repoUrl.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("GitHub 저장소가 설정되지 않았습니다.");
+            }
+
+            RepoInfo repoInfo = gitHubService.parseRepoUrl(repoUrl);
+            if (repoInfo == null) {
+                return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
+            }
+
+            String branchName = request.get("branchName");
+            String fromSha = request.get("fromSha");
+
+            if (branchName == null || branchName.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("브랜치 이름이 필요합니다.");
+            }
+            if (fromSha == null || fromSha.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("분기할 커밋 SHA가 필요합니다.");
+            }
+
+            String accessToken = getLeaderAccessToken(team);
+            if (accessToken == null) {
+                return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다. 팀장이 GitHub에 로그인해야 합니다.");
+            }
+
+            GitHubBranch newBranch = gitHubService.createBranch(
+                accessToken, repoInfo.owner, repoInfo.repo, branchName.trim(), fromSha.trim()
+            );
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", true);
+            result.put("branch", newBranch);
+            result.put("message", "브랜치가 생성되었습니다: " + newBranch.getName());
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            log.error("Failed to create branch: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * 브랜치를 머지합니다.
+     * POST /api/github/merge/{teamId}
+     * Body: { "base": "main", "head": "feature/xxx", "commitMessage": "..." }
+     */
+    @PostMapping("/merge/{teamId}")
+    public ResponseEntity<?> mergeBranches(
+            @PathVariable int teamId,
+            @RequestBody Map<String, String> request) {
+        try {
+            Team team = teamService.findById(teamId);
+            if (team == null) {
+                return ResponseEntity.badRequest().body("팀을 찾을 수 없습니다.");
+            }
+
+            String repoUrl = team.getGithubRepoUrl();
+            if (repoUrl == null || repoUrl.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("GitHub 저장소가 설정되지 않았습니다.");
+            }
+
+            RepoInfo repoInfo = gitHubService.parseRepoUrl(repoUrl);
+            if (repoInfo == null) {
+                return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
+            }
+
+            String base = request.get("base");
+            String head = request.get("head");
+            String commitMessage = request.get("commitMessage");
+
+            if (base == null || base.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("머지 대상 브랜치(base)가 필요합니다.");
+            }
+            if (head == null || head.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("머지할 브랜치(head)가 필요합니다.");
+            }
+
+            String accessToken = getLeaderAccessToken(team);
+            if (accessToken == null) {
+                return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다. 팀장이 GitHub에 로그인해야 합니다.");
+            }
+
+            GitHubMergeResult mergeResult = gitHubService.mergeBranches(
+                accessToken, repoInfo.owner, repoInfo.repo, base.trim(), head.trim(), commitMessage
+            );
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", mergeResult.isMerged());
+            result.put("sha", mergeResult.getSha());
+            result.put("message", mergeResult.getMessage());
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            log.error("Failed to merge branches: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * 브랜치를 삭제합니다.
+     * DELETE /api/github/branch/{teamId}/{branchName}
+     */
+    @DeleteMapping("/branch/{teamId}/{branchName}")
+    public ResponseEntity<?> deleteBranch(
+            @PathVariable int teamId,
+            @PathVariable String branchName) {
+        try {
+            Team team = teamService.findById(teamId);
+            if (team == null) {
+                return ResponseEntity.badRequest().body("팀을 찾을 수 없습니다.");
+            }
+
+            String repoUrl = team.getGithubRepoUrl();
+            if (repoUrl == null || repoUrl.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("GitHub 저장소가 설정되지 않았습니다.");
+            }
+
+            RepoInfo repoInfo = gitHubService.parseRepoUrl(repoUrl);
+            if (repoInfo == null) {
+                return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
+            }
+
+            if (branchName == null || branchName.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("브랜치 이름이 필요합니다.");
+            }
+
+            String accessToken = getLeaderAccessToken(team);
+            if (accessToken == null) {
+                return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다. 팀장이 GitHub에 로그인해야 합니다.");
+            }
+
+            // 기본 브랜치 삭제 방지
+            String defaultBranch = gitHubService.getDefaultBranch(accessToken, repoInfo.owner, repoInfo.repo);
+            if (branchName.equals(defaultBranch)) {
+                return ResponseEntity.badRequest().body("기본 브랜치는 삭제할 수 없습니다.");
+            }
+
+            gitHubService.deleteBranch(accessToken, repoInfo.owner, repoInfo.repo, branchName.trim());
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", true);
+            result.put("message", "브랜치가 삭제되었습니다: " + branchName);
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            log.error("Failed to delete branch: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

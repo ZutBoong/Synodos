@@ -369,8 +369,11 @@ function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewCo
         if (!window.confirm('모든 프로젝트, 태스크, 파일이 삭제됩니다.\n계속하시겠습니까?')) return;
         try {
             await deleteTeam(team.teamId);
+            // 삭제된 팀 정보를 localStorage에서 제거
+            localStorage.removeItem('currentTeam');
             alert('팀이 삭제되었습니다.');
-            navigate('/');
+            // 팀 목록이 있는 페이지로 이동
+            navigate('/mypage');
         } catch (error) {
             alert('팀 삭제에 실패했습니다.');
         }

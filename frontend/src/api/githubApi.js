@@ -76,3 +76,45 @@ export const compareBranches = async (teamId, base, head) => {
     });
     return response.data;
 };
+
+// ==================== 브랜치 작업 API ====================
+
+/**
+ * 새 브랜치를 생성합니다.
+ * @param {number} teamId - 팀 ID
+ * @param {string} branchName - 생성할 브랜치 이름
+ * @param {string} fromSha - 분기할 커밋 SHA
+ */
+export const createBranch = async (teamId, branchName, fromSha) => {
+    const response = await axiosInstance.post(`${API_PATH}/branch/${teamId}`, {
+        branchName,
+        fromSha
+    });
+    return response.data;
+};
+
+/**
+ * 브랜치를 머지합니다.
+ * @param {number} teamId - 팀 ID
+ * @param {string} base - 머지 대상 브랜치 (예: main)
+ * @param {string} head - 머지할 브랜치 (예: feature/xxx)
+ * @param {string} commitMessage - 머지 커밋 메시지 (선택)
+ */
+export const mergeBranches = async (teamId, base, head, commitMessage = null) => {
+    const response = await axiosInstance.post(`${API_PATH}/merge/${teamId}`, {
+        base,
+        head,
+        commitMessage
+    });
+    return response.data;
+};
+
+/**
+ * 브랜치를 삭제합니다.
+ * @param {number} teamId - 팀 ID
+ * @param {string} branchName - 삭제할 브랜치 이름
+ */
+export const deleteBranch = async (teamId, branchName) => {
+    const response = await axiosInstance.delete(`${API_PATH}/branch/${teamId}/${encodeURIComponent(branchName)}`);
+    return response.data;
+};

@@ -133,6 +133,7 @@ function Sidebar({ isOpen, onToggle, currentTeam, onSelectTeam, loginMember }) {
                 const updatedTeams = teams.filter(t => t.teamId !== team.teamId);
                 setTeams(updatedTeams);
                 if (currentTeam?.teamId === team.teamId) {
+                    localStorage.removeItem('currentTeam');
                     onSelectTeam(updatedTeams[0] || null);
                 }
             } catch (error) {
@@ -146,6 +147,7 @@ function Sidebar({ isOpen, onToggle, currentTeam, onSelectTeam, loginMember }) {
                 const updatedTeams = teams.filter(t => t.teamId !== team.teamId);
                 setTeams(updatedTeams);
                 if (currentTeam?.teamId === team.teamId) {
+                    localStorage.removeItem('currentTeam');
                     onSelectTeam(updatedTeams[0] || null);
                 }
             } catch (error) {

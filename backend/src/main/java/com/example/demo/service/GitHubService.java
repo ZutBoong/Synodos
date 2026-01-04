@@ -707,4 +707,153 @@ public class GitHubService {
         private String status;  // ahead, behind, identical, diverged
         private int totalCommits;
     }
+
+    // ==================== 브랜치 작업 API ====================
+
+    /**
+     * 새 브랜치를 생성합니다.
+     * @param accessToken GitHub 액세스 토큰
+     * @param owner 저장소 소유자
+     * @param repo 저장소 이름
+     * @param branchName 생성할 브랜치 이름
+     * @param fromSha 분기할 커밋 SHA
+     * @return 생성된 브랜치 정보
+     */
+    public GitHubBranch createBranch(String accessToken, String owner, String repo, String branchName, String fromSha) {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/git/refs", owner, repo);
+        log.info("Creating branch {}/{}: {} from {}", owner, repo, branchName, fromSha);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            headers.set("Content-Type", "application/json");
+
+            Map<String, String> body = Map.of(
+                "ref", "refs/heads/" + branchName,
+                "sha", fromSha
+            );
+
+            String jsonBody = objectMapper.writeValueAsString(body);
+            HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl, HttpMethod.POST, entity, String.class
+            );
+
+            JsonNode node = objectMapper.readTree(response.getBody());
+            String ref = node.path("ref").asText();
+            String sha = node.path("object").path("sha").asText();
+            String name = ref.replace("refs/heads/", "");
+
+            log.info("Branch created successfully: {}", name);
+            return new GitHubBranch(name, sha);
+        } catch (Exception e) {
+            log.error("Failed to create branch: {}", e.getMessage());
+            if (e.getMessage().contains("422")) {
+                throw new RuntimeException("이미 존재하는 브랜치 이름입니다: " + branchName, e);
+            }
+            throw new RuntimeException("브랜치 생성에 실패했습니다: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 브랜치를 머지합니다.
+     * @param accessToken GitHub 액세스 토큰
+     * @param owner 저장소 소유자
+     * @param repo 저장소 이름
+     * @param base 머지 대상 브랜치 (예: main)
+     * @param head 머지할 브랜치 (예: feature/xxx)
+     * @param commitMessage 머지 커밋 메시지 (선택)
+     * @return 머지 결과
+     */
+    public GitHubMergeResult mergeBranches(String accessToken, String owner, String repo,
+                                            String base, String head, String commitMessage) {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/merges", owner, repo);
+        log.info("Merging {}/{}: {} <- {}", owner, repo, base, head);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            headers.set("Content-Type", "application/json");
+
+            Map<String, String> body = new java.util.HashMap<>();
+            body.put("base", base);
+            body.put("head", head);
+            if (commitMessage != null && !commitMessage.isEmpty()) {
+                body.put("commit_message", commitMessage);
+            }
+
+            String jsonBody = objectMapper.writeValueAsString(body);
+            HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl, HttpMethod.POST, entity, String.class
+            );
+
+            JsonNode node = objectMapper.readTree(response.getBody());
+
+            GitHubMergeResult result = new GitHubMergeResult();
+            result.setSha(node.path("sha").asText());
+            result.setMerged(true);
+            result.setMessage("머지가 완료되었습니다.");
+
+            log.info("Merge successful: {}", result.getSha());
+            return result;
+        } catch (Exception e) {
+            log.error("Failed to merge branches: {}", e.getMessage());
+
+            GitHubMergeResult result = new GitHubMergeResult();
+            result.setMerged(false);
+
+            if (e.getMessage().contains("409")) {
+                result.setMessage("머지 충돌이 있습니다. GitHub에서 직접 해결해주세요.");
+            } else if (e.getMessage().contains("404")) {
+                result.setMessage("브랜치를 찾을 수 없습니다.");
+            } else if (e.getMessage().contains("204")) {
+                // 204 No Content = 이미 최신 상태
+                result.setMerged(true);
+                result.setMessage("이미 최신 상태입니다. 머지할 변경사항이 없습니다.");
+                return result;
+            } else {
+                result.setMessage("머지에 실패했습니다: " + e.getMessage());
+            }
+
+            return result;
+        }
+    }
+
+    /**
+     * 브랜치를 삭제합니다.
+     * @param accessToken GitHub 액세스 토큰
+     * @param owner 저장소 소유자
+     * @param repo 저장소 이름
+     * @param branchName 삭제할 브랜치 이름
+     */
+    public void deleteBranch(String accessToken, String owner, String repo, String branchName) {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/git/refs/heads/%s",
+                                      owner, repo, branchName);
+        log.info("Deleting branch {}/{}: {}", owner, repo, branchName);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            restTemplate.exchange(apiUrl, HttpMethod.DELETE, entity, String.class);
+            log.info("Branch deleted successfully: {}", branchName);
+        } catch (Exception e) {
+            log.error("Failed to delete branch: {}", e.getMessage());
+            if (e.getMessage().contains("422")) {
+                throw new RuntimeException("보호된 브랜치는 삭제할 수 없습니다.", e);
+            }
+            throw new RuntimeException("브랜치 삭제에 실패했습니다: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 머지 결과
+     */
+    @lombok.Data
+    public static class GitHubMergeResult {
+        private String sha;           // 머지 커밋 SHA
+        private boolean merged;       // 성공 여부
+        private String message;       // 상태 메시지
+    }
 }
