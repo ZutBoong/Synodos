@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { taskupdate, updateTaskAssignees, updateTaskVerifiers, archiveTask, unarchiveTask, toggleTaskFavorite, checkTaskFavorite } from '../api/boardApi';
 import { getTeamMembers, getTeam } from '../api/teamApi';
 import { uploadFile, getFilesByTask, deleteFile, formatFileSize, getFileIcon } from '../api/fileApi';
-import { createTaskBranch, createTaskPR, getTaskPRs, getBranches, getDefaultBranch } from '../api/githubApi';
+import { createTaskBranch, createTaskPR, getTaskPRs, getBranches, getDefaultBranch, mergePR, getPRDetail, aiResolveConflict, applyConflictResolution } from '../api/githubApi';
 import CommentSection from './CommentSection';
 import CommitBrowser from './CommitBrowser';
 import LinkedCommits from './LinkedCommits';
@@ -20,7 +20,7 @@ const WORKFLOW_STATUS = {
 };
 
 
-function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
+function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastCommentEvent }) {
     const [teamMembers, setTeamMembers] = useState([]);
     const [files, setFiles] = useState([]);
     const [isFavorite, setIsFavorite] = useState(false);
@@ -59,11 +59,35 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
         body: ''
     });
 
+    // PR 머지 다이얼로그 상태
+    const [mergeDialog, setMergeDialog] = useState({
+        show: false,
+        pr: null,
+        prDetail: null,       // PR 상세 정보 (충돌 상태 포함)
+        mergeMethod: 'merge',
+        loading: false,
+        checkingStatus: false // 머지 가능 여부 확인 중
+    });
+
+    // AI 충돌 해결 상태
+    const [aiResolution, setAiResolution] = useState({
+        show: false,           // AI 해결 패널 표시
+        filename: null,        // 현재 해결 중인 파일
+        loading: false,        // AI 분석 중
+        applying: false,       // 해결 코드 적용 중
+        result: null,          // AI 해결 결과
+        error: null,           // 에러 메시지
+        selectedOption: null   // 선택된 옵션 인덱스
+    });
+
     const commentSectionRef = useRef(null);
     const linkedCommitsRef = useRef(null);
     const fileInputRef = useRef(null);
     const saveTimeoutRef = useRef(null);
     const initialLoadRef = useRef(true);
+
+    // 탭 상태
+    const [activeTab, setActiveTab] = useState('info');
 
     // task 변경 시 폼 초기화
     useEffect(() => {
@@ -153,6 +177,17 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
             }
         };
     }, []);
+
+    // GitHub → Synodos 댓글 동기화 시 실시간 업데이트
+    useEffect(() => {
+        if (lastCommentEvent && task?.taskId && commentSectionRef.current) {
+            // 이 태스크의 댓글 이벤트인지 확인
+            if (lastCommentEvent.payload?.taskId === task.taskId) {
+                console.log('Comment event for current task, refreshing...', lastCommentEvent);
+                commentSectionRef.current.refresh();
+            }
+        }
+    }, [lastCommentEvent, task?.taskId]);
 
     const formatDateForInput = (dateStr) => {
         if (!dateStr) return '';
@@ -280,6 +315,260 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
             body: form.description || ''
         }));
         setShowPRDialog(true);
+    };
+
+    // PR 머지 다이얼로그 열기
+    const openMergeDialog = async (pr) => {
+        setMergeDialog({
+            show: true,
+            pr: pr,
+            prDetail: null,
+            mergeMethod: 'merge',
+            loading: false,
+            checkingStatus: true
+        });
+
+        // PR 상세 정보 조회 (머지 가능 여부 확인)
+        try {
+            const detail = await getPRDetail(teamId, pr.prNumber);
+            setMergeDialog(prev => ({
+                ...prev,
+                prDetail: detail,
+                checkingStatus: false
+            }));
+        } catch (error) {
+            console.error('PR 상태 확인 실패:', error);
+            setMergeDialog(prev => ({
+                ...prev,
+                checkingStatus: false
+            }));
+        }
+    };
+
+    // PR 머지 다이얼로그 닫기
+    const closeMergeDialog = () => {
+        setMergeDialog({
+            show: false,
+            pr: null,
+            prDetail: null,
+            mergeMethod: 'merge',
+            loading: false,
+            checkingStatus: false
+        });
+    };
+
+    // PR 머지 실행
+    const handleMergePR = async (retryCount = 0) => {
+        if (!mergeDialog.pr) return;
+
+        setMergeDialog(prev => ({ ...prev, loading: true }));
+        try {
+            const result = await mergePR(
+                teamId,
+                mergeDialog.pr.prNumber,
+                null, // commitTitle - 기본값 사용
+                mergeDialog.mergeMethod
+            );
+
+            if (result.merged) {
+                alert(`PR #${mergeDialog.pr.prNumber}이(가) 성공적으로 머지되었습니다.`);
+                closeMergeDialog();
+                fetchTaskPRs(); // PR 목록 새로고침
+                // 머지 성공 후 TaskDetailView 닫기
+                if (onUpdate) onUpdate();
+                onClose();
+            } else {
+                // 머지 불가능 에러 처리
+                const errorMsg = result.message || '';
+                if (errorMsg.includes('not mergeable') && retryCount < 2) {
+                    // GitHub가 아직 준비되지 않음 - 자동 재시도
+                    setMergeDialog(prev => ({ ...prev, loading: true }));
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    return handleMergePR(retryCount + 1);
+                } else if (errorMsg.includes('not mergeable')) {
+                    const retry = window.confirm(
+                        'GitHub에서 아직 머지 가능 상태로 업데이트되지 않았습니다.\n' +
+                        '충돌 해결 후 GitHub가 상태를 업데이트하는데 시간이 걸릴 수 있습니다.\n\n' +
+                        '잠시 후 다시 시도하시겠습니까?'
+                    );
+                    if (retry) {
+                        setMergeDialog(prev => ({ ...prev, loading: true }));
+                        await new Promise(resolve => setTimeout(resolve, 5000));
+                        return handleMergePR(0);
+                    }
+                } else {
+                    alert(result.message || 'PR 머지에 실패했습니다.');
+                }
+            }
+        } catch (error) {
+            console.error('PR 머지 실패:', error);
+            const errorData = error.response?.data || '';
+            if (typeof errorData === 'string' && errorData.includes('not mergeable') && retryCount < 2) {
+                // 자동 재시도
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                return handleMergePR(retryCount + 1);
+            } else if (typeof errorData === 'string' && errorData.includes('not mergeable')) {
+                const retry = window.confirm(
+                    'GitHub에서 아직 머지 가능 상태로 업데이트되지 않았습니다.\n' +
+                    '잠시 후 다시 시도하시겠습니까?'
+                );
+                if (retry) {
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    return handleMergePR(0);
+                }
+            } else {
+                alert(errorData || 'PR 머지에 실패했습니다.');
+            }
+        } finally {
+            setMergeDialog(prev => ({ ...prev, loading: false }));
+        }
+    };
+
+    // AI 충돌 해결 시작
+    const handleAiResolveConflict = async (filename) => {
+        if (!mergeDialog.pr) return;
+
+        setAiResolution({
+            show: true,
+            filename: filename,
+            loading: true,
+            applying: false,
+            result: null,
+            error: null,
+            selectedOption: null
+        });
+
+        try {
+            const result = await aiResolveConflict(teamId, mergeDialog.pr.prNumber, filename);
+
+            if (result.success) {
+                setAiResolution(prev => ({
+                    ...prev,
+                    loading: false,
+                    result: result
+                }));
+            } else {
+                setAiResolution(prev => ({
+                    ...prev,
+                    loading: false,
+                    error: result.error || 'AI 충돌 해결에 실패했습니다.'
+                }));
+            }
+        } catch (error) {
+            console.error('AI 충돌 해결 실패:', error);
+            setAiResolution(prev => ({
+                ...prev,
+                loading: false,
+                error: error.response?.data || 'AI 충돌 해결에 실패했습니다.'
+            }));
+        }
+    };
+
+    // AI 해결 코드 적용
+    const handleApplyResolution = async () => {
+        if (!aiResolution.result || !mergeDialog.pr) return;
+
+        // 선택된 옵션 확인
+        const selectedIdx = aiResolution.selectedOption;
+        if (selectedIdx === null || !aiResolution.result.options?.[selectedIdx]) {
+            alert('해결 옵션을 선택해주세요.');
+            return;
+        }
+
+        const selectedOption = aiResolution.result.options[selectedIdx];
+
+        setAiResolution(prev => ({ ...prev, applying: true }));
+
+        try {
+            const result = await applyConflictResolution(
+                teamId,
+                mergeDialog.pr.prNumber,
+                aiResolution.result.filename,
+                selectedOption.code,
+                aiResolution.result.headSha
+            );
+
+            if (result.success) {
+                const resolvedFilename = aiResolution.result.filename;
+                alert(`충돌이 해결되었습니다: ${resolvedFilename}`);
+
+                // AI 해결 패널 닫기
+                setAiResolution({
+                    show: false,
+                    filename: null,
+                    loading: false,
+                    applying: false,
+                    result: null,
+                    error: null,
+                    selectedOption: null
+                });
+
+                // 해결된 파일을 충돌 목록에서 제거 (낙관적 업데이트)
+                setMergeDialog(prev => {
+                    const updatedConflictFiles = prev.prDetail?.conflictFiles?.filter(
+                        f => f.filename !== resolvedFilename
+                    ) || [];
+                    const allResolved = updatedConflictFiles.length === 0;
+
+                    return {
+                        ...prev,
+                        checkingStatus: true,
+                        prDetail: prev.prDetail ? {
+                            ...prev.prDetail,
+                            conflictFiles: updatedConflictFiles,
+                            // 모든 충돌이 해결되면 hasConflicts를 false로
+                            hasConflicts: !allResolved,
+                            // mergeable도 낙관적으로 true로 설정
+                            mergeable: allResolved ? true : prev.prDetail.mergeable
+                        } : null
+                    };
+                });
+
+                // 잠시 대기 후 실제 상태 확인 (백그라운드)
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                // GitHub 상태 확인 (실패해도 무시 - 낙관적 UI 유지)
+                try {
+                    const detail = await getPRDetail(teamId, mergeDialog.pr.prNumber);
+                    // GitHub가 여전히 충돌이라고 하면 그대로 유지, 아니면 업데이트
+                    if (!detail.hasConflicts) {
+                        setMergeDialog(prev => ({ ...prev, prDetail: detail, checkingStatus: false }));
+                    } else {
+                        // GitHub가 충돌이라고 해도 우리가 해결한 파일은 목록에서 제거된 상태 유지
+                        setMergeDialog(prev => ({ ...prev, checkingStatus: false }));
+                    }
+                } catch (e) {
+                    console.error('PR 상태 확인 실패:', e);
+                    setMergeDialog(prev => ({ ...prev, checkingStatus: false }));
+                }
+            } else {
+                setAiResolution(prev => ({
+                    ...prev,
+                    applying: false,
+                    error: result.error || '해결 코드 적용에 실패했습니다.'
+                }));
+            }
+        } catch (error) {
+            console.error('해결 코드 적용 실패:', error);
+            setAiResolution(prev => ({
+                ...prev,
+                applying: false,
+                error: error.response?.data || '해결 코드 적용에 실패했습니다.'
+            }));
+        }
+    };
+
+    // AI 해결 취소
+    const handleCancelAiResolution = () => {
+        setAiResolution({
+            show: false,
+            filename: null,
+            loading: false,
+            applying: false,
+            result: null,
+            error: null,
+            selectedOption: null
+        });
     };
 
     const fetchFiles = async () => {
@@ -461,6 +750,12 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
                         )}
                     </div>
                     <div className="header-right">
+                        <span
+                            className="status-badge"
+                            style={{ background: status.bg, color: status.color }}
+                        >
+                            {status.label}
+                        </span>
                         <button
                             className={`action-btn urgent-btn ${form.priority === 'URGENT' ? 'active' : ''}`}
                             onClick={() => {
@@ -494,7 +789,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
             {/* 콘텐츠 */}
             <div className="task-detail-view-scroll">
                 <div className="task-detail-view-content">
-                    {/* 제목 & 상태 */}
+                    {/* 제목 */}
                     <div className="task-title-section">
                         <input
                             type="text"
@@ -504,14 +799,6 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
                             onChange={handleFormChange}
                             placeholder="태스크 제목을 입력하세요..."
                         />
-                        <div className="task-badges">
-                            <span
-                                className="status-badge"
-                                style={{ background: status.bg, color: status.color }}
-                            >
-                                {status.label}
-                            </span>
-                        </div>
                     </div>
 
                     {/* 반려 사유 */}
@@ -525,11 +812,59 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
                         </div>
                     )}
 
-                    {/* 메타 정보 */}
-                    <div className="task-meta-grid">
-                        <div className="meta-item">
-                            <label><i className="fa-regular fa-calendar"></i> 시작일</label>
-                            <div className="date-time-inputs">
+                    {/* 탭 네비게이션 */}
+                    <div className="task-tabs">
+                        <button
+                            className={`tab-btn ${activeTab === 'info' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('info')}
+                        >
+                            <i className="fa-solid fa-circle-info"></i>
+                            기본정보
+                        </button>
+                        {hasGithubRepo && (
+                            <button
+                                className={`tab-btn ${activeTab === 'github' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('github')}
+                            >
+                                <i className="fa-brands fa-github"></i>
+                                GitHub
+                                {taskPRs.filter(pr => pr.prState === 'open').length > 0 && (
+                                    <span className="tab-badge">{taskPRs.filter(pr => pr.prState === 'open').length}</span>
+                                )}
+                            </button>
+                        )}
+                        <button
+                            className={`tab-btn ${activeTab === 'files' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('files')}
+                        >
+                            <i className="fa-solid fa-paperclip"></i>
+                            파일
+                            {files.length > 0 && <span className="tab-badge">{files.length}</span>}
+                        </button>
+                        <button
+                            className={`tab-btn ${activeTab === 'comments' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('comments')}
+                        >
+                            <i className="fa-solid fa-comments"></i>
+                            댓글
+                        </button>
+                    </div>
+
+                    {/* 탭 콘텐츠 */}
+                    <div className="tab-content">
+
+                    {/* 기본정보 탭 */}
+                    {activeTab === 'info' && (
+                    <div className="tab-panel">
+
+                    {/* 일정 */}
+                    <div className="task-dates-section">
+                        <div className="date-card">
+                            <div className="date-card-header">
+                                <i className="fa-regular fa-calendar"></i>
+                                <span>시작일</span>
+                            </div>
+                            <div className="date-card-inputs">
                                 <input
                                     type="date"
                                     name="startDate"
@@ -544,9 +879,15 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
                                 />
                             </div>
                         </div>
-                        <div className="meta-item">
-                            <label><i className="fa-regular fa-calendar-check"></i> 마감일</label>
-                            <div className="date-time-inputs">
+                        <div className="date-arrow">
+                            <i className="fa-solid fa-arrow-right"></i>
+                        </div>
+                        <div className="date-card">
+                            <div className="date-card-header">
+                                <i className="fa-regular fa-calendar-check"></i>
+                                <span>마감일</span>
+                            </div>
+                            <div className="date-card-inputs">
                                 <input
                                     type="date"
                                     name="dueDate"
@@ -560,10 +901,6 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
                                     onChange={handleFormChange}
                                 />
                             </div>
-                        </div>
-                        <div className="meta-item">
-                            <label><i className="fa-regular fa-clock"></i> 생성일</label>
-                            <span>{formatDate(task?.createdAt)}</span>
                         </div>
                     </div>
 
@@ -680,44 +1017,46 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
                         />
                     </div>
 
-                    {/* GitHub 커밋 */}
-                    {hasGithubRepo && (
-                        <div className="task-section">
-                            <div className="section-header-row">
-                                <label><i className="fa-brands fa-github"></i> 연결된 커밋</label>
-                                <button
-                                    type="button"
-                                    className="link-commit-btn"
-                                    onClick={() => setShowCommitBrowser(true)}
-                                >
-                                    <i className="fa-solid fa-plus"></i> 커밋 연결
-                                </button>
-                            </div>
-                            <LinkedCommits
-                                ref={linkedCommitsRef}
-                                taskId={task?.taskId}
-                                canEdit={true}
-                            />
-                        </div>
+                    </div>
                     )}
+
+                    {/* GitHub 탭 */}
+                    {activeTab === 'github' && hasGithubRepo && (
+                    <div className="tab-panel">
+
+                    {/* GitHub 커밋 */}
+                    <div className="task-section">
+                        <div className="section-header-row">
+                            <label><i className="fa-brands fa-github"></i> 연결된 커밋</label>
+                            <button
+                                type="button"
+                                className="link-commit-btn"
+                                onClick={() => setShowCommitBrowser(true)}
+                            >
+                                <i className="fa-solid fa-plus"></i> 커밋 연결
+                            </button>
+                        </div>
+                        <LinkedCommits
+                            ref={linkedCommitsRef}
+                            taskId={task?.taskId}
+                            canEdit={true}
+                        />
+                    </div>
 
                     {/* GitHub Issue 연동 */}
-                    {hasGithubRepo && (
-                        <div className="task-section">
-                            <label><i className="fa-brands fa-github"></i> GitHub Issue</label>
-                            <GitHubIssueLink
-                                taskId={task?.taskId}
-                                teamId={teamId}
-                                taskTitle={form.title}
-                                taskDescription={form.description}
-                                loginMember={loginMember}
-                            />
-                        </div>
-                    )}
+                    <div className="task-section">
+                        <label><i className="fa-brands fa-github"></i> GitHub Issue</label>
+                        <GitHubIssueLink
+                            taskId={task?.taskId}
+                            teamId={teamId}
+                            taskTitle={form.title}
+                            taskDescription={form.description}
+                            loginMember={loginMember}
+                        />
+                    </div>
 
                     {/* GitHub PR */}
-                    {hasGithubRepo && (
-                        <div className="task-section pr-section">
+                    <div className="task-section pr-section">
                             <div className="section-header-row">
                                 <label><i className="fa-solid fa-code-pull-request"></i> Pull Requests</label>
                                 <div className="section-actions">
@@ -780,12 +1119,31 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
                                                     {pr.prState === 'open' && <span className="pr-status open">Open</span>}
                                                 </div>
                                             </div>
+                                            {/* 머지 버튼 - open 상태인 PR에만 표시 */}
+                                            {pr.prState === 'open' && !pr.merged && (
+                                                <div className="pr-actions">
+                                                    <button
+                                                        type="button"
+                                                        className="pr-merge-btn"
+                                                        onClick={() => openMergeDialog(pr)}
+                                                        title="PR 머지"
+                                                    >
+                                                        <i className="fa-solid fa-code-merge"></i> 머지
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     ))
                                 )}
                             </div>
-                        </div>
+                    </div>
+
+                    </div>
                     )}
+
+                    {/* 파일 탭 */}
+                    {activeTab === 'files' && (
+                    <div className="tab-panel">
 
                     {/* 첨부파일 */}
                     <div className="task-section">
@@ -844,6 +1202,13 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
                         )}
                     </div>
 
+                    </div>
+                    )}
+
+                    {/* 댓글 탭 */}
+                    {activeTab === 'comments' && (
+                    <div className="tab-panel">
+
                     {/* 댓글 */}
                     <div className="task-section comments-section">
                         <label><i className="fa-solid fa-comments"></i> 댓글</label>
@@ -853,6 +1218,11 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
                             loginMember={loginMember}
                         />
                     </div>
+
+                    </div>
+                    )}
+
+                    </div>{/* tab-content 닫기 */}
                 </div>
             </div>
 
@@ -950,6 +1320,344 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember }) {
                             >
                                 {prLoading ? 'PR 생성 중...' : 'PR 생성'}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* PR 머지 다이얼로그 */}
+            {mergeDialog.show && mergeDialog.pr && (
+                <div className="pr-dialog-overlay" onClick={() => !mergeDialog.loading && !mergeDialog.checkingStatus && closeMergeDialog()}>
+                    <div className="pr-dialog merge-dialog" onClick={e => e.stopPropagation()}>
+                        <div className="pr-dialog-header">
+                            <h3><i className="fa-solid fa-code-merge"></i> Pull Request 머지</h3>
+                            <button
+                                className="close-btn"
+                                onClick={closeMergeDialog}
+                                disabled={mergeDialog.loading || mergeDialog.checkingStatus}
+                            >
+                                <i className="fa-solid fa-x"></i>
+                            </button>
+                        </div>
+                        <div className="pr-dialog-body">
+                            <div className="merge-pr-info">
+                                <div className="merge-pr-title">
+                                    <i className="fa-solid fa-code-pull-request"></i>
+                                    #{mergeDialog.pr.prNumber} {mergeDialog.pr.prTitle}
+                                </div>
+                                <div className="merge-pr-branches">
+                                    <span className="pr-branch">{mergeDialog.pr.headBranch}</span>
+                                    <i className="fa-solid fa-arrow-right"></i>
+                                    <span className="pr-branch">{mergeDialog.pr.baseBranch}</span>
+                                </div>
+                            </div>
+
+                            {/* 머지 상태 확인 중 */}
+                            {mergeDialog.checkingStatus && (
+                                <div className="merge-status-checking">
+                                    <i className="fa-solid fa-spinner fa-spin"></i>
+                                    머지 가능 여부 확인 중...
+                                </div>
+                            )}
+
+                            {/* 머지 가능 상태 표시 */}
+                            {!mergeDialog.checkingStatus && mergeDialog.prDetail && (
+                                <>
+                                    {/* 충돌 없음 - 머지 가능 */}
+                                    {mergeDialog.prDetail.mergeable === true && !mergeDialog.prDetail.hasConflicts && (
+                                        <div className="merge-status success">
+                                            <i className="fa-solid fa-check-circle"></i>
+                                            <span>머지 가능: 충돌 없음</span>
+                                        </div>
+                                    )}
+
+                                    {/* 아직 확인 중 */}
+                                    {mergeDialog.prDetail.mergeable === null && !mergeDialog.prDetail.hasConflicts && (
+                                        <div className="merge-status pending">
+                                            <i className="fa-solid fa-clock"></i>
+                                            <span>GitHub에서 머지 가능 여부 확인 중...</span>
+                                            <button
+                                                className="refresh-btn"
+                                                onClick={async () => {
+                                                    setMergeDialog(prev => ({ ...prev, checkingStatus: true }));
+                                                    try {
+                                                        const detail = await getPRDetail(teamId, mergeDialog.pr.prNumber);
+                                                        setMergeDialog(prev => ({ ...prev, prDetail: detail, checkingStatus: false }));
+                                                    } catch (e) {
+                                                        setMergeDialog(prev => ({ ...prev, checkingStatus: false }));
+                                                    }
+                                                }}
+                                                title="상태 새로고침"
+                                            >
+                                                <i className="fa-solid fa-rotate"></i>
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* 충돌 있음 */}
+                                    {mergeDialog.prDetail.hasConflicts && (
+                                        <div className="merge-conflict-section">
+                                            <div className="merge-status conflict">
+                                                <i className="fa-solid fa-exclamation-triangle"></i>
+                                                <span>충돌 발생: 머지 전 충돌 해결 필요</span>
+                                            </div>
+
+                                            {/* 충돌 파일 목록 */}
+                                            {mergeDialog.prDetail.conflictFiles && mergeDialog.prDetail.conflictFiles.length > 0 && (
+                                                <div className="conflict-files">
+                                                    <div className="conflict-files-header">
+                                                        <i className="fa-solid fa-file-code"></i>
+                                                        충돌 가능 파일 ({mergeDialog.prDetail.conflictFiles.length}개)
+                                                    </div>
+                                                    <ul className="conflict-file-list">
+                                                        {mergeDialog.prDetail.conflictFiles.slice(0, 10).map((file, idx) => (
+                                                            <li key={idx} className={`conflict-file ${file.status}`}>
+                                                                <span className="file-status">
+                                                                    {file.status === 'modified' && <i className="fa-solid fa-pen"></i>}
+                                                                    {file.status === 'added' && <i className="fa-solid fa-plus"></i>}
+                                                                    {file.status === 'removed' && <i className="fa-solid fa-minus"></i>}
+                                                                    {file.status === 'renamed' && <i className="fa-solid fa-arrow-right"></i>}
+                                                                </span>
+                                                                <span className="file-name">{file.filename}</span>
+                                                                <span className="file-changes">
+                                                                    <span className="additions">+{file.additions}</span>
+                                                                    <span className="deletions">-{file.deletions}</span>
+                                                                </span>
+                                                                {/* AI 해결 버튼 - 수정된 파일에만 표시 */}
+                                                                {file.status === 'modified' && (
+                                                                    <button
+                                                                        className="ai-resolve-btn"
+                                                                        onClick={() => handleAiResolveConflict(file.filename)}
+                                                                        disabled={aiResolution.loading}
+                                                                        title="AI로 충돌 해결"
+                                                                    >
+                                                                        <i className="fa-solid fa-wand-magic-sparkles"></i>
+                                                                        AI 해결
+                                                                    </button>
+                                                                )}
+                                                            </li>
+                                                        ))}
+                                                        {mergeDialog.prDetail.conflictFiles.length > 10 && (
+                                                            <li className="more-files">
+                                                                ... 외 {mergeDialog.prDetail.conflictFiles.length - 10}개 파일
+                                                            </li>
+                                                        )}
+                                                    </ul>
+                                                </div>
+                                            )}
+
+                                            {/* AI 충돌 해결 패널 */}
+                                            {aiResolution.show && (
+                                                <div className="ai-resolution-panel">
+                                                    <div className="ai-panel-header">
+                                                        <div className="ai-panel-title">
+                                                            <i className="fa-solid fa-wand-magic-sparkles"></i>
+                                                            AI 충돌 해결
+                                                        </div>
+                                                        <span className="ai-panel-file">{aiResolution.filename}</span>
+                                                        <button
+                                                            className="ai-panel-close"
+                                                            onClick={handleCancelAiResolution}
+                                                            disabled={aiResolution.applying}
+                                                        >
+                                                            <i className="fa-solid fa-x"></i>
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="ai-panel-body">
+                                                        {/* 로딩 상태 */}
+                                                        {aiResolution.loading && (
+                                                            <div className="ai-loading">
+                                                                <i className="fa-solid fa-spinner fa-spin"></i>
+                                                                <span>AI가 충돌을 분석하고 있습니다...</span>
+                                                                <p className="ai-loading-hint">양쪽 브랜치의 변경사항을 분석하여 최적의 해결책을 찾고 있습니다.</p>
+                                                            </div>
+                                                        )}
+
+                                                        {/* 에러 */}
+                                                        {aiResolution.error && (
+                                                            <div className="ai-error">
+                                                                <i className="fa-solid fa-exclamation-circle"></i>
+                                                                <span>{aiResolution.error}</span>
+                                                                <button
+                                                                    className="retry-btn"
+                                                                    onClick={() => handleAiResolveConflict(aiResolution.filename)}
+                                                                >
+                                                                    다시 시도
+                                                                </button>
+                                                            </div>
+                                                        )}
+
+                                                        {/* 해결 결과 */}
+                                                        {aiResolution.result && !aiResolution.loading && !aiResolution.error && (
+                                                            <>
+                                                                {/* 분석 내용 */}
+                                                                <div className="ai-analysis">
+                                                                    <div className="ai-section-title">
+                                                                        <i className="fa-solid fa-magnifying-glass-chart"></i>
+                                                                        충돌 분석
+                                                                    </div>
+                                                                    <p>{aiResolution.result.analysis}</p>
+                                                                </div>
+
+                                                                {/* 해결 옵션 카드들 */}
+                                                                <div className="ai-options">
+                                                                    <div className="ai-section-title">
+                                                                        <i className="fa-solid fa-list-check"></i>
+                                                                        해결 옵션 선택
+                                                                    </div>
+                                                                    <div className="ai-option-cards">
+                                                                        {aiResolution.result.options?.map((option, idx) => (
+                                                                            <div
+                                                                                key={idx}
+                                                                                className={`ai-option-card ${aiResolution.selectedOption === idx ? 'selected' : ''}`}
+                                                                                onClick={() => setAiResolution(prev => ({ ...prev, selectedOption: idx }))}
+                                                                            >
+                                                                                <div className="option-header">
+                                                                                    <span className="option-number">{idx + 1}</span>
+                                                                                    <span className="option-title">{option.title}</span>
+                                                                                    {aiResolution.selectedOption === idx && (
+                                                                                        <i className="fa-solid fa-check-circle selected-check"></i>
+                                                                                    )}
+                                                                                </div>
+                                                                                <p className="option-description">{option.description}</p>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* 선택된 옵션의 코드 미리보기 */}
+                                                                {aiResolution.selectedOption !== null && aiResolution.result.options?.[aiResolution.selectedOption] && (
+                                                                    <div className="ai-code-preview">
+                                                                        <div className="ai-section-title">
+                                                                            <i className="fa-solid fa-code"></i>
+                                                                            {aiResolution.result.options[aiResolution.selectedOption].title} - 코드 미리보기
+                                                                        </div>
+                                                                        <pre className="code-block">
+                                                                            <code>{aiResolution.result.options[aiResolution.selectedOption].code}</code>
+                                                                        </pre>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* 적용 버튼 */}
+                                                                <div className="ai-actions">
+                                                                    <button
+                                                                        className="cancel-btn"
+                                                                        onClick={handleCancelAiResolution}
+                                                                        disabled={aiResolution.applying}
+                                                                    >
+                                                                        취소
+                                                                    </button>
+                                                                    <button
+                                                                        className="apply-btn"
+                                                                        onClick={handleApplyResolution}
+                                                                        disabled={aiResolution.applying || aiResolution.selectedOption === null}
+                                                                    >
+                                                                        {aiResolution.applying ? (
+                                                                            <>
+                                                                                <i className="fa-solid fa-spinner fa-spin"></i>
+                                                                                적용 중...
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <i className="fa-solid fa-check"></i>
+                                                                                선택한 옵션 적용
+                                                                            </>
+                                                                        )}
+                                                                    </button>
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* 충돌 해결 안내 */}
+                                            <div className="conflict-resolution-guide">
+                                                <div className="guide-header">
+                                                    <i className="fa-solid fa-lightbulb"></i>
+                                                    충돌 해결 방법
+                                                </div>
+                                                <div className="guide-options">
+                                                    <a
+                                                        href={mergeDialog.prDetail.htmlUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="guide-option github"
+                                                    >
+                                                        <i className="fa-brands fa-github"></i>
+                                                        <div className="option-content">
+                                                            <strong>GitHub에서 해결</strong>
+                                                            <span>웹 에디터로 충돌 해결</span>
+                                                        </div>
+                                                        <i className="fa-solid fa-external-link"></i>
+                                                    </a>
+                                                    <div className="guide-option local">
+                                                        <i className="fa-solid fa-terminal"></i>
+                                                        <div className="option-content">
+                                                            <strong>로컬에서 해결</strong>
+                                                            <code>
+                                                                git fetch origin<br/>
+                                                                git checkout {mergeDialog.prDetail.headRef}<br/>
+                                                                git merge origin/{mergeDialog.prDetail.baseRef}<br/>
+                                                                <span className="comment"># 충돌 해결 후</span><br/>
+                                                                git add . && git commit<br/>
+                                                                git push
+                                                            </code>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            {/* 머지 방법 선택 (충돌 없을 때만) */}
+                            {!mergeDialog.checkingStatus && mergeDialog.prDetail && !mergeDialog.prDetail.hasConflicts && (
+                                <div className="pr-form-field">
+                                    <label>머지 방법</label>
+                                    <select
+                                        value={mergeDialog.mergeMethod}
+                                        onChange={e => setMergeDialog(prev => ({ ...prev, mergeMethod: e.target.value }))}
+                                        disabled={mergeDialog.loading}
+                                    >
+                                        <option value="merge">Merge commit (모든 커밋 유지)</option>
+                                        <option value="squash">Squash and merge (커밋 하나로 합치기)</option>
+                                        <option value="rebase">Rebase and merge (리베이스 후 머지)</option>
+                                    </select>
+                                </div>
+                            )}
+                        </div>
+                        <div className="pr-dialog-footer">
+                            <button
+                                type="button"
+                                className="cancel-btn"
+                                onClick={closeMergeDialog}
+                                disabled={mergeDialog.loading || mergeDialog.checkingStatus}
+                            >
+                                {mergeDialog.prDetail?.hasConflicts ? '닫기' : '취소'}
+                            </button>
+                            {!mergeDialog.prDetail?.hasConflicts && (
+                                <button
+                                    type="button"
+                                    className="submit-btn merge"
+                                    onClick={handleMergePR}
+                                    disabled={mergeDialog.loading || mergeDialog.checkingStatus}
+                                >
+                                    {mergeDialog.loading ? '머지 중...' : mergeDialog.checkingStatus ? '확인 중...' : '머지 확인'}
+                                </button>
+                            )}
+                            {mergeDialog.prDetail?.hasConflicts && (
+                                <a
+                                    href={mergeDialog.prDetail.htmlUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="submit-btn github-link"
+                                >
+                                    <i className="fa-brands fa-github"></i> GitHub에서 해결
+                                </a>
+                            )}
                         </div>
                     </div>
                 </div>

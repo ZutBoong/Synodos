@@ -28,7 +28,8 @@ function ListView({
     removeTask,
     refreshData,
     selectedTaskId,
-    onSelectTask
+    onSelectTask,
+    lastCommentEvent
 }) {
     const [tasks, setTasks] = useState(propTasks || []);
     const [columns, setColumns] = useState(propColumns || []);
@@ -508,6 +509,7 @@ function ListView({
                         onUpdate={() => {
                             if (refreshData) refreshData();
                         }}
+                        lastCommentEvent={lastCommentEvent}
                     />
                 ) : (
                     <>

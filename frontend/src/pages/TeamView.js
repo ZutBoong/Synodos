@@ -56,6 +56,7 @@ function TeamView() {
         assigneeNo: null,
         dueDateFilter: ''
     });
+    const [lastCommentEvent, setLastCommentEvent] = useState(null);  // 댓글 실시간 업데이트용
 
     // 탭 변경 핸들러
     const handleTabChange = (tabId) => {
@@ -148,6 +149,14 @@ function TeamView() {
             // Presence 이벤트
             case 'PRESENCE_UPDATE':
                 setOnlineMembers(Array.isArray(event.payload) ? event.payload : []);
+                break;
+
+            // Comment 이벤트 (GitHub → Synodos 동기화 등)
+            case 'COMMENT_CREATED':
+            case 'COMMENT_UPDATED':
+            case 'COMMENT_DELETED':
+                // 댓글 이벤트 발생 시 lastCommentEvent 업데이트
+                setLastCommentEvent({ ...event, timestamp: Date.now() });
                 break;
 
             default:
@@ -304,7 +313,9 @@ function TeamView() {
         activeTab,
         // 선택된 Task (URL 기반)
         selectedTaskId,
-        onSelectTask: handleSelectTask
+        onSelectTask: handleSelectTask,
+        // 댓글 실시간 업데이트
+        lastCommentEvent
     };
 
     // 현재 탭에 해당하는 뷰 렌더링

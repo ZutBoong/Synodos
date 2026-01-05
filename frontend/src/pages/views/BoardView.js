@@ -36,7 +36,8 @@ function BoardView({
     removeColumn,
     refreshData,
     selectedTaskId,
-    onSelectTask
+    onSelectTask,
+    lastCommentEvent
 }) {
     // 로컬 상태 (드래그 등 즉각적인 UI 반응용)
     const [columns, setColumns] = useState(propColumns || []);
@@ -476,6 +477,7 @@ function BoardView({
                     onUpdate={() => {
                         if (refreshData) refreshData();
                     }}
+                    lastCommentEvent={lastCommentEvent}
                 />
             ) : (
             <DragDropContext onDragEnd={onDragEnd}>

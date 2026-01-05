@@ -9,9 +9,10 @@
 spring.mail.username=your-email@gmail.com
 spring.mail.password=your-app-password
 
-# Gemini AI API Key
-# https://aistudio.google.com/app/apikey 에서 API 키 생성
-gemini.api.key=your-gemini-api-key
+# OpenAI API Key
+# https://platform.openai.com/api-keys 에서 API 키 생성
+# Usage limits: https://platform.openai.com/settings/organization/limits
+openai.api.key=your-openai-api-key
 
 # GitHub OAuth
 # https://github.com/settings/developers 에서 OAuth App 생성

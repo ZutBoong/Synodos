@@ -830,7 +830,7 @@ function BranchView({ team, loginMember }) {
             } else {
                 // Overview: HEAD와 시작점만
                 if (isDefaultBranch) {
-                    // 기본 브랜치: HEAD와 가장 오래된 "원래" 커밋
+                    // 기본 브랜치: HEAD와 가장 오래된 "원래" 커밋 + 머지 커밋들
                     if (commits.length > 0) {
                         allDisplayCommits.push({ ...commits[0], branch, type: 'head' });
                         // 원래 master 커밋 중 가장 오래된 것 찾기
@@ -838,6 +838,20 @@ function BranchView({ team, loginMember }) {
                         if (originalCommits.length > 1) {
                             allDisplayCommits.push({ ...originalCommits[originalCommits.length - 1], branch, type: 'start' });
                         }
+
+                        // 머지 커밋 추가 (다른 브랜치를 머지한 커밋) - 점선 연결용
+                        const mergeCommits = originalCommits.filter(c =>
+                            c.parents?.length >= 2 && c.sha !== commits[0].sha
+                        );
+                        mergeCommits.forEach(mergeCommit => {
+                            // 이미 추가된 커밋인지 확인
+                            const alreadyAdded = allDisplayCommits.some(
+                                dc => dc.sha === mergeCommit.sha && dc.branch === branch
+                            );
+                            if (!alreadyAdded) {
+                                allDisplayCommits.push({ ...mergeCommit, branch, type: 'merge' });
+                            }
+                        });
                     }
                 } else {
                     // 다른 브랜치: 고유 커밋의 HEAD, 시작
@@ -1109,18 +1123,30 @@ function BranchView({ team, loginMember }) {
         });
 
         // 기본 브랜치 라인 (확장되지 않은 경우)
-        if (!expandedBranches.has(defaultBranch) && branchHeads[defaultBranch] && branchStarts[defaultBranch]) {
+        if (!expandedBranches.has(defaultBranch)) {
             const row = branchRows[defaultBranch] ?? 0;
-            edges.push({
-                from: branchHeads[defaultBranch].id,
-                to: branchStarts[defaultBranch].id,
-                fromX: branchHeads[defaultBranch].x,
-                fromY: branchHeads[defaultBranch].y,
-                toX: branchStarts[defaultBranch].x,
-                toY: branchStarts[defaultBranch].y,
-                color: GRAPH_CONFIG.branchColors[Math.abs(row) % GRAPH_CONFIG.branchColors.length],
-                crossBranch: false
-            });
+            const color = GRAPH_CONFIG.branchColors[Math.abs(row) % GRAPH_CONFIG.branchColors.length];
+
+            // 기본 브랜치의 모든 노드를 찾아서 X 순서대로 정렬
+            const defaultBranchNodes = nodes
+                .filter(n => n.branch === defaultBranch)
+                .sort((a, b) => b.x - a.x); // X 내림차순 (HEAD가 앞, START가 뒤)
+
+            // 연속된 노드들 사이에 엣지 생성
+            for (let i = 0; i < defaultBranchNodes.length - 1; i++) {
+                const fromNode = defaultBranchNodes[i];
+                const toNode = defaultBranchNodes[i + 1];
+                edges.push({
+                    from: fromNode.id,
+                    to: toNode.id,
+                    fromX: fromNode.x,
+                    fromY: fromNode.y,
+                    toX: toNode.x,
+                    toY: toNode.y,
+                    color,
+                    crossBranch: false
+                });
+            }
         }
 
         // 다른 브랜치 라인 (확장되지 않은 경우)

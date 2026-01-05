@@ -78,6 +78,12 @@ public class GitHubService {
 
             for (JsonNode node : jsonArray) {
                 String name = node.path("name").asText();
+
+                // PR 관련 브랜치 필터링 (pull/, pr/, pr- 등)
+                if (isPullRequestBranch(name)) {
+                    continue;
+                }
+
                 String sha = node.path("commit").path("sha").asText();
                 branches.add(new GitHubBranch(name, sha));
             }
@@ -131,6 +137,20 @@ public class GitHubService {
             log.error("Failed to fetch commits: {}", e.getMessage());
             throw new RuntimeException("커밋 목록을 가져오는데 실패했습니다. Public repository인지 확인해주세요.", e);
         }
+    }
+
+    /**
+     * PR 관련 브랜치인지 확인합니다.
+     * GitHub에서 PR 생성 시 자동으로 생성되는 브랜치들을 필터링합니다.
+     */
+    private boolean isPullRequestBranch(String branchName) {
+        if (branchName == null) return false;
+        String lower = branchName.toLowerCase();
+        // PR 관련 패턴: pull/123/head, pr/123, pr-123, refs/pull/...
+        return lower.startsWith("pull/") ||
+               lower.startsWith("pr/") ||
+               lower.matches("^pr-\\d+.*") ||
+               lower.startsWith("refs/pull/");
     }
 
     /**
@@ -1420,6 +1440,98 @@ public class GitHubService {
     }
 
     /**
+     * PR의 변경된 파일 목록을 조회합니다 (충돌 확인용).
+     */
+    public List<PRFile> getPullRequestFiles(String accessToken, String owner, String repo, int prNumber) {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/pulls/%d/files?per_page=100",
+                                      owner, repo, prNumber);
+        log.debug("Getting PR files for PR #{} in {}/{}", prNumber, owner, repo);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl, HttpMethod.GET, entity, String.class
+            );
+
+            List<PRFile> files = new ArrayList<>();
+            JsonNode arrayNode = objectMapper.readTree(response.getBody());
+
+            for (JsonNode node : arrayNode) {
+                PRFile file = new PRFile();
+                file.setFilename(node.path("filename").asText());
+                file.setStatus(node.path("status").asText());
+                file.setAdditions(node.path("additions").asInt());
+                file.setDeletions(node.path("deletions").asInt());
+                file.setChanges(node.path("changes").asInt());
+                file.setPatch(node.path("patch").asText(null));
+                files.add(file);
+            }
+
+            return files;
+        } catch (Exception e) {
+            log.error("Failed to get PR files: {}", e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * PR 상세 정보 조회 (mergeable 상태 포함)
+     * GitHub API는 mergeable을 별도 요청에서만 정확히 반환합니다.
+     */
+    public PRDetailInfo getPullRequestDetail(String accessToken, String owner, String repo, int prNumber) {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/pulls/%d", owner, repo, prNumber);
+        log.debug("Getting PR detail for PR #{} in {}/{}", prNumber, owner, repo);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl, HttpMethod.GET, entity, String.class
+            );
+
+            JsonNode node = objectMapper.readTree(response.getBody());
+
+            PRDetailInfo detail = new PRDetailInfo();
+            detail.setNumber(node.path("number").asInt());
+            detail.setTitle(node.path("title").asText());
+            detail.setState(node.path("state").asText());
+            detail.setMerged(node.path("merged").asBoolean(false));
+
+            // mergeable이 null일 수 있음 (GitHub이 아직 계산 중)
+            JsonNode mergeableNode = node.path("mergeable");
+            if (mergeableNode.isNull()) {
+                detail.setMergeable(null); // 아직 확인 중
+                detail.setMergeableState("unknown");
+            } else {
+                detail.setMergeable(mergeableNode.asBoolean());
+                detail.setMergeableState(node.path("mergeable_state").asText());
+            }
+
+            detail.setHtmlUrl(node.path("html_url").asText());
+            detail.setHeadRef(node.path("head").path("ref").asText());
+            detail.setBaseRef(node.path("base").path("ref").asText());
+            detail.setHeadSha(node.path("head").path("sha").asText());
+
+            // 충돌 상태면 파일 목록도 조회
+            if (Boolean.FALSE.equals(detail.getMergeable()) || "dirty".equals(detail.getMergeableState())) {
+                detail.setConflictFiles(getPullRequestFiles(accessToken, owner, repo, prNumber));
+                detail.setHasConflicts(true);
+            } else {
+                detail.setHasConflicts(false);
+                detail.setConflictFiles(new ArrayList<>());
+            }
+
+            return detail;
+        } catch (Exception e) {
+            log.error("Failed to get PR detail: {}", e.getMessage());
+            throw new RuntimeException("PR 상세 조회에 실패했습니다: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Pull Request 정보
      */
     @lombok.Data
@@ -1443,5 +1555,431 @@ public class GitHubService {
         private String baseRef;        // 대상 브랜치
         private String userLogin;
         private String userAvatarUrl;
+    }
+
+    /**
+     * PR 상세 정보 (충돌 상태 포함)
+     */
+    @lombok.Data
+    public static class PRDetailInfo {
+        private int number;
+        private String title;
+        private String state;
+        private boolean merged;
+        private Boolean mergeable;      // null = 확인 중
+        private String mergeableState;  // clean, dirty, unstable, blocked, unknown
+        private String htmlUrl;
+        private String headRef;
+        private String baseRef;
+        private String headSha;
+        private boolean hasConflicts;
+        private List<PRFile> conflictFiles;
+    }
+
+    /**
+     * PR 변경 파일 정보
+     */
+    @lombok.Data
+    public static class PRFile {
+        private String filename;
+        private String status;      // added, removed, modified, renamed
+        private int additions;
+        private int deletions;
+        private int changes;
+        private String patch;       // diff 내용 (일부)
+    }
+
+    // ==================== 파일 조회/업데이트 API (충돌 해결용) ====================
+
+    /**
+     * 특정 브랜치에서 파일 내용을 조회합니다.
+     */
+    public FileContent getFileContent(String accessToken, String owner, String repo, String path, String ref) {
+        String encodedPath = path;
+        try {
+            encodedPath = java.net.URLEncoder.encode(path, "UTF-8").replace("+", "%20");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/contents/%s?ref=%s",
+                                      owner, repo, encodedPath, ref);
+        log.debug("Getting file content: {} at {}", path, ref);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl, HttpMethod.GET, entity, String.class
+            );
+
+            JsonNode node = objectMapper.readTree(response.getBody());
+
+            FileContent content = new FileContent();
+            content.setPath(node.path("path").asText());
+            content.setSha(node.path("sha").asText());
+            content.setSize(node.path("size").asInt());
+
+            // Base64 디코딩
+            String encodedContent = node.path("content").asText().replaceAll("\\s", "");
+            if (!encodedContent.isEmpty()) {
+                byte[] decodedBytes = java.util.Base64.getDecoder().decode(encodedContent);
+                content.setContent(new String(decodedBytes, java.nio.charset.StandardCharsets.UTF_8));
+            } else {
+                content.setContent("");
+            }
+
+            return content;
+        } catch (Exception e) {
+            log.error("Failed to get file content: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 파일을 업데이트합니다 (새 커밋 생성).
+     */
+    public FileUpdateResult updateFileContent(String accessToken, String owner, String repo,
+                                               String path, String content, String message,
+                                               String branch, String sha) {
+        String encodedPath = path;
+        try {
+            encodedPath = java.net.URLEncoder.encode(path, "UTF-8").replace("+", "%20");
+        } catch (Exception e) {
+            // ignore
+        }
+
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/contents/%s",
+                                      owner, repo, encodedPath);
+        log.info("Updating file: {} on branch {}", path, branch);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            headers.set("Content-Type", "application/json");
+
+            // Base64 인코딩
+            String encodedContent = java.util.Base64.getEncoder().encodeToString(
+                content.getBytes(java.nio.charset.StandardCharsets.UTF_8)
+            );
+
+            Map<String, Object> body = new java.util.HashMap<>();
+            body.put("message", message);
+            body.put("content", encodedContent);
+            body.put("branch", branch);
+            if (sha != null && !sha.isEmpty()) {
+                body.put("sha", sha);
+            }
+
+            String jsonBody = objectMapper.writeValueAsString(body);
+            HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl, HttpMethod.PUT, entity, String.class
+            );
+
+            JsonNode node = objectMapper.readTree(response.getBody());
+
+            FileUpdateResult result = new FileUpdateResult();
+            result.setSuccess(true);
+            result.setCommitSha(node.path("commit").path("sha").asText());
+            result.setMessage("파일이 성공적으로 업데이트되었습니다.");
+
+            return result;
+        } catch (Exception e) {
+            log.error("Failed to update file: {}", e.getMessage());
+            FileUpdateResult result = new FileUpdateResult();
+            result.setSuccess(false);
+            result.setMessage("파일 업데이트 실패: " + e.getMessage());
+            return result;
+        }
+    }
+
+    /**
+     * 충돌 파일의 양쪽 버전을 조회합니다.
+     */
+    public ConflictFileVersions getConflictFileVersions(String accessToken, String owner, String repo,
+                                                         String filename, String headRef, String baseRef) {
+        log.info("Getting conflict file versions: {} (head: {}, base: {})", filename, headRef, baseRef);
+
+        ConflictFileVersions versions = new ConflictFileVersions();
+        versions.setFilename(filename);
+        versions.setHeadRef(headRef);
+        versions.setBaseRef(baseRef);
+
+        // Head 브랜치 버전 조회
+        FileContent headContent = getFileContent(accessToken, owner, repo, filename, headRef);
+        if (headContent != null) {
+            versions.setHeadContent(headContent.getContent());
+            versions.setHeadSha(headContent.getSha());
+        }
+
+        // Base 브랜치 버전 조회
+        FileContent baseContent = getFileContent(accessToken, owner, repo, filename, baseRef);
+        if (baseContent != null) {
+            versions.setBaseContent(baseContent.getContent());
+            versions.setBaseSha(baseContent.getSha());
+        }
+
+        return versions;
+    }
+
+    /**
+     * 파일 내용 정보
+     */
+    @lombok.Data
+    public static class FileContent {
+        private String path;
+        private String sha;
+        private int size;
+        private String content;
+    }
+
+    /**
+     * 파일 업데이트 결과
+     */
+    @lombok.Data
+    public static class FileUpdateResult {
+        private boolean success;
+        private String commitSha;
+        private String message;
+        private String error;
+    }
+
+    /**
+     * 충돌 파일의 양쪽 버전
+     */
+    @lombok.Data
+    public static class ConflictFileVersions {
+        private String filename;
+        private String headRef;
+        private String baseRef;
+        private String headContent;
+        private String baseContent;
+        private String headSha;
+        private String baseSha;
+    }
+
+    /**
+     * 충돌이 해결된 파일로 머지 커밋을 생성합니다.
+     * Git Data API를 사용하여 head 브랜치에 base 브랜치를 머지하는 커밋을 생성합니다.
+     *
+     * @param accessToken GitHub 액세스 토큰
+     * @param owner 저장소 소유자
+     * @param repo 저장소 이름
+     * @param headRef head 브랜치 (PR 소스)
+     * @param baseRef base 브랜치 (PR 대상)
+     * @param filename 충돌 파일 경로
+     * @param resolvedContent 해결된 파일 내용
+     * @return 머지 커밋 결과
+     */
+    public FileUpdateResult createMergeCommitWithResolvedFile(
+            String accessToken, String owner, String repo,
+            String headRef, String baseRef,
+            String filename, String resolvedContent) {
+
+        log.info("Creating merge commit with resolved file: {} (merging {} into {})", filename, baseRef, headRef);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            headers.set("Content-Type", "application/json");
+
+            // 1. head와 base 브랜치의 최신 커밋 SHA 가져오기
+            String headCommitSha = getBranchCommitSha(accessToken, owner, repo, headRef);
+            String baseCommitSha = getBranchCommitSha(accessToken, owner, repo, baseRef);
+
+            if (headCommitSha == null || baseCommitSha == null) {
+                FileUpdateResult result = new FileUpdateResult();
+                result.setSuccess(false);
+                result.setError("브랜치 커밋을 찾을 수 없습니다.");
+                return result;
+            }
+
+            log.info("Head commit: {}, Base commit: {}", headCommitSha, baseCommitSha);
+
+            // 2. head 커밋의 tree SHA 가져오기
+            String headTreeSha = getCommitTreeSha(accessToken, owner, repo, headCommitSha);
+
+            // 3. 해결된 파일 내용으로 blob 생성
+            String blobSha = createBlob(accessToken, owner, repo, resolvedContent);
+            log.info("Created blob: {}", blobSha);
+
+            // 4. 새 tree 생성 (head tree 기반 + 해결된 파일)
+            String newTreeSha = createTreeWithFile(accessToken, owner, repo, headTreeSha, filename, blobSha);
+            log.info("Created tree: {}", newTreeSha);
+
+            // 5. 머지 커밋 생성 (두 개의 부모: head와 base)
+            String commitMessage = String.format("Merge branch '%s' into %s\n\nResolved conflict in %s via AI\nAI-assisted conflict resolution by Synodos",
+                    baseRef, headRef, filename);
+
+            String newCommitSha = createCommit(accessToken, owner, repo, commitMessage, newTreeSha,
+                    new String[]{headCommitSha, baseCommitSha});
+            log.info("Created merge commit: {}", newCommitSha);
+
+            // 6. head 브랜치 ref 업데이트
+            boolean refUpdated = updateBranchRef(accessToken, owner, repo, headRef, newCommitSha);
+
+            if (refUpdated) {
+                FileUpdateResult result = new FileUpdateResult();
+                result.setSuccess(true);
+                result.setCommitSha(newCommitSha);
+                result.setMessage("머지 커밋이 생성되었습니다.");
+                return result;
+            } else {
+                FileUpdateResult result = new FileUpdateResult();
+                result.setSuccess(false);
+                result.setError("브랜치 업데이트에 실패했습니다.");
+                return result;
+            }
+
+        } catch (Exception e) {
+            log.error("Failed to create merge commit: {}", e.getMessage(), e);
+            FileUpdateResult result = new FileUpdateResult();
+            result.setSuccess(false);
+            result.setError("머지 커밋 생성 실패: " + e.getMessage());
+            return result;
+        }
+    }
+
+    /**
+     * 브랜치의 최신 커밋 SHA를 가져옵니다.
+     */
+    private String getBranchCommitSha(String accessToken, String owner, String repo, String branch) {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/git/refs/heads/%s", owner, repo, branch);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.GET, entity, String.class);
+            JsonNode node = objectMapper.readTree(response.getBody());
+
+            return node.path("object").path("sha").asText();
+        } catch (Exception e) {
+            log.error("Failed to get branch commit SHA: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 커밋의 tree SHA를 가져옵니다.
+     */
+    private String getCommitTreeSha(String accessToken, String owner, String repo, String commitSha) {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/git/commits/%s", owner, repo, commitSha);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.GET, entity, String.class);
+            JsonNode node = objectMapper.readTree(response.getBody());
+
+            return node.path("tree").path("sha").asText();
+        } catch (Exception e) {
+            log.error("Failed to get commit tree SHA: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 파일 내용으로 blob을 생성합니다.
+     */
+    private String createBlob(String accessToken, String owner, String repo, String content) throws Exception {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/git/blobs", owner, repo);
+
+        HttpHeaders headers = createAuthHeaders(accessToken);
+        headers.set("Content-Type", "application/json");
+
+        Map<String, Object> body = new java.util.HashMap<>();
+        body.put("content", content);
+        body.put("encoding", "utf-8");
+
+        String jsonBody = objectMapper.writeValueAsString(body);
+        HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.POST, entity, String.class);
+        JsonNode node = objectMapper.readTree(response.getBody());
+
+        return node.path("sha").asText();
+    }
+
+    /**
+     * 기존 tree 기반으로 파일을 추가/수정한 새 tree를 생성합니다.
+     */
+    private String createTreeWithFile(String accessToken, String owner, String repo,
+                                       String baseTreeSha, String filename, String blobSha) throws Exception {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/git/trees", owner, repo);
+
+        HttpHeaders headers = createAuthHeaders(accessToken);
+        headers.set("Content-Type", "application/json");
+
+        // tree 항목 생성
+        Map<String, Object> treeItem = new java.util.HashMap<>();
+        treeItem.put("path", filename);
+        treeItem.put("mode", "100644"); // regular file
+        treeItem.put("type", "blob");
+        treeItem.put("sha", blobSha);
+
+        Map<String, Object> body = new java.util.HashMap<>();
+        body.put("base_tree", baseTreeSha);
+        body.put("tree", new Object[]{treeItem});
+
+        String jsonBody = objectMapper.writeValueAsString(body);
+        HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.POST, entity, String.class);
+        JsonNode node = objectMapper.readTree(response.getBody());
+
+        return node.path("sha").asText();
+    }
+
+    /**
+     * 새 커밋을 생성합니다.
+     */
+    private String createCommit(String accessToken, String owner, String repo,
+                                 String message, String treeSha, String[] parentShas) throws Exception {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/git/commits", owner, repo);
+
+        HttpHeaders headers = createAuthHeaders(accessToken);
+        headers.set("Content-Type", "application/json");
+
+        Map<String, Object> body = new java.util.HashMap<>();
+        body.put("message", message);
+        body.put("tree", treeSha);
+        body.put("parents", parentShas);
+
+        String jsonBody = objectMapper.writeValueAsString(body);
+        HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(apiUrl, HttpMethod.POST, entity, String.class);
+        JsonNode node = objectMapper.readTree(response.getBody());
+
+        return node.path("sha").asText();
+    }
+
+    /**
+     * 브랜치 ref를 새 커밋으로 업데이트합니다.
+     */
+    private boolean updateBranchRef(String accessToken, String owner, String repo,
+                                     String branch, String commitSha) {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/git/refs/heads/%s", owner, repo, branch);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            headers.set("Content-Type", "application/json");
+
+            Map<String, Object> body = new java.util.HashMap<>();
+            body.put("sha", commitSha);
+            body.put("force", false);
+
+            String jsonBody = objectMapper.writeValueAsString(body);
+            HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
+
+            restTemplate.exchange(apiUrl, HttpMethod.PATCH, entity, String.class);
+            return true;
+        } catch (Exception e) {
+            log.error("Failed to update branch ref: {}", e.getMessage());
+            return false;
+        }
     }
 }

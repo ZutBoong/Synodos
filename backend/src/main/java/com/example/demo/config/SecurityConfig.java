@@ -64,7 +64,15 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
 
-            // 4️⃣ OAuth2 로그인 (exceptionHandling보다 먼저 설정)
+            // 4️⃣ API 요청에 대해 401 반환 (OAuth 리다이렉트 방지) - oauth2Login보다 먼저!
+            .exceptionHandling(exception -> exception
+                .defaultAuthenticationEntryPointFor(
+                    new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                    new AntPathRequestMatcher("/api/**")
+                )
+            )
+
+            // 5️⃣ OAuth2 로그인
             .oauth2Login(oauth -> oauth
                 .authorizationEndpoint(authorization -> authorization
                     .authorizationRequestResolver(
@@ -72,22 +80,6 @@ public class SecurityConfig {
                     )
                 )
                 .successHandler(oAuth2SuccessHandler)
-            )
-
-            // 5️⃣ API 요청에 대해 401 반환 (OAuth 리다이렉트 방지)
-            .exceptionHandling(exception -> exception
-                .authenticationEntryPoint((request, response, authException) -> {
-                    String requestUri = request.getRequestURI();
-                    // API 경로는 401 반환 (OAuth 리다이렉트 방지)
-                    if (requestUri.startsWith("/api/")) {
-                        response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                        response.setContentType("application/json;charset=UTF-8");
-                        response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"인증이 필요합니다.\"}");
-                    } else {
-                        // 그 외 경로는 OAuth2 로그인 페이지로 리다이렉트
-                        response.sendRedirect("/oauth2/authorization/github");
-                    }
-                })
             )
 
             // 6️⃣ 인가 설정

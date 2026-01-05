@@ -40,42 +40,47 @@ public class GitHubCommentSyncService {
     public void syncCommentToGitHub(Comment comment) {
         if (comment == null) return;
 
+        log.info("[Comment Sync] Starting sync for Synodos comment #{} to GitHub", comment.getCommentId());
+
         // Task 조회
         Task task = taskDao.content(comment.getTaskId());
         if (task == null) {
-            log.debug("Task not found for comment #{}", comment.getCommentId());
+            log.warn("[Comment Sync] Task not found for comment #{}", comment.getCommentId());
             return;
         }
 
         // Column에서 TeamId 조회
         SynodosColumn column = columnDao.content(task.getColumnId());
         if (column == null) {
-            log.debug("Column not found for task #{}", task.getTaskId());
+            log.warn("[Comment Sync] Column not found for task #{}", task.getTaskId());
             return;
         }
 
         int teamId = column.getTeamId();
+        log.info("[Comment Sync] Task #{} belongs to team #{}", task.getTaskId(), teamId);
 
         // Task-Issue 매핑 조회
         TaskGitHubIssue mapping = taskGitHubIssueDao.findByTaskId(comment.getTaskId());
         if (mapping == null) {
-            log.debug("No GitHub issue linked to task #{}", comment.getTaskId());
+            log.info("[Comment Sync] No GitHub issue linked to task #{}, skipping sync", comment.getTaskId());
             return;
         }
+        log.info("[Comment Sync] Found mapping: Task #{} -> Issue #{}", comment.getTaskId(), mapping.getIssueNumber());
 
         // 팀 정보 조회 (GitHub 토큰용)
         Team team = teamDao.findById(teamId);
         if (team == null || team.getGithubRepoUrl() == null) {
-            log.debug("Team {} has no GitHub repo configured", teamId);
+            log.warn("[Comment Sync] Team {} has no GitHub repo configured", teamId);
             return;
         }
 
         // 팀 리더의 GitHub 토큰 조회
         Member leader = memberDao.findByNo(team.getLeaderNo());
         if (leader == null || leader.getGithubAccessToken() == null) {
-            log.debug("Team leader has no GitHub access token");
+            log.warn("[Comment Sync] Team leader (no:{}) has no GitHub access token", team.getLeaderNo());
             return;
         }
+        log.info("[Comment Sync] Using token from team leader: {}", leader.getName());
 
         // GitHub repo URL에서 owner/repo 추출
         String[] ownerRepo = parseRepoUrl(team.getGithubRepoUrl());

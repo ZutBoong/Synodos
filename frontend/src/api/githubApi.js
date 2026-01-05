@@ -203,3 +203,58 @@ export const mergePR = async (teamId, prNumber, commitTitle = null, mergeMethod 
     });
     return response.data;
 };
+
+/**
+ * PR 상세 정보 조회 (머지 가능 여부, 충돌 파일 포함)
+ * @param {number} teamId - 팀 ID
+ * @param {number} prNumber - PR 번호
+ */
+export const getPRDetail = async (teamId, prNumber) => {
+    const response = await axiosInstance.get(`${API_PATH}/pr/${teamId}/${prNumber}/detail`);
+    return response.data;
+};
+
+// ==================== AI 충돌 해결 API ====================
+
+/**
+ * 충돌 파일의 양쪽 버전을 조회합니다.
+ * @param {number} teamId - 팀 ID
+ * @param {number} prNumber - PR 번호
+ * @param {string} filename - 충돌 파일명
+ */
+export const getConflictFileVersions = async (teamId, prNumber, filename) => {
+    const response = await axiosInstance.get(
+        `${API_PATH}/pr/${teamId}/${prNumber}/conflict/${encodeURIComponent(filename)}`
+    );
+    return response.data;
+};
+
+/**
+ * AI를 사용하여 충돌을 해결합니다.
+ * @param {number} teamId - 팀 ID
+ * @param {number} prNumber - PR 번호
+ * @param {string} filename - 충돌 파일명
+ */
+export const aiResolveConflict = async (teamId, prNumber, filename) => {
+    const response = await axiosInstance.post(
+        `${API_PATH}/pr/${teamId}/${prNumber}/ai-resolve`,
+        { filename }
+    );
+    return response.data;
+};
+
+/**
+ * AI가 해결한 코드를 GitHub에 커밋합니다.
+ * @param {number} teamId - 팀 ID
+ * @param {number} prNumber - PR 번호
+ * @param {string} filename - 파일명
+ * @param {string} resolvedCode - 해결된 코드
+ * @param {string} headSha - 파일 SHA
+ */
+export const applyConflictResolution = async (teamId, prNumber, filename, resolvedCode, headSha) => {
+    const response = await axiosInstance.post(
+        `${API_PATH}/pr/${teamId}/${prNumber}/apply-resolution`,
+        { filename, resolvedCode, headSha }
+    );
+    return response.data;
+};

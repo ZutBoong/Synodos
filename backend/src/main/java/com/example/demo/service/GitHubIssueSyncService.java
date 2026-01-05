@@ -295,10 +295,10 @@ public class GitHubIssueSyncService {
                 handleCommentCreated(payload, mapping, teamId);
                 break;
             case "edited":
-                handleCommentEdited(payload, mapping);
+                handleCommentEdited(payload, mapping, teamId);
                 break;
             case "deleted":
-                handleCommentDeleted(payload, mapping);
+                handleCommentDeleted(payload, mapping, teamId);
                 break;
             default:
                 log.debug("Ignoring comment action: {}", action);
@@ -310,11 +310,14 @@ public class GitHubIssueSyncService {
      */
     private void handleCommentCreated(GitHubIssuePayload payload, TaskGitHubIssue mapping, int teamId) {
         GitHubIssuePayload.Comment githubComment = payload.getComment();
+        log.info("[Comment Sync] Processing GitHub comment {} -> Synodos (Issue #{})",
+            githubComment.getId(), payload.getIssue().getNumber());
 
         // 이미 동기화된 댓글인지 확인
         Comment existing = commentDao.findByGithubCommentId(githubComment.getId());
         if (existing != null) {
-            log.debug("Comment {} already synced to Synodos comment #{}", githubComment.getId(), existing.getCommentId());
+            log.info("[Comment Sync] Comment {} already synced to Synodos comment #{}, skipping",
+                githubComment.getId(), existing.getCommentId());
             return;
         }
 
@@ -346,13 +349,21 @@ public class GitHubIssueSyncService {
         comment.setGithubCommentId(githubComment.getId());
 
         commentDao.insert(comment);
-        log.info("Created Synodos comment #{} from GitHub comment {}", comment.getCommentId(), githubComment.getId());
+        log.info("[Comment Sync] SUCCESS: Created Synodos comment #{} from GitHub comment {} (Task #{})",
+            comment.getCommentId(), githubComment.getId(), mapping.getTaskId());
+
+        // WebSocket 알림 전송 (실시간 업데이트)
+        Comment created = commentDao.content(comment.getCommentId());
+        if (created != null) {
+            boardNotificationService.notifyCommentEvent("COMMENT_CREATED", created, teamId);
+            log.info("[Comment Sync] Sent WebSocket notification for comment #{}", created.getCommentId());
+        }
     }
 
     /**
      * GitHub 댓글 수정 → Synodos 댓글 수정
      */
-    private void handleCommentEdited(GitHubIssuePayload payload, TaskGitHubIssue mapping) {
+    private void handleCommentEdited(GitHubIssuePayload payload, TaskGitHubIssue mapping, int teamId) {
         GitHubIssuePayload.Comment githubComment = payload.getComment();
 
         Comment comment = commentDao.findByGithubCommentId(githubComment.getId());
@@ -370,12 +381,18 @@ public class GitHubIssueSyncService {
         comment.setContent(body);
         commentDao.update(comment);
         log.info("Updated Synodos comment #{} from GitHub comment {}", comment.getCommentId(), githubComment.getId());
+
+        // WebSocket 알림 전송 (실시간 업데이트)
+        Comment updated = commentDao.content(comment.getCommentId());
+        if (updated != null) {
+            boardNotificationService.notifyCommentEvent("COMMENT_UPDATED", updated, teamId);
+        }
     }
 
     /**
      * GitHub 댓글 삭제 → Synodos 댓글 삭제
      */
-    private void handleCommentDeleted(GitHubIssuePayload payload, TaskGitHubIssue mapping) {
+    private void handleCommentDeleted(GitHubIssuePayload payload, TaskGitHubIssue mapping, int teamId) {
         GitHubIssuePayload.Comment githubComment = payload.getComment();
 
         Comment comment = commentDao.findByGithubCommentId(githubComment.getId());
@@ -384,8 +401,16 @@ public class GitHubIssueSyncService {
             return;
         }
 
+        // 삭제 전에 알림용 댓글 정보 보관
+        Comment toDelete = commentDao.content(comment.getCommentId());
+
         commentDao.delete(comment.getCommentId());
         log.info("Deleted Synodos comment #{} (GitHub comment {})", comment.getCommentId(), githubComment.getId());
+
+        // WebSocket 알림 전송 (실시간 업데이트)
+        if (toDelete != null) {
+            boardNotificationService.notifyCommentEvent("COMMENT_DELETED", toDelete, teamId);
+        }
     }
 
     /**

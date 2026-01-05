@@ -297,6 +297,9 @@ CREATE TABLE IF NOT EXISTS comment (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 기존 테이블에 github_comment_id 컬럼 추가 (PostgreSQL 9.6+)
+ALTER TABLE comment ADD COLUMN IF NOT EXISTS github_comment_id BIGINT;
+
 CREATE INDEX IF NOT EXISTS idx_comment_task ON comment(task_id);
 CREATE INDEX IF NOT EXISTS idx_comment_created ON comment(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_comment_github ON comment(github_comment_id) WHERE github_comment_id IS NOT NULL;

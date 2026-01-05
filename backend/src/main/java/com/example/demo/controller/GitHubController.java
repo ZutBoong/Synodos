@@ -16,6 +16,7 @@ import com.example.demo.model.Team;
 import com.example.demo.model.TaskCommit;
 import com.example.demo.model.TaskGitHubIssue;
 import com.example.demo.model.TaskGitHubPR;
+import com.example.demo.service.GeminiService;
 import com.example.demo.service.GitHubService;
 import com.example.demo.service.GitHubService.GitHubBranch;
 import com.example.demo.service.GitHubService.GitHubBranchComparison;
@@ -37,6 +38,9 @@ public class GitHubController {
 
     @Autowired
     private GitHubService gitHubService;
+
+    @Autowired
+    private GeminiService geminiService;
 
     @Autowired
     private TeamService teamService;
@@ -940,6 +944,47 @@ public class GitHubController {
     }
 
     /**
+     * PR 상세 정보 조회 (머지 가능 여부, 충돌 파일 포함)
+     * GET /api/github/pr/{teamId}/{prNumber}/detail
+     */
+    @GetMapping("/pr/{teamId}/{prNumber}/detail")
+    public ResponseEntity<?> getPRDetail(
+            @PathVariable int teamId,
+            @PathVariable int prNumber) {
+        try {
+            Team team = teamService.findById(teamId);
+            if (team == null) {
+                return ResponseEntity.badRequest().body("팀을 찾을 수 없습니다.");
+            }
+
+            String repoUrl = team.getGithubRepoUrl();
+            if (repoUrl == null || repoUrl.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("GitHub 저장소가 설정되지 않았습니다.");
+            }
+
+            RepoInfo repoInfo = gitHubService.parseRepoUrl(repoUrl);
+            if (repoInfo == null) {
+                return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
+            }
+
+            String accessToken = getLeaderAccessToken(team);
+            if (accessToken == null) {
+                return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다.");
+            }
+
+            GitHubService.PRDetailInfo detail = gitHubService.getPullRequestDetail(
+                accessToken, repoInfo.owner, repoInfo.repo, prNumber
+            );
+
+            return ResponseEntity.ok(detail);
+
+        } catch (Exception e) {
+            log.error("Failed to get PR detail: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
      * PR을 머지합니다.
      * PUT /api/github/pr/{teamId}/{prNumber}/merge
      */
@@ -989,6 +1034,216 @@ public class GitHubController {
 
         } catch (Exception e) {
             log.error("Failed to merge PR: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // ==================== AI 충돌 해결 API ====================
+
+    /**
+     * 충돌 파일의 양쪽 버전을 조회합니다.
+     * GET /api/github/pr/{teamId}/{prNumber}/conflict/{filename}
+     */
+    @GetMapping("/pr/{teamId}/{prNumber}/conflict/{filename:.+}")
+    public ResponseEntity<?> getConflictFileVersions(
+            @PathVariable int teamId,
+            @PathVariable int prNumber,
+            @PathVariable String filename) {
+        try {
+            Team team = teamService.findById(teamId);
+            if (team == null) {
+                return ResponseEntity.badRequest().body("팀을 찾을 수 없습니다.");
+            }
+
+            String repoUrl = team.getGithubRepoUrl();
+            if (repoUrl == null || repoUrl.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("GitHub 저장소가 설정되지 않았습니다.");
+            }
+
+            RepoInfo repoInfo = gitHubService.parseRepoUrl(repoUrl);
+            if (repoInfo == null) {
+                return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
+            }
+
+            String accessToken = getLeaderAccessToken(team);
+            if (accessToken == null) {
+                return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다.");
+            }
+
+            // PR 정보 조회하여 head/base 브랜치 확인
+            GitHubPullRequest pr = gitHubService.getPullRequest(
+                accessToken, repoInfo.owner, repoInfo.repo, prNumber
+            );
+            if (pr == null) {
+                return ResponseEntity.badRequest().body("PR을 찾을 수 없습니다.");
+            }
+
+            // 양쪽 버전 조회
+            GitHubService.ConflictFileVersions versions = gitHubService.getConflictFileVersions(
+                accessToken, repoInfo.owner, repoInfo.repo,
+                filename, pr.getHeadRef(), pr.getBaseRef()
+            );
+
+            return ResponseEntity.ok(versions);
+
+        } catch (Exception e) {
+            log.error("Failed to get conflict file versions: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * AI를 사용하여 충돌을 해결합니다.
+     * POST /api/github/pr/{teamId}/{prNumber}/ai-resolve
+     * Body: { "filename": "path/to/file.java" }
+     */
+    @PostMapping("/pr/{teamId}/{prNumber}/ai-resolve")
+    public ResponseEntity<?> aiResolveConflict(
+            @PathVariable int teamId,
+            @PathVariable int prNumber,
+            @RequestBody Map<String, String> body) {
+        try {
+            String filename = body.get("filename");
+            if (filename == null || filename.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("파일명이 필요합니다.");
+            }
+
+            Team team = teamService.findById(teamId);
+            if (team == null) {
+                return ResponseEntity.badRequest().body("팀을 찾을 수 없습니다.");
+            }
+
+            String repoUrl = team.getGithubRepoUrl();
+            if (repoUrl == null || repoUrl.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("GitHub 저장소가 설정되지 않았습니다.");
+            }
+
+            RepoInfo repoInfo = gitHubService.parseRepoUrl(repoUrl);
+            if (repoInfo == null) {
+                return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
+            }
+
+            String accessToken = getLeaderAccessToken(team);
+            if (accessToken == null) {
+                return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다.");
+            }
+
+            // PR 정보 조회
+            GitHubPullRequest pr = gitHubService.getPullRequest(
+                accessToken, repoInfo.owner, repoInfo.repo, prNumber
+            );
+            if (pr == null) {
+                return ResponseEntity.badRequest().body("PR을 찾을 수 없습니다.");
+            }
+
+            // 양쪽 버전 조회
+            GitHubService.ConflictFileVersions versions = gitHubService.getConflictFileVersions(
+                accessToken, repoInfo.owner, repoInfo.repo,
+                filename, pr.getHeadRef(), pr.getBaseRef()
+            );
+
+            if (versions.getHeadContent() == null && versions.getBaseContent() == null) {
+                return ResponseEntity.badRequest().body("파일 내용을 조회할 수 없습니다.");
+            }
+
+            // AI로 충돌 해결
+            GeminiService.ConflictResolutionResult result = geminiService.resolveConflict(
+                filename, pr.getBaseRef(), pr.getHeadRef(),
+                versions.getBaseContent(), versions.getHeadContent()
+            );
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", result.isSuccess());
+            response.put("analysis", result.getAnalysis());
+            response.put("options", result.getOptions());  // 여러 해결 옵션
+            response.put("error", result.getError());
+            response.put("filename", filename);
+            response.put("headRef", pr.getHeadRef());
+            response.put("baseRef", pr.getBaseRef());
+            // 파일 SHA 정보도 포함 (커밋 시 필요)
+            response.put("headSha", versions.getHeadSha());
+            response.put("baseSha", versions.getBaseSha());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("Failed to AI resolve conflict: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * AI가 해결한 코드를 GitHub에 커밋합니다.
+     * POST /api/github/pr/{teamId}/{prNumber}/apply-resolution
+     * Body: { "filename": "...", "resolvedCode": "...", "headSha": "..." }
+     */
+    @PostMapping("/pr/{teamId}/{prNumber}/apply-resolution")
+    public ResponseEntity<?> applyResolution(
+            @PathVariable int teamId,
+            @PathVariable int prNumber,
+            @RequestBody Map<String, String> body) {
+        try {
+            String filename = body.get("filename");
+            String resolvedCode = body.get("resolvedCode");
+            String headSha = body.get("headSha");
+
+            if (filename == null || filename.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("파일명이 필요합니다.");
+            }
+            if (resolvedCode == null) {
+                return ResponseEntity.badRequest().body("해결된 코드가 필요합니다.");
+            }
+            if (headSha == null || headSha.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("파일 SHA가 필요합니다.");
+            }
+
+            Team team = teamService.findById(teamId);
+            if (team == null) {
+                return ResponseEntity.badRequest().body("팀을 찾을 수 없습니다.");
+            }
+
+            String repoUrl = team.getGithubRepoUrl();
+            if (repoUrl == null || repoUrl.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("GitHub 저장소가 설정되지 않았습니다.");
+            }
+
+            RepoInfo repoInfo = gitHubService.parseRepoUrl(repoUrl);
+            if (repoInfo == null) {
+                return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
+            }
+
+            String accessToken = getLeaderAccessToken(team);
+            if (accessToken == null) {
+                return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다.");
+            }
+
+            // PR 정보 조회
+            GitHubPullRequest pr = gitHubService.getPullRequest(
+                accessToken, repoInfo.owner, repoInfo.repo, prNumber
+            );
+            if (pr == null) {
+                return ResponseEntity.badRequest().body("PR을 찾을 수 없습니다.");
+            }
+
+            // 머지 커밋 생성 (base 브랜치를 head 브랜치에 머지하면서 충돌 해결)
+            GitHubService.FileUpdateResult updateResult = gitHubService.createMergeCommitWithResolvedFile(
+                accessToken, repoInfo.owner, repoInfo.repo,
+                pr.getHeadRef(), pr.getBaseRef(),
+                filename, resolvedCode
+            );
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", updateResult.isSuccess());
+            response.put("commitSha", updateResult.getCommitSha());
+            response.put("message", updateResult.isSuccess()
+                ? "충돌이 해결되었습니다: " + filename
+                : "충돌 해결 실패: " + updateResult.getError());
+            response.put("error", updateResult.getError());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("Failed to apply resolution: {}", e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

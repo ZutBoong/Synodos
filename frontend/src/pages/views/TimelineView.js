@@ -13,7 +13,8 @@ function TimelineView({
     updateTask,
     refreshData,
     selectedTaskId,
-    onSelectTask
+    onSelectTask,
+    lastCommentEvent
 }) {
     const [tasks, setTasks] = useState(propTasks || []);
     const [columns, setColumns] = useState(propColumns || []);
@@ -549,6 +550,7 @@ function TimelineView({
                     onUpdate={() => {
                         if (refreshData) refreshData();
                     }}
+                    lastCommentEvent={lastCommentEvent}
                 />
             ) : (
             <>

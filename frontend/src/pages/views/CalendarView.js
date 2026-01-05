@@ -13,7 +13,7 @@ const PRIORITY_COLORS = {
     LOW: '#6b7280'
 };
 
-function CalendarView({ team, tasks: propTasks, teamMembers, loginMember, filters, refreshData, selectedTaskId, onSelectTask }) {
+function CalendarView({ team, tasks: propTasks, teamMembers, loginMember, filters, refreshData, selectedTaskId, onSelectTask, lastCommentEvent }) {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [tasks, setTasks] = useState(propTasks || []);
     const [loading, setLoading] = useState(false);
@@ -181,6 +181,7 @@ function CalendarView({ team, tasks: propTasks, teamMembers, loginMember, filter
                     onUpdate={() => {
                         fetchTasks();
                     }}
+                    lastCommentEvent={lastCommentEvent}
                 />
             ) : (
             <>
