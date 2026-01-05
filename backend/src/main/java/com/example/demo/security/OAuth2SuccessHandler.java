@@ -21,6 +21,7 @@ import com.example.demo.model.MemberSocialLink;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 
 @Component
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
@@ -29,6 +30,9 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     private final MemberDao memberDao;
     private final MemberSocialLinkDao socialLinkDao;
     private final OAuth2AuthorizedClientService authorizedClientService;
+
+    @Value("${frontend.url:http://localhost:3000}")
+    private String frontendUrl;
 
     public OAuth2SuccessHandler(
             JwtTokenProvider jwtTokenProvider,
@@ -172,7 +176,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             // 신규 회원 또는 연동 시도
             // → 프론트엔드에서 연동 모드 여부를 확인하고 처리
             UriComponentsBuilder builder = UriComponentsBuilder
-                    .fromUriString("http://localhost:3000/oauth2/redirect")
+                    .fromUriString(frontendUrl + "/oauth2/redirect")
                     .queryParam("isNewUser", true)
                     .queryParam("provider", registrationId)
                     .queryParam("providerId", providerId)
@@ -260,7 +264,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         String accessToken = jwtTokenProvider.generateToken(member.getUserid(), member.getNo(), member.getName());
 
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromUriString("http://localhost:3000/oauth2/redirect")
+                .fromUriString(frontendUrl + "/oauth2/redirect")
                 .queryParam("token", accessToken)
                 .queryParam("email", member.getEmail())
                 .queryParam("name", UriUtils.encode(member.getName(), StandardCharsets.UTF_8))

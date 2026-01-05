@@ -41,8 +41,8 @@ public class GitHubOAuthController {
     @Value("${github.oauth.client-secret:}")
     private String clientSecret;
 
-    @Value("${github.oauth.redirect-uri:http://localhost:3000/github/callback}")
-    private String redirectUri;
+    @Value("${frontend.url:http://localhost:3000}")
+    private String frontendUrl;
 
     @Value("${github.webhook.secret:}")
     private String webhookSecret;
@@ -68,6 +68,7 @@ public class GitHubOAuthController {
         String scope = "repo";  // repo 권한 (issues 읽기/쓰기 포함)
         String state = String.valueOf(memberNo);  // state에 memberNo 저장
 
+        String redirectUri = frontendUrl + "/github/callback";
         String authorizeUrl = String.format(
             "https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s&scope=%s&state=%s",
             clientId,
@@ -396,6 +397,7 @@ public class GitHubOAuthController {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("Accept", "application/json");
 
+        String redirectUri = frontendUrl + "/github/callback";
         String body = String.format(
             "{\"client_id\":\"%s\",\"client_secret\":\"%s\",\"code\":\"%s\",\"redirect_uri\":\"%s\"}",
             clientId, clientSecret, code, redirectUri
