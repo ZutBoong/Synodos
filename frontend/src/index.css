@@ -1,3 +1,8 @@
+/* Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* 반응형 CSS 변수 및 유틸리티 */
 @import './styles/responsive.css';
 

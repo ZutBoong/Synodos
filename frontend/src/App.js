@@ -1,6 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import Home from './pages/Home';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import FindId from './pages/FindId';
@@ -15,69 +14,78 @@ import Invite from './pages/Invite';
 import GitHubCallback from './pages/GitHubCallback';
 import OAuth2Redirect from './pages/OAuth2Redirect';
 import SocialSignupComplete from './pages/SocialSignupComplete';
+import Landing from './pages/views/Landing';
 import './App.css';
 
 function AppContent() {
   const location = useLocation();
+  const pathname = location.pathname;
 
-  const isOAuthRedirect = location.pathname === '/oauth2/redirect';
-  const isSocialSignupComplete = location.pathname === '/social-signup-complete';
-  const isCalendarPage = location.pathname === '/calendar';
-  const isTeamPage = location.pathname.startsWith('/team/');
-  const isMyPage = location.pathname === '/mypage';
-  const isMyActivity = location.pathname === '/activity';
-  const isCreateTeam = location.pathname === '/create-team';
-  const isNotifications = location.pathname === '/notifications';
-  const isInvite = location.pathname.startsWith('/invite/');
-  const isGitHubCallback = location.pathname === '/github/callback';
-  const hideHeader = ['/', '/login', '/register', '/find-id', '/find-password', '/social-signup-complete'].includes(location.pathname);
+  // Landing 페이지 (자체 헤더 있음)
+  if (pathname === '/') {
+    return <Landing />;
+  }
 
   // OAuth 리다이렉트 처리
-  if (isOAuthRedirect) {
+  if (pathname === '/oauth2/redirect') {
     return <OAuth2Redirect />;
   }
 
   // 소셜 로그인 추가 정보 입력
-  if (isSocialSignupComplete) {
+  if (pathname === '/social-signup-complete') {
     return <SocialSignupComplete />;
   }
 
-  if (isTeamPage) {
+  // GitHub 콜백
+  if (pathname === '/github/callback') {
+    return <GitHubCallback />;
+  }
+
+  // 팀 페이지
+  if (pathname.startsWith('/team/')) {
     return (
       <Routes>
         <Route path="/team/:teamId" element={<TeamView />} />
       </Routes>
     );
   }
-  if (isCalendarPage) {
-    return <Calendar />;
-  }
-  if (isMyPage) {
-    return <MyPage />;
-  }
-  if (isMyActivity) {
-    return <MyActivity />;
-  }
-  if (isCreateTeam) {
-    return <CreateTeam />;
-  }
-  if (isNotifications) {
-    return <NotificationsPage />;
-  }
-  if (isInvite) {
+
+  // 초대 페이지
+  if (pathname.startsWith('/invite/')) {
     return (
       <Routes>
         <Route path="/invite/:teamCode" element={<Invite />} />
       </Routes>
     );
   }
-  if (isGitHubCallback) {
-    return (
-      <Routes>
-        <Route path="/github/callback" element={<GitHubCallback />} />
-      </Routes>
-    );
+
+  // 캘린더 페이지
+  if (pathname === '/calendar') {
+    return <Calendar />;
   }
+
+  // 마이페이지
+  if (pathname === '/mypage') {
+    return <MyPage />;
+  }
+
+  // 내 활동
+  if (pathname === '/activity') {
+    return <MyActivity />;
+  }
+
+  // 팀 생성
+  if (pathname === '/create-team') {
+    return <CreateTeam />;
+  }
+
+  // 알림
+  if (pathname === '/notifications') {
+    return <NotificationsPage />;
+  }
+
+  // 헤더 숨김 페이지들
+  const hideHeader = ['/login', '/register', '/find-id', '/find-password'].includes(pathname);
 
   return (
     <div className="App">
@@ -88,18 +96,15 @@ function AppContent() {
       )}
       <main className={hideHeader ? 'no-header' : ''}>
         <Routes>
-          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/find-id" element={<FindId />} />
           <Route path="/find-password" element={<FindPassword />} />
-          <Route path="/activity" element={<MyActivity />} />
         </Routes>
       </main>
     </div>
   );
 }
-
 
 function App() {
   return (
