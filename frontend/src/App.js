@@ -15,6 +15,7 @@ import Invite from './pages/Invite';
 import GitHubCallback from './pages/GitHubCallback';
 import OAuth2Redirect from './pages/OAuth2Redirect';
 import SocialSignupComplete from './pages/SocialSignupComplete';
+import Landing from "./pages/views/Landing";
 import './App.css';
 
 function AppContent() {
@@ -88,7 +89,8 @@ function AppContent() {
       )}
       <main className={hideHeader ? 'no-header' : ''}>
         <Routes>
-          <Route path="/" element={<Home />} />
+            <Route path="/" element={<Landing />} />
+          <Route path="/Home" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/find-id" element={<FindId />} />
