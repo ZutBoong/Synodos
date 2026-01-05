@@ -11,7 +11,9 @@ import TimelineView from './views/TimelineView';
 import CalendarView from './views/CalendarView';
 import ChatView from './views/ChatView';
 import FilesView from './views/FilesView';
+import DashboardView from './views/DashboardView';
 import './TeamView.css';
+
 
 // 탭 정의
 const TABS = [
@@ -20,6 +22,7 @@ const TABS = [
     { id: 'board', label: '보드', icon: '▦' },
     { id: 'timeline', label: '타임라인', icon: '📊' },
     { id: 'calendar', label: '캘린더', icon: '📅' },
+    { id: 'dashboard', label: '통계', icon: '📈' },
     { id: 'chat', label: '채팅', icon: '💬' },
     { id: 'files', label: '파일', icon: '📁' }
 ];
@@ -319,10 +322,13 @@ function TeamView() {
                 return <TimelineView {...viewProps} />;
             case 'calendar':
                 return <CalendarView {...viewProps} />;
+            case 'dashboard':
+                return <DashboardView {...viewProps} />;
             case 'chat':
                 return <ChatView {...viewProps} />;
             case 'files':
                 return <FilesView {...viewProps} />;
+
             default:
                 return <OverviewView {...viewProps} />;
         }

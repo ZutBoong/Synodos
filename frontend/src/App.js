@@ -13,6 +13,7 @@ import CreateTeam from './pages/CreateTeam';
 import NotificationsPage from './pages/NotificationsPage';
 import Invite from './pages/Invite';
 import './App.css';
+import DashboardPage from './pages/DashboardPage';
 
 function AppContent() {
   const location = useLocation();
@@ -24,6 +25,7 @@ function AppContent() {
   const isNotifications = location.pathname === '/notifications';
   const isInvite = location.pathname.startsWith('/invite/');
   const hideHeader = ['/', '/login', '/register', '/find-id', '/find-password'].includes(location.pathname);
+  const isDashboard = location.pathname === '/dashboard';
 
   // TeamView, Calendar, MyPage, MyActivity, CreateTeam 페이지는 독립적인 레이아웃 사용
   // TeamView는 Routes 내에서 렌더링 (useParams 사용을 위해)
@@ -55,6 +57,9 @@ function AppContent() {
         <Route path="/invite/:teamCode" element={<Invite />} />
       </Routes>
     );
+  }
+  if (isDashboard) {
+  return <DashboardPage />;
   }
 
   return (
