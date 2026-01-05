@@ -464,7 +464,7 @@ function MyPage() {
         localStorage.setItem('socialLinkMemberNo', member.no.toString());
 
         // OAuth 로그인 페이지로 이동
-        window.location.href = `http://localhost:8081/oauth2/authorization/${provider}`;
+        window.location.href = `/oauth2/authorization/${provider}`;
     };
 
     // 소셜 연동 해제

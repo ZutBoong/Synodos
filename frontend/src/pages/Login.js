@@ -52,20 +52,18 @@ function Login() {
     };
 
     const handleGitHubLogin = () => {
-        window.location.href = 'http://localhost:8081/oauth2/authorization/github';
+        window.location.href = '/oauth2/authorization/github';
     };
 
     // 소셜 로그인
     const handleGoogleLogin = () => {
-        window.location.href = 'http://localhost:8081/oauth2/authorization/google';
+        window.location.href = '/oauth2/authorization/google';
     };
     const handleNaverLogin = () => {    //작성자 : 윤희망 OAuth2.0연동 Naver.Kakao
-        window.location.href =
-        'http://localhost:8081/oauth2/authorization/naver'
+        window.location.href = '/oauth2/authorization/naver';
     };
     const handleKakaoLogin = () => {
-        window.location.href =
-        'http://localhost:8081/oauth2/authorization/kakao'
+        window.location.href = '/oauth2/authorization/kakao';
     };
 
     return (
