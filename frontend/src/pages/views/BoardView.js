@@ -654,6 +654,7 @@ function BoardView({
                                                                             ref={provided.innerRef}
                                                                             {...provided.draggableProps}
                                                                             {...provided.dragHandleProps}
+                                                                            data-task-id={task.taskId}
                                                                             onClick={() => handleTaskClick(task)}
                                                                         >
                                                                             <div className="task-card-actions">

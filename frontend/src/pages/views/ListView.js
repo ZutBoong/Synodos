@@ -498,6 +498,7 @@ function ListView({
                                                                 <tr
                                                                     ref={taskDragProvided.innerRef}
                                                                     {...taskDragProvided.draggableProps}
+                                                                    data-task-id={task.taskId}
                                                                     className={`${isTaskDone(task) ? 'completed' : ''} ${taskDragSnapshot.isDragging ? 'dragging' : ''} ${hasSearchQuery ? (matchesSearch ? 'search-match' : 'search-dim') : ''}`}
                                                                 >
                                                                     <td className="col-drag" {...taskDragProvided.dragHandleProps}>

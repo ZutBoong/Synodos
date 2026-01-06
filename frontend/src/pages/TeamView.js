@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { columnlistByTeam, tasklistByTeam } from '../api/boardApi';
 import { getTeam, getTeamMembers } from '../api/teamApi';
@@ -57,7 +57,71 @@ function TeamView() {
         assigneeNo: null,
         dueDateFilter: ''
     });
+    const [searchMatchIndex, setSearchMatchIndex] = useState(0); // 현재 검색 매칭 인덱스
     const [lastCommentEvent, setLastCommentEvent] = useState(null);  // 댓글 실시간 업데이트용
+
+    // 자식 뷰 ref (스크롤용)
+    const viewRef = useRef(null);
+
+    // 검색어에 매칭되는 태스크 목록
+    const searchMatches = useMemo(() => {
+        if (!filters.searchQuery) return [];
+        const query = filters.searchQuery.toLowerCase();
+        return tasks.filter(task => {
+            const matchTitle = task.title?.toLowerCase().includes(query);
+            const matchDesc = task.description?.toLowerCase().includes(query);
+            const matchAssignee = task.assignees?.some(a =>
+                a.memberName?.toLowerCase().includes(query)
+            );
+            return matchTitle || matchDesc || matchAssignee;
+        });
+    }, [tasks, filters.searchQuery]);
+
+    // 검색어 변경 시 첫 번째 매칭으로 자동 스크롤
+    useEffect(() => {
+        if (searchMatches.length > 0) {
+            setSearchMatchIndex(0);
+            // 약간의 딜레이 후 스크롤 (렌더링 완료 대기)
+            setTimeout(() => {
+                scrollToMatch(0);
+            }, 100);
+        } else {
+            setSearchMatchIndex(0);
+        }
+    }, [filters.searchQuery]);
+
+    // 특정 매칭으로 스크롤
+    const scrollToMatch = (index) => {
+        if (searchMatches.length === 0 || index < 0 || index >= searchMatches.length) return;
+        const taskId = searchMatches[index].taskId;
+
+        // DOM에서 해당 태스크 요소 찾기
+        const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+        if (taskElement) {
+            taskElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // 하이라이트 효과
+            taskElement.classList.add('search-focus');
+            setTimeout(() => {
+                taskElement.classList.remove('search-focus');
+            }, 1500);
+        }
+    };
+
+    // 이전 매칭으로 이동
+    const goToPrevMatch = () => {
+        if (searchMatches.length === 0) return;
+        const newIndex = searchMatchIndex > 0 ? searchMatchIndex - 1 : searchMatches.length - 1;
+        setSearchMatchIndex(newIndex);
+        scrollToMatch(newIndex);
+    };
+
+    // 다음 매칭으로 이동
+    const goToNextMatch = () => {
+        if (searchMatches.length === 0) return;
+        const newIndex = searchMatchIndex < searchMatches.length - 1 ? searchMatchIndex + 1 : 0;
+        setSearchMatchIndex(newIndex);
+        scrollToMatch(newIndex);
+    };
 
     // 탭 변경 핸들러
     const handleTabChange = (tabId) => {
@@ -402,25 +466,58 @@ function TeamView() {
                     </div>
                     <div className="team-header-right">
                         {team && ['list', 'board', 'timeline', 'calendar', 'branches'].includes(activeTab) && (
-                            <div className="header-search">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="11" cy="11" r="8" />
-                                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                                </svg>
-                                <input
-                                    type="text"
-                                    placeholder="검색..."
-                                    value={filters.searchQuery || ''}
-                                    onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
-                                />
+                            <div className="search-wrapper">
+                                <div className="header-search">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <circle cx="11" cy="11" r="8" />
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                    </svg>
+                                    <input
+                                        type="text"
+                                        placeholder="검색..."
+                                        value={filters.searchQuery || ''}
+                                        onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
+                                    />
+                                    {filters.searchQuery && (
+                                        <button
+                                            className="search-clear-btn"
+                                            onClick={() => setFilters({ ...filters, searchQuery: '' })}
+                                            title="검색 초기화"
+                                        >
+                                            ✕
+                                        </button>
+                                    )}
+                                </div>
+                                {/* 검색 결과 네비게이션 */}
                                 {filters.searchQuery && (
-                                    <button
-                                        className="search-clear-btn"
-                                        onClick={() => setFilters({ ...filters, searchQuery: '' })}
-                                        title="검색 초기화"
-                                    >
-                                        ✕
-                                    </button>
+                                    <div className="search-nav">
+                                        <span className="search-count">
+                                            {searchMatches.length > 0
+                                                ? `${searchMatchIndex + 1}/${searchMatches.length}`
+                                                : '0개'
+                                            }
+                                        </span>
+                                        <button
+                                            className="search-nav-btn"
+                                            onClick={goToPrevMatch}
+                                            disabled={searchMatches.length === 0}
+                                            title="이전 결과"
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <polyline points="18 15 12 9 6 15" />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            className="search-nav-btn"
+                                            onClick={goToNextMatch}
+                                            disabled={searchMatches.length === 0}
+                                            title="다음 결과"
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <polyline points="6 9 12 15 18 9" />
+                                            </svg>
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         )}
