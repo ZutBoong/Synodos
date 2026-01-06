@@ -1,6 +1,6 @@
 package com.example.demo.model;
 
-import java.sql.Date;
+import java.time.LocalDateTime;
 import org.apache.ibatis.type.Alias;
 import lombok.Data;
 
@@ -13,7 +13,7 @@ public class Comment {
 	private String authorName;     // JOIN으로 조회
 	private String authorUserid;   // JOIN으로 조회
 	private String content;
-	private Date createdAt;
-	private Date updatedAt;
+	private LocalDateTime createdAt;
+	private LocalDateTime updatedAt;
 	private Long githubCommentId;  // GitHub Issue Comment ID (동기화용)
 }

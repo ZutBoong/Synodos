@@ -237,6 +237,11 @@ function TeamView() {
             console.error('데이터 로드 실패:', error);
             if (error.response?.status === 404) {
                 alert('팀을 찾을 수 없습니다.');
+                localStorage.removeItem('currentTeam');
+                navigate('/');
+            } else if (error.response?.status === 403) {
+                alert('해당 팀에 접근 권한이 없습니다. 팀에서 퇴출되었을 수 있습니다.');
+                localStorage.removeItem('currentTeam');
                 navigate('/');
             }
         } finally {

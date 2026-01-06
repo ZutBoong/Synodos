@@ -724,23 +724,17 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                         <button
                             type="button"
                             className="copy-btn"
-                            onClick={() => {
-                                navigator.clipboard.writeText(`#${task?.taskId}`);
+                            onClick={async () => {
+                                try {
+                                    await navigator.clipboard.writeText(`#${task?.taskId}`);
+                                    alert('태스크 ID가 복사되었습니다.');
+                                } catch (err) {
+                                    console.error('복사 실패:', err);
+                                }
                             }}
                             title="태스크 ID 복사"
                         >
                             <i className="fa-regular fa-copy"></i>
-                        </button>
-                        <button
-                            type="button"
-                            className="copy-btn"
-                            onClick={() => {
-                                const branchName = `feature/TASK-${task?.taskId}-${form.title?.toLowerCase().replace(/[^a-z0-9가-힣]/g, '-').substring(0, 30)}`;
-                                navigator.clipboard.writeText(branchName);
-                            }}
-                            title="브랜치명 복사"
-                        >
-                            <i className="fa-solid fa-code-branch"></i>
                         </button>
                         {saving && (
                             <span className="saving-indicator">

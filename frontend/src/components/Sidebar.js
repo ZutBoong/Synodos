@@ -90,6 +90,25 @@ function Sidebar({ isOpen, onToggle, currentTeam, onSelectTeam, loginMember }) {
                 console.log('팀 목록 응답:', data);
                 const teamsArray = Array.isArray(data) ? data : [];
                 setTeams(teamsArray);
+
+                // localStorage의 currentTeam이 실제 팀 목록에 있는지 확인
+                // (팀에서 퇴출되었을 경우 정리)
+                const storedTeam = localStorage.getItem('currentTeam');
+                if (storedTeam) {
+                    const parsedTeam = JSON.parse(storedTeam);
+                    const teamExists = teamsArray.some(t => t.teamId === parsedTeam.teamId);
+                    if (!teamExists) {
+                        console.log('퇴출된 팀 정보 제거:', parsedTeam.teamId);
+                        localStorage.removeItem('currentTeam');
+                        // 현재 해당 팀 페이지에 있다면 홈으로 이동
+                        if (location.pathname.startsWith(`/team/${parsedTeam.teamId}`)) {
+                            alert('해당 팀에서 퇴출되었거나 팀이 삭제되었습니다.');
+                            window.location.href = '/';
+                            return;
+                        }
+                    }
+                }
+
                 // 현재 팀 페이지가 아닐 때만 첫 번째 팀 선택
                 if (!currentTeam && teamsArray.length > 0 && !location.pathname.startsWith('/team/')) {
                     onSelectTeam(teamsArray[0]);

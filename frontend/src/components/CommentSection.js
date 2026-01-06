@@ -42,8 +42,10 @@ const CommentSection = forwardRef(({ taskId, loginMember }, ref) => {
                 content: newComment.trim()
             });
             if (comment) {
-                setComments(prev => [...prev, comment]);
+                // 로컬 상태에 추가하지 않고 서버에서 새로 가져옴
+                // (WebSocket 이벤트와 중복 방지)
                 setNewComment('');
+                await fetchComments();
             }
         } catch (error) {
             console.error('댓글 작성 실패:', error);

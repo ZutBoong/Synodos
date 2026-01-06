@@ -50,6 +50,11 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+# frontend/.env.production은 빌드용으로 유지 (민감정보 없음)
 
 # Test coverage
 coverage/
@@ -67,7 +72,6 @@ postgres_data/
 pgdata/
 
 # Spring Boot
-*.pid
 .springBeans
 application-local.properties
 
@@ -80,3 +84,28 @@ application-local.properties
 docs
 
 backend/uploads
+
+# Security - 인증서, 키 파일
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+secrets/
+credentials*.json
+
+# Cache files
+.eslintcache
+.npm/
+.pnpm-store/
+*.tsbuildinfo
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Yarn
+.yarn/cache
+.yarn/install-state.gz
