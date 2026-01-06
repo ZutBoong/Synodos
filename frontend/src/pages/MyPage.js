@@ -441,7 +441,12 @@ function MyPage() {
                 localStorage.setItem('github_return_url', '/mypage');
 
                 // GitHub OAuth URL 가져오기
-                const response = await fetch(`/api/github/oauth/authorize?memberNo=${member.no}`);
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/github/oauth/authorize?memberNo=${member.no}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 const data = await response.json();
 
                 if (data.error) {
