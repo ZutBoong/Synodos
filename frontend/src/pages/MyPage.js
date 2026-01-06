@@ -492,6 +492,10 @@ function MyPage() {
                 if (result.success) {
                     // member 객체에서 githubUsername 제거
                     setMember(prev => ({ ...prev, githubUsername: null }));
+
+                    // socialLinks에서도 github 제거
+                    setSocialLinks(prev => prev.filter(link => link.provider !== 'github'));
+
                     setSocialMessage({ type: 'success', text: 'GitHub 계정 연동이 해제되었습니다.' });
 
                     // localStorage의 member도 업데이트
@@ -500,6 +504,13 @@ function MyPage() {
                         const memberData = JSON.parse(storedMember);
                         delete memberData.githubUsername;
                         localStorage.setItem('member', JSON.stringify(memberData));
+                    }
+
+                    // member_social_link 테이블에서도 제거 시도 (있는 경우)
+                    try {
+                        await unlinkSocialAccount(member.no, 'github');
+                    } catch (e) {
+                        // 소셜 링크가 없으면 무시
                     }
                 } else {
                     setSocialMessage({ type: 'error', text: result.error || 'GitHub 연동 해제에 실패했습니다.' });

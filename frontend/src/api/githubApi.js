@@ -4,9 +4,13 @@ const API_PATH = '/api/github';
 
 /**
  * 팀 저장소의 브랜치 목록을 조회합니다.
+ * @param {number} teamId - 팀 ID
+ * @param {number} memberNo - 회원 번호 (선택, GitHub 토큰용)
  */
-export const getBranches = async (teamId) => {
-    const response = await axiosInstance.get(`${API_PATH}/branches/${teamId}`);
+export const getBranches = async (teamId, memberNo = null) => {
+    const params = {};
+    if (memberNo) params.memberNo = memberNo;
+    const response = await axiosInstance.get(`${API_PATH}/branches/${teamId}`, { params });
     return response.data;
 };
 
@@ -46,9 +50,13 @@ export const getTaskCommits = async (taskId) => {
 
 /**
  * 팀 저장소의 기본 브랜치를 조회합니다.
+ * @param {number} teamId - 팀 ID
+ * @param {number} memberNo - 회원 번호 (선택, GitHub 토큰용)
  */
-export const getDefaultBranch = async (teamId) => {
-    const response = await axiosInstance.get(`${API_PATH}/default-branch/${teamId}`);
+export const getDefaultBranch = async (teamId, memberNo = null) => {
+    const params = {};
+    if (memberNo) params.memberNo = memberNo;
+    const response = await axiosInstance.get(`${API_PATH}/default-branch/${teamId}`, { params });
     return response.data;
 };
 
@@ -57,23 +65,29 @@ export const getDefaultBranch = async (teamId) => {
  * @param {number} teamId - 팀 ID
  * @param {string[]} branches - 조회할 브랜치 목록
  * @param {number} depth - 각 브랜치당 조회할 커밋 수 (기본 50)
+ * @param {number} memberNo - 회원 번호 (선택, GitHub 토큰용)
  */
-export const getCommitsGraph = async (teamId, branches = [], depth = 50) => {
+export const getCommitsGraph = async (teamId, branches = [], depth = 50, memberNo = null) => {
     const params = { depth };
     if (branches.length > 0) {
         params.branches = branches.join(',');
     }
+    if (memberNo) params.memberNo = memberNo;
     const response = await axiosInstance.get(`${API_PATH}/graph/${teamId}`, { params });
     return response.data;
 };
 
 /**
  * 두 브랜치를 비교하여 분기점(merge base)을 조회합니다.
+ * @param {number} teamId - 팀 ID
+ * @param {string} base - 기준 브랜치
+ * @param {string} head - 비교 브랜치
+ * @param {number} memberNo - 회원 번호 (선택, GitHub 토큰용)
  */
-export const compareBranches = async (teamId, base, head) => {
-    const response = await axiosInstance.get(`${API_PATH}/compare/${teamId}`, {
-        params: { base, head }
-    });
+export const compareBranches = async (teamId, base, head, memberNo = null) => {
+    const params = { base, head };
+    if (memberNo) params.memberNo = memberNo;
+    const response = await axiosInstance.get(`${API_PATH}/compare/${teamId}`, { params });
     return response.data;
 };
 
@@ -84,11 +98,13 @@ export const compareBranches = async (teamId, base, head) => {
  * @param {number} teamId - 팀 ID
  * @param {string} branchName - 생성할 브랜치 이름
  * @param {string} fromSha - 분기할 커밋 SHA
+ * @param {number} memberNo - 회원 번호 (필수, GitHub 토큰용)
  */
-export const createBranch = async (teamId, branchName, fromSha) => {
+export const createBranch = async (teamId, branchName, fromSha, memberNo) => {
     const response = await axiosInstance.post(`${API_PATH}/branch/${teamId}`, {
         branchName,
-        fromSha
+        fromSha,
+        memberNo
     });
     return response.data;
 };
@@ -99,12 +115,14 @@ export const createBranch = async (teamId, branchName, fromSha) => {
  * @param {string} base - 머지 대상 브랜치 (예: main)
  * @param {string} head - 머지할 브랜치 (예: feature/xxx)
  * @param {string} commitMessage - 머지 커밋 메시지 (선택)
+ * @param {number} memberNo - 회원 번호 (필수, GitHub 토큰용)
  */
-export const mergeBranches = async (teamId, base, head, commitMessage = null) => {
+export const mergeBranches = async (teamId, base, head, commitMessage = null, memberNo) => {
     const response = await axiosInstance.post(`${API_PATH}/merge/${teamId}`, {
         base,
         head,
-        commitMessage
+        commitMessage,
+        memberNo
     });
     return response.data;
 };
@@ -113,9 +131,12 @@ export const mergeBranches = async (teamId, base, head, commitMessage = null) =>
  * 브랜치를 삭제합니다.
  * @param {number} teamId - 팀 ID
  * @param {string} branchName - 삭제할 브랜치 이름
+ * @param {number} memberNo - 회원 번호 (필수, GitHub 토큰용)
  */
-export const deleteBranch = async (teamId, branchName) => {
-    const response = await axiosInstance.delete(`${API_PATH}/branch/${teamId}/${encodeURIComponent(branchName)}`);
+export const deleteBranch = async (teamId, branchName, memberNo) => {
+    const response = await axiosInstance.delete(
+        `${API_PATH}/branch/${teamId}/${encodeURIComponent(branchName)}?memberNo=${memberNo}`
+    );
     return response.data;
 };
 
@@ -124,11 +145,13 @@ export const deleteBranch = async (teamId, branchName) => {
  * @param {number} teamId - 팀 ID
  * @param {string} branch - 브랜치 이름
  * @param {string} commitSha - 되돌릴 커밋 SHA
+ * @param {number} memberNo - 회원 번호 (필수, GitHub 토큰용)
  */
-export const revertCommit = async (teamId, branch, commitSha) => {
+export const revertCommit = async (teamId, branch, commitSha, memberNo) => {
     const response = await axiosInstance.post(`${API_PATH}/revert/${teamId}`, {
         branch,
-        commitSha
+        commitSha,
+        memberNo
     });
     return response.data;
 };
@@ -136,17 +159,38 @@ export const revertCommit = async (teamId, branch, commitSha) => {
 // ==================== Pull Request API ====================
 
 /**
+ * Pull Request를 생성합니다 (Task 연결 없이).
+ * @param {number} teamId - 팀 ID
+ * @param {string} head - 소스 브랜치
+ * @param {string} base - 대상 브랜치 (선택)
+ * @param {string} title - PR 제목
+ * @param {string} body - PR 본문 (선택)
+ * @param {number} memberNo - 회원 번호 (필수, GitHub 토큰용)
+ */
+export const createPR = async (teamId, head, base, title, body = '', memberNo) => {
+    const response = await axiosInstance.post(`${API_PATH}/pr/${teamId}`, {
+        head,
+        base,
+        title,
+        body,
+        memberNo
+    });
+    return response.data;
+};
+
+/**
  * Task에서 작업용 브랜치를 생성합니다.
  * @param {number} taskId - Task ID
  * @param {number} teamId - 팀 ID
  * @param {string} branchName - 브랜치 이름 (선택, 없으면 자동 생성)
  * @param {string} baseSha - 분기할 커밋 SHA (선택)
+ * @param {number} memberNo - 회원 번호 (필수, GitHub 토큰용)
  */
-export const createTaskBranch = async (taskId, teamId, branchName = null, baseSha = null) => {
-    const response = await axiosInstance.post(`${API_PATH}/task/${taskId}/branch?teamId=${teamId}`, {
-        branchName,
-        baseSha
-    });
+export const createTaskBranch = async (taskId, teamId, branchName = null, baseSha = null, memberNo) => {
+    const response = await axiosInstance.post(
+        `${API_PATH}/task/${taskId}/branch?teamId=${teamId}&memberNo=${memberNo}`,
+        { branchName, baseSha }
+    );
     return response.data;
 };
 
@@ -158,14 +202,13 @@ export const createTaskBranch = async (taskId, teamId, branchName = null, baseSh
  * @param {string} base - 대상 브랜치 (선택, 기본: 기본 브랜치)
  * @param {string} title - PR 제목
  * @param {string} body - PR 본문 (선택)
+ * @param {number} memberNo - 회원 번호 (필수, GitHub 토큰용)
  */
-export const createTaskPR = async (taskId, teamId, head, base, title, body = '') => {
-    const response = await axiosInstance.post(`${API_PATH}/task/${taskId}/pr?teamId=${teamId}`, {
-        head,
-        base,
-        title,
-        body
-    });
+export const createTaskPR = async (taskId, teamId, head, base, title, body = '', memberNo) => {
+    const response = await axiosInstance.post(
+        `${API_PATH}/task/${taskId}/pr?teamId=${teamId}&memberNo=${memberNo}`,
+        { head, base, title, body }
+    );
     return response.data;
 };
 
@@ -173,9 +216,12 @@ export const createTaskPR = async (taskId, teamId, head, base, title, body = '')
  * Task에 연결된 PR 목록을 조회합니다.
  * @param {number} taskId - Task ID
  * @param {number} teamId - 팀 ID
+ * @param {number} memberNo - 회원 번호 (선택, GitHub 토큰용)
  */
-export const getTaskPRs = async (taskId, teamId) => {
-    const response = await axiosInstance.get(`${API_PATH}/task/${taskId}/prs?teamId=${teamId}`);
+export const getTaskPRs = async (taskId, teamId, memberNo = null) => {
+    let url = `${API_PATH}/task/${taskId}/prs?teamId=${teamId}`;
+    if (memberNo) url += `&memberNo=${memberNo}`;
+    const response = await axiosInstance.get(url);
     return response.data;
 };
 
@@ -183,9 +229,12 @@ export const getTaskPRs = async (taskId, teamId) => {
  * 팀의 모든 PR 목록을 조회합니다.
  * @param {number} teamId - 팀 ID
  * @param {string} state - 상태 필터 (open, closed, all)
+ * @param {number} memberNo - 회원 번호 (선택, GitHub 토큰용)
  */
-export const getTeamPRs = async (teamId, state = 'all') => {
-    const response = await axiosInstance.get(`${API_PATH}/prs/${teamId}?state=${state}`);
+export const getTeamPRs = async (teamId, state = 'all', memberNo = null) => {
+    let url = `${API_PATH}/prs/${teamId}?state=${state}`;
+    if (memberNo) url += `&memberNo=${memberNo}`;
+    const response = await axiosInstance.get(url);
     return response.data;
 };
 
@@ -195,11 +244,13 @@ export const getTeamPRs = async (teamId, state = 'all') => {
  * @param {number} prNumber - PR 번호
  * @param {string} commitTitle - 머지 커밋 제목 (선택)
  * @param {string} mergeMethod - 머지 방법 (merge, squash, rebase)
+ * @param {number} memberNo - 회원 번호 (필수, GitHub 토큰용)
  */
-export const mergePR = async (teamId, prNumber, commitTitle = null, mergeMethod = 'merge') => {
+export const mergePR = async (teamId, prNumber, commitTitle = null, mergeMethod = 'merge', memberNo) => {
     const response = await axiosInstance.put(`${API_PATH}/pr/${teamId}/${prNumber}/merge`, {
         commitTitle,
-        mergeMethod
+        mergeMethod,
+        memberNo
     });
     return response.data;
 };
@@ -208,9 +259,12 @@ export const mergePR = async (teamId, prNumber, commitTitle = null, mergeMethod 
  * PR 상세 정보 조회 (머지 가능 여부, 충돌 파일 포함)
  * @param {number} teamId - 팀 ID
  * @param {number} prNumber - PR 번호
+ * @param {number} memberNo - 회원 번호 (선택, GitHub 토큰용)
  */
-export const getPRDetail = async (teamId, prNumber) => {
-    const response = await axiosInstance.get(`${API_PATH}/pr/${teamId}/${prNumber}/detail`);
+export const getPRDetail = async (teamId, prNumber, memberNo = null) => {
+    let url = `${API_PATH}/pr/${teamId}/${prNumber}/detail`;
+    if (memberNo) url += `?memberNo=${memberNo}`;
+    const response = await axiosInstance.get(url);
     return response.data;
 };
 
@@ -221,11 +275,12 @@ export const getPRDetail = async (teamId, prNumber) => {
  * @param {number} teamId - 팀 ID
  * @param {number} prNumber - PR 번호
  * @param {string} filename - 충돌 파일명
+ * @param {number} memberNo - 회원 번호 (선택, GitHub 토큰용)
  */
-export const getConflictFileVersions = async (teamId, prNumber, filename) => {
-    const response = await axiosInstance.get(
-        `${API_PATH}/pr/${teamId}/${prNumber}/conflict/${encodeURIComponent(filename)}`
-    );
+export const getConflictFileVersions = async (teamId, prNumber, filename, memberNo = null) => {
+    let url = `${API_PATH}/pr/${teamId}/${prNumber}/conflict/${encodeURIComponent(filename)}`;
+    if (memberNo) url += `?memberNo=${memberNo}`;
+    const response = await axiosInstance.get(url);
     return response.data;
 };
 
@@ -234,11 +289,12 @@ export const getConflictFileVersions = async (teamId, prNumber, filename) => {
  * @param {number} teamId - 팀 ID
  * @param {number} prNumber - PR 번호
  * @param {string} filename - 충돌 파일명
+ * @param {number} memberNo - 회원 번호 (선택, GitHub 토큰용)
  */
-export const aiResolveConflict = async (teamId, prNumber, filename) => {
+export const aiResolveConflict = async (teamId, prNumber, filename, memberNo = null) => {
     const response = await axiosInstance.post(
         `${API_PATH}/pr/${teamId}/${prNumber}/ai-resolve`,
-        { filename }
+        { filename, memberNo }
     );
     return response.data;
 };
@@ -250,11 +306,12 @@ export const aiResolveConflict = async (teamId, prNumber, filename) => {
  * @param {string} filename - 파일명
  * @param {string} resolvedCode - 해결된 코드
  * @param {string} headSha - 파일 SHA
+ * @param {number} memberNo - 회원 번호 (필수, GitHub 토큰용)
  */
-export const applyConflictResolution = async (teamId, prNumber, filename, resolvedCode, headSha) => {
+export const applyConflictResolution = async (teamId, prNumber, filename, resolvedCode, headSha, memberNo) => {
     const response = await axiosInstance.post(
         `${API_PATH}/pr/${teamId}/${prNumber}/apply-resolution`,
-        { filename, resolvedCode, headSha }
+        { filename, resolvedCode, headSha, memberNo }
     );
     return response.data;
 };

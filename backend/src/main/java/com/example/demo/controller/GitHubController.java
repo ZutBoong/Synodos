@@ -59,10 +59,12 @@ public class GitHubController {
 
     /**
      * 팀 저장소의 브랜치 목록을 조회합니다.
-     * GET /api/github/branches/{teamId}
+     * GET /api/github/branches/{teamId}?memberNo=123
      */
     @GetMapping("/branches/{teamId}")
-    public ResponseEntity<?> getBranches(@PathVariable int teamId) {
+    public ResponseEntity<?> getBranches(
+            @PathVariable int teamId,
+            @RequestParam(required = false, defaultValue = "0") int memberNo) {
         try {
             Team team = teamService.findById(teamId);
             if (team == null) {
@@ -79,8 +81,11 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
             }
 
-            // 팀장의 GitHub 액세스 토큰 조회
-            String accessToken = getLeaderAccessToken(team);
+            // 회원 토큰 우선, 없으면 팀장 토큰 사용
+            String accessToken = memberNo > 0 ? getMemberAccessToken(memberNo) : null;
+            if (accessToken == null) {
+                accessToken = getLeaderAccessToken(team);
+            }
 
             List<GitHubBranch> branches = gitHubService.listBranches(accessToken, repoInfo.owner, repoInfo.repo);
             return ResponseEntity.ok(branches);
@@ -207,10 +212,12 @@ public class GitHubController {
 
     /**
      * 팀 저장소의 기본 브랜치를 조회합니다.
-     * GET /api/github/default-branch/{teamId}
+     * GET /api/github/default-branch/{teamId}?memberNo=123
      */
     @GetMapping("/default-branch/{teamId}")
-    public ResponseEntity<?> getDefaultBranch(@PathVariable int teamId) {
+    public ResponseEntity<?> getDefaultBranch(
+            @PathVariable int teamId,
+            @RequestParam(required = false, defaultValue = "0") int memberNo) {
         try {
             Team team = teamService.findById(teamId);
             if (team == null) {
@@ -227,8 +234,11 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
             }
 
-            // 팀장의 GitHub 액세스 토큰 조회
-            String accessToken = getLeaderAccessToken(team);
+            // 회원 토큰 우선, 없으면 팀장 토큰 사용
+            String accessToken = memberNo > 0 ? getMemberAccessToken(memberNo) : null;
+            if (accessToken == null) {
+                accessToken = getLeaderAccessToken(team);
+            }
 
             String defaultBranch = gitHubService.getDefaultBranch(accessToken, repoInfo.owner, repoInfo.repo);
 
@@ -244,13 +254,14 @@ public class GitHubController {
 
     /**
      * 브랜치 그래프 시각화용 커밋 데이터를 조회합니다.
-     * GET /api/github/graph/{teamId}?branches=main,develop&depth=50
+     * GET /api/github/graph/{teamId}?branches=main,develop&depth=50&memberNo=123
      */
     @GetMapping("/graph/{teamId}")
     public ResponseEntity<?> getCommitsGraph(
             @PathVariable int teamId,
             @RequestParam(defaultValue = "") String branches,
-            @RequestParam(defaultValue = "50") int depth) {
+            @RequestParam(defaultValue = "50") int depth,
+            @RequestParam(required = false, defaultValue = "0") int memberNo) {
         try {
             Team team = teamService.findById(teamId);
             if (team == null) {
@@ -267,8 +278,11 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
             }
 
-            // 팀장의 GitHub 액세스 토큰 조회
-            String accessToken = getLeaderAccessToken(team);
+            // 회원 토큰 우선, 없으면 팀장 토큰 사용
+            String accessToken = memberNo > 0 ? getMemberAccessToken(memberNo) : null;
+            if (accessToken == null) {
+                accessToken = getLeaderAccessToken(team);
+            }
 
             // 브랜치 목록 파싱
             String[] branchList;
@@ -305,13 +319,14 @@ public class GitHubController {
 
     /**
      * 두 브랜치를 비교하여 분기점(merge base)을 조회합니다.
-     * GET /api/github/compare/{teamId}?base=main&head=feature
+     * GET /api/github/compare/{teamId}?base=main&head=feature&memberNo=123
      */
     @GetMapping("/compare/{teamId}")
     public ResponseEntity<?> compareBranches(
             @PathVariable int teamId,
             @RequestParam String base,
-            @RequestParam String head) {
+            @RequestParam String head,
+            @RequestParam(required = false, defaultValue = "0") int memberNo) {
         try {
             Team team = teamService.findById(teamId);
             if (team == null) {
@@ -335,8 +350,11 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("head 브랜치가 필요합니다.");
             }
 
-            // 팀장의 GitHub 액세스 토큰 조회
-            String accessToken = getLeaderAccessToken(team);
+            // 회원 토큰 우선, 없으면 팀장 토큰 사용
+            String accessToken = memberNo > 0 ? getMemberAccessToken(memberNo) : null;
+            if (accessToken == null) {
+                accessToken = getLeaderAccessToken(team);
+            }
 
             GitHubBranchComparison comparison = gitHubService.compareBranches(
                 accessToken, repoInfo.owner, repoInfo.repo, base.trim(), head.trim()
@@ -354,12 +372,12 @@ public class GitHubController {
     /**
      * 새 브랜치를 생성합니다.
      * POST /api/github/branch/{teamId}
-     * Body: { "branchName": "feature/xxx", "fromSha": "abc123" }
+     * Body: { "branchName": "feature/xxx", "fromSha": "abc123", "memberNo": 123 }
      */
     @PostMapping("/branch/{teamId}")
     public ResponseEntity<?> createBranch(
             @PathVariable int teamId,
-            @RequestBody Map<String, String> request) {
+            @RequestBody Map<String, Object> request) {
         try {
             Team team = teamService.findById(teamId);
             if (team == null) {
@@ -376,8 +394,9 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
             }
 
-            String branchName = request.get("branchName");
-            String fromSha = request.get("fromSha");
+            String branchName = (String) request.get("branchName");
+            String fromSha = (String) request.get("fromSha");
+            Integer memberNo = request.get("memberNo") != null ? ((Number) request.get("memberNo")).intValue() : null;
 
             if (branchName == null || branchName.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("브랜치 이름이 필요합니다.");
@@ -386,13 +405,17 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("분기할 커밋 SHA가 필요합니다.");
             }
 
-            String accessToken = getLeaderAccessToken(team);
-            if (accessToken == null) {
-                return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다. 팀장이 GitHub에 로그인해야 합니다.");
+            // 회원의 GitHub 연결 상태 확인 (필수)
+            GitHubConnectionCheck check = memberNo != null
+                ? checkMemberGitHubConnection(memberNo)
+                : GitHubConnectionCheck.failure("GitHub 작업을 수행하려면 로그인이 필요합니다.");
+
+            if (!check.connected) {
+                return ResponseEntity.badRequest().body(check.errorMessage);
             }
 
             GitHubBranch newBranch = gitHubService.createBranch(
-                accessToken, repoInfo.owner, repoInfo.repo, branchName.trim(), fromSha.trim()
+                check.accessToken, repoInfo.owner, repoInfo.repo, branchName.trim(), fromSha.trim()
             );
 
             Map<String, Object> result = new HashMap<>();
@@ -410,12 +433,12 @@ public class GitHubController {
     /**
      * 브랜치를 머지합니다.
      * POST /api/github/merge/{teamId}
-     * Body: { "base": "main", "head": "feature/xxx", "commitMessage": "..." }
+     * Body: { "base": "main", "head": "feature/xxx", "commitMessage": "...", "memberNo": 123 }
      */
     @PostMapping("/merge/{teamId}")
     public ResponseEntity<?> mergeBranches(
             @PathVariable int teamId,
-            @RequestBody Map<String, String> request) {
+            @RequestBody Map<String, Object> request) {
         try {
             Team team = teamService.findById(teamId);
             if (team == null) {
@@ -432,9 +455,10 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
             }
 
-            String base = request.get("base");
-            String head = request.get("head");
-            String commitMessage = request.get("commitMessage");
+            String base = (String) request.get("base");
+            String head = (String) request.get("head");
+            String commitMessage = (String) request.get("commitMessage");
+            Integer memberNo = request.get("memberNo") != null ? ((Number) request.get("memberNo")).intValue() : null;
 
             if (base == null || base.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("머지 대상 브랜치(base)가 필요합니다.");
@@ -443,13 +467,17 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("머지할 브랜치(head)가 필요합니다.");
             }
 
-            String accessToken = getLeaderAccessToken(team);
-            if (accessToken == null) {
-                return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다. 팀장이 GitHub에 로그인해야 합니다.");
+            // 회원의 GitHub 연결 상태 확인 (필수)
+            GitHubConnectionCheck check = memberNo != null
+                ? checkMemberGitHubConnection(memberNo)
+                : GitHubConnectionCheck.failure("GitHub 작업을 수행하려면 로그인이 필요합니다.");
+
+            if (!check.connected) {
+                return ResponseEntity.badRequest().body(check.errorMessage);
             }
 
             GitHubMergeResult mergeResult = gitHubService.mergeBranches(
-                accessToken, repoInfo.owner, repoInfo.repo, base.trim(), head.trim(), commitMessage
+                check.accessToken, repoInfo.owner, repoInfo.repo, base.trim(), head.trim(), commitMessage
             );
 
             Map<String, Object> result = new HashMap<>();
@@ -466,12 +494,13 @@ public class GitHubController {
 
     /**
      * 브랜치를 삭제합니다.
-     * DELETE /api/github/branch/{teamId}/{branchName}
+     * DELETE /api/github/branch/{teamId}/{branchName}?memberNo=123
      */
     @DeleteMapping("/branch/{teamId}/{branchName}")
     public ResponseEntity<?> deleteBranch(
             @PathVariable int teamId,
-            @PathVariable String branchName) {
+            @PathVariable String branchName,
+            @RequestParam int memberNo) {
         try {
             Team team = teamService.findById(teamId);
             if (team == null) {
@@ -492,18 +521,19 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("브랜치 이름이 필요합니다.");
             }
 
-            String accessToken = getLeaderAccessToken(team);
-            if (accessToken == null) {
-                return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다. 팀장이 GitHub에 로그인해야 합니다.");
+            // 회원의 GitHub 연결 상태 확인 (필수)
+            GitHubConnectionCheck check = checkMemberGitHubConnection(memberNo);
+            if (!check.connected) {
+                return ResponseEntity.badRequest().body(check.errorMessage);
             }
 
             // 기본 브랜치 삭제 방지
-            String defaultBranch = gitHubService.getDefaultBranch(accessToken, repoInfo.owner, repoInfo.repo);
+            String defaultBranch = gitHubService.getDefaultBranch(check.accessToken, repoInfo.owner, repoInfo.repo);
             if (branchName.equals(defaultBranch)) {
                 return ResponseEntity.badRequest().body("기본 브랜치는 삭제할 수 없습니다.");
             }
 
-            gitHubService.deleteBranch(accessToken, repoInfo.owner, repoInfo.repo, branchName.trim());
+            gitHubService.deleteBranch(check.accessToken, repoInfo.owner, repoInfo.repo, branchName.trim());
 
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
@@ -519,12 +549,12 @@ public class GitHubController {
     /**
      * 커밋을 되돌립니다 (Revert).
      * POST /api/github/revert/{teamId}
-     * Body: { "branch": "main", "commitSha": "abc123..." }
+     * Body: { "branch": "main", "commitSha": "abc123...", "memberNo": 123 }
      */
     @PostMapping("/revert/{teamId}")
     public ResponseEntity<?> revertCommit(
             @PathVariable int teamId,
-            @RequestBody Map<String, String> request) {
+            @RequestBody Map<String, Object> request) {
         try {
             Team team = teamService.findById(teamId);
             if (team == null) {
@@ -541,8 +571,9 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
             }
 
-            String branch = request.get("branch");
-            String commitSha = request.get("commitSha");
+            String branch = (String) request.get("branch");
+            String commitSha = (String) request.get("commitSha");
+            Integer memberNo = request.get("memberNo") != null ? ((Number) request.get("memberNo")).intValue() : null;
 
             if (branch == null || branch.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("브랜치 이름이 필요합니다.");
@@ -551,13 +582,17 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("되돌릴 커밋 SHA가 필요합니다.");
             }
 
-            String accessToken = getLeaderAccessToken(team);
-            if (accessToken == null) {
-                return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다. 팀장이 GitHub에 로그인해야 합니다.");
+            // 회원의 GitHub 연결 상태 확인 (필수)
+            GitHubConnectionCheck check = memberNo != null
+                ? checkMemberGitHubConnection(memberNo)
+                : GitHubConnectionCheck.failure("GitHub 작업을 수행하려면 로그인이 필요합니다.");
+
+            if (!check.connected) {
+                return ResponseEntity.badRequest().body(check.errorMessage);
             }
 
             GitHubRevertResult revertResult = gitHubService.revertCommit(
-                accessToken, repoInfo.owner, repoInfo.repo, branch.trim(), commitSha.trim()
+                check.accessToken, repoInfo.owner, repoInfo.repo, branch.trim(), commitSha.trim()
             );
 
             Map<String, Object> result = new HashMap<>();
@@ -578,12 +613,12 @@ public class GitHubController {
     /**
      * Pull Request를 생성합니다 (Task 연결 없이).
      * POST /api/github/pr/{teamId}
-     * Body: { "head": "feature/xxx", "base": "main", "title": "PR Title", "body": "..." }
+     * Body: { "head": "feature/xxx", "base": "main", "title": "PR Title", "body": "...", "memberNo": 123 }
      */
     @PostMapping("/pr/{teamId}")
     public ResponseEntity<?> createPullRequest(
             @PathVariable int teamId,
-            @RequestBody Map<String, String> request) {
+            @RequestBody Map<String, Object> request) {
         try {
             Team team = teamService.findById(teamId);
             if (team == null) {
@@ -600,10 +635,11 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
             }
 
-            String head = request.get("head");
-            String base = request.get("base");
-            String title = request.get("title");
-            String body = request.get("body");
+            String head = (String) request.get("head");
+            String base = (String) request.get("base");
+            String title = (String) request.get("title");
+            String body = (String) request.get("body");
+            Integer memberNo = request.get("memberNo") != null ? ((Number) request.get("memberNo")).intValue() : null;
 
             if (head == null || head.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("소스 브랜치(head)가 필요합니다.");
@@ -612,19 +648,23 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("PR 제목이 필요합니다.");
             }
 
-            String accessToken = getLeaderAccessToken(team);
-            if (accessToken == null) {
-                return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다. 팀장이 GitHub에 로그인해야 합니다.");
+            // 회원의 GitHub 연결 상태 확인 (필수)
+            GitHubConnectionCheck check = memberNo != null
+                ? checkMemberGitHubConnection(memberNo)
+                : GitHubConnectionCheck.failure("GitHub 작업을 수행하려면 로그인이 필요합니다.");
+
+            if (!check.connected) {
+                return ResponseEntity.badRequest().body(check.errorMessage);
             }
 
             // 기본 브랜치 설정
             if (base == null || base.trim().isEmpty()) {
-                base = gitHubService.getDefaultBranch(accessToken, repoInfo.owner, repoInfo.repo);
+                base = gitHubService.getDefaultBranch(check.accessToken, repoInfo.owner, repoInfo.repo);
             }
 
             // PR 생성
             GitHubPullRequest pr = gitHubService.createPullRequest(
-                accessToken, repoInfo.owner, repoInfo.repo,
+                check.accessToken, repoInfo.owner, repoInfo.repo,
                 title.trim(), body != null ? body : "", head.trim(), base.trim()
             );
 
@@ -644,12 +684,13 @@ public class GitHubController {
 
     /**
      * Task에서 작업용 브랜치를 생성합니다.
-     * POST /api/github/task/{taskId}/branch
+     * POST /api/github/task/{taskId}/branch?teamId=1&memberNo=123
      */
     @PostMapping("/task/{taskId}/branch")
     public ResponseEntity<?> createTaskBranch(
             @PathVariable int taskId,
             @RequestParam int teamId,
+            @RequestParam int memberNo,
             @RequestBody Map<String, String> body) {
         try {
             Team team = teamService.findById(teamId);
@@ -667,9 +708,10 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
             }
 
-            String accessToken = getLeaderAccessToken(team);
-            if (accessToken == null) {
-                return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다. 팀장이 GitHub에 로그인해야 합니다.");
+            // 회원의 GitHub 연결 상태 확인 (필수)
+            GitHubConnectionCheck check = checkMemberGitHubConnection(memberNo);
+            if (!check.connected) {
+                return ResponseEntity.badRequest().body(check.errorMessage);
             }
 
             // 연결된 Issue 번호 조회
@@ -688,7 +730,7 @@ public class GitHubController {
             }
 
             // 기본 브랜치에서 분기
-            String defaultBranch = gitHubService.getDefaultBranch(accessToken, repoInfo.owner, repoInfo.repo);
+            String defaultBranch = gitHubService.getDefaultBranch(check.accessToken, repoInfo.owner, repoInfo.repo);
             String baseSha = body.get("baseSha");
             if (baseSha == null || baseSha.isEmpty()) {
                 // 기본 브랜치의 최신 커밋 SHA 조회
@@ -699,7 +741,7 @@ public class GitHubController {
                 baseSha = commits.get(0).getSha();
             }
 
-            gitHubService.createBranch(accessToken, repoInfo.owner, repoInfo.repo, branchName.trim(), baseSha);
+            gitHubService.createBranch(check.accessToken, repoInfo.owner, repoInfo.repo, branchName.trim(), baseSha);
 
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
@@ -716,12 +758,13 @@ public class GitHubController {
 
     /**
      * Task에서 Pull Request를 생성합니다.
-     * POST /api/github/task/{taskId}/pr
+     * POST /api/github/task/{taskId}/pr?teamId=1&memberNo=123
      */
     @PostMapping("/task/{taskId}/pr")
     public ResponseEntity<?> createTaskPR(
             @PathVariable int taskId,
             @RequestParam int teamId,
+            @RequestParam int memberNo,
             @RequestBody Map<String, String> body) {
         try {
             Team team = teamService.findById(teamId);
@@ -739,9 +782,10 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
             }
 
-            String accessToken = getLeaderAccessToken(team);
-            if (accessToken == null) {
-                return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다. 팀장이 GitHub에 로그인해야 합니다.");
+            // 회원의 GitHub 연결 상태 확인 (필수)
+            GitHubConnectionCheck check = checkMemberGitHubConnection(memberNo);
+            if (!check.connected) {
+                return ResponseEntity.badRequest().body(check.errorMessage);
             }
 
             String headBranch = body.get("head");
@@ -754,7 +798,7 @@ public class GitHubController {
             }
 
             if (baseBranch == null || baseBranch.isEmpty()) {
-                baseBranch = gitHubService.getDefaultBranch(accessToken, repoInfo.owner, repoInfo.repo);
+                baseBranch = gitHubService.getDefaultBranch(check.accessToken, repoInfo.owner, repoInfo.repo);
             }
 
             // 연결된 Issue 번호 조회
@@ -770,7 +814,7 @@ public class GitHubController {
 
             // PR 생성
             GitHubPullRequest pr = gitHubService.createPullRequest(
-                accessToken, repoInfo.owner, repoInfo.repo,
+                check.accessToken, repoInfo.owner, repoInfo.repo,
                 title, prBody, headBranch, baseBranch
             );
 
@@ -805,10 +849,13 @@ public class GitHubController {
      * Task에 연결된 PR 목록을 조회합니다.
      * - Synodos에서 직접 생성한 PR (task_github_pr 테이블)
      * - Task에 연결된 Issue를 참조하는 PR (GitHub API에서 검색)
-     * GET /api/github/task/{taskId}/prs
+     * GET /api/github/task/{taskId}/prs?teamId=1&memberNo=123
      */
     @GetMapping("/task/{taskId}/prs")
-    public ResponseEntity<?> getTaskPRs(@PathVariable int taskId, @RequestParam int teamId) {
+    public ResponseEntity<?> getTaskPRs(
+            @PathVariable int taskId,
+            @RequestParam int teamId,
+            @RequestParam(required = false, defaultValue = "0") int memberNo) {
         try {
             Team team = teamService.findById(teamId);
             if (team == null) {
@@ -817,7 +864,11 @@ public class GitHubController {
 
             String repoUrl = team.getGithubRepoUrl();
             RepoInfo repoInfo = repoUrl != null ? gitHubService.parseRepoUrl(repoUrl) : null;
-            String accessToken = getLeaderAccessToken(team);
+            // 회원 토큰 우선, 없으면 팀장 토큰 사용
+            String accessToken = memberNo > 0 ? getMemberAccessToken(memberNo) : null;
+            if (accessToken == null) {
+                accessToken = getLeaderAccessToken(team);
+            }
 
             // 1. DB에서 저장된 PR 목록 조회
             List<TaskGitHubPR> prs = taskGitHubPRDao.listByTask(taskId);
@@ -905,12 +956,13 @@ public class GitHubController {
 
     /**
      * 팀의 모든 PR 목록을 조회합니다.
-     * GET /api/github/prs/{teamId}
+     * GET /api/github/prs/{teamId}?memberNo=123
      */
     @GetMapping("/prs/{teamId}")
     public ResponseEntity<?> getTeamPRs(
             @PathVariable int teamId,
-            @RequestParam(defaultValue = "all") String state) {
+            @RequestParam(defaultValue = "all") String state,
+            @RequestParam(required = false, defaultValue = "0") int memberNo) {
         try {
             Team team = teamService.findById(teamId);
             if (team == null) {
@@ -927,7 +979,11 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
             }
 
-            String accessToken = getLeaderAccessToken(team);
+            // 회원 토큰 우선, 없으면 팀장 토큰 사용
+            String accessToken = memberNo > 0 ? getMemberAccessToken(memberNo) : null;
+            if (accessToken == null) {
+                accessToken = getLeaderAccessToken(team);
+            }
             if (accessToken == null) {
                 return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다.");
             }
@@ -945,12 +1001,13 @@ public class GitHubController {
 
     /**
      * PR 상세 정보 조회 (머지 가능 여부, 충돌 파일 포함)
-     * GET /api/github/pr/{teamId}/{prNumber}/detail
+     * GET /api/github/pr/{teamId}/{prNumber}/detail?memberNo=123
      */
     @GetMapping("/pr/{teamId}/{prNumber}/detail")
     public ResponseEntity<?> getPRDetail(
             @PathVariable int teamId,
-            @PathVariable int prNumber) {
+            @PathVariable int prNumber,
+            @RequestParam(required = false, defaultValue = "0") int memberNo) {
         try {
             Team team = teamService.findById(teamId);
             if (team == null) {
@@ -967,7 +1024,11 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
             }
 
-            String accessToken = getLeaderAccessToken(team);
+            // 회원 토큰 우선, 없으면 팀장 토큰 사용
+            String accessToken = memberNo > 0 ? getMemberAccessToken(memberNo) : null;
+            if (accessToken == null) {
+                accessToken = getLeaderAccessToken(team);
+            }
             if (accessToken == null) {
                 return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다.");
             }
@@ -987,12 +1048,13 @@ public class GitHubController {
     /**
      * PR을 머지합니다.
      * PUT /api/github/pr/{teamId}/{prNumber}/merge
+     * Body: { "commitTitle": "...", "mergeMethod": "merge", "memberNo": 123 }
      */
     @PutMapping("/pr/{teamId}/{prNumber}/merge")
     public ResponseEntity<?> mergePR(
             @PathVariable int teamId,
             @PathVariable int prNumber,
-            @RequestBody(required = false) Map<String, String> body) {
+            @RequestBody(required = false) Map<String, Object> body) {
         try {
             Team team = teamService.findById(teamId);
             if (team == null) {
@@ -1009,16 +1071,21 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
             }
 
-            String accessToken = getLeaderAccessToken(team);
-            if (accessToken == null) {
-                return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다.");
+            String commitTitle = body != null ? (String) body.get("commitTitle") : null;
+            String mergeMethod = body != null ? (String) body.get("mergeMethod") : "merge";
+            Integer memberNo = body != null && body.get("memberNo") != null ? ((Number) body.get("memberNo")).intValue() : null;
+
+            // 회원의 GitHub 연결 상태 확인 (필수)
+            GitHubConnectionCheck check = memberNo != null
+                ? checkMemberGitHubConnection(memberNo)
+                : GitHubConnectionCheck.failure("GitHub 작업을 수행하려면 로그인이 필요합니다.");
+
+            if (!check.connected) {
+                return ResponseEntity.badRequest().body(check.errorMessage);
             }
 
-            String commitTitle = body != null ? body.get("commitTitle") : null;
-            String mergeMethod = body != null ? body.get("mergeMethod") : "merge";
-
             GitHubMergeResult result = gitHubService.mergePullRequest(
-                accessToken, repoInfo.owner, repoInfo.repo, prNumber, commitTitle, mergeMethod
+                check.accessToken, repoInfo.owner, repoInfo.repo, prNumber, commitTitle, mergeMethod
             );
 
             // DB 상태 업데이트
@@ -1042,13 +1109,14 @@ public class GitHubController {
 
     /**
      * 충돌 파일의 양쪽 버전을 조회합니다.
-     * GET /api/github/pr/{teamId}/{prNumber}/conflict/{filename}
+     * GET /api/github/pr/{teamId}/{prNumber}/conflict/{filename}?memberNo=123
      */
     @GetMapping("/pr/{teamId}/{prNumber}/conflict/{filename:.+}")
     public ResponseEntity<?> getConflictFileVersions(
             @PathVariable int teamId,
             @PathVariable int prNumber,
-            @PathVariable String filename) {
+            @PathVariable String filename,
+            @RequestParam(required = false, defaultValue = "0") int memberNo) {
         try {
             Team team = teamService.findById(teamId);
             if (team == null) {
@@ -1065,7 +1133,11 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
             }
 
-            String accessToken = getLeaderAccessToken(team);
+            // 회원 토큰 우선, 없으면 팀장 토큰 사용
+            String accessToken = memberNo > 0 ? getMemberAccessToken(memberNo) : null;
+            if (accessToken == null) {
+                accessToken = getLeaderAccessToken(team);
+            }
             if (accessToken == null) {
                 return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다.");
             }
@@ -1095,15 +1167,17 @@ public class GitHubController {
     /**
      * AI를 사용하여 충돌을 해결합니다.
      * POST /api/github/pr/{teamId}/{prNumber}/ai-resolve
-     * Body: { "filename": "path/to/file.java" }
+     * Body: { "filename": "path/to/file.java", "memberNo": 123 }
      */
     @PostMapping("/pr/{teamId}/{prNumber}/ai-resolve")
     public ResponseEntity<?> aiResolveConflict(
             @PathVariable int teamId,
             @PathVariable int prNumber,
-            @RequestBody Map<String, String> body) {
+            @RequestBody Map<String, Object> body) {
         try {
-            String filename = body.get("filename");
+            String filename = (String) body.get("filename");
+            Integer memberNo = body.get("memberNo") != null ? ((Number) body.get("memberNo")).intValue() : null;
+
             if (filename == null || filename.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("파일명이 필요합니다.");
             }
@@ -1123,7 +1197,11 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
             }
 
-            String accessToken = getLeaderAccessToken(team);
+            // 회원 토큰 우선, 없으면 팀장 토큰 사용 (읽기 작업이므로 폴백 허용)
+            String accessToken = memberNo != null && memberNo > 0 ? getMemberAccessToken(memberNo) : null;
+            if (accessToken == null) {
+                accessToken = getLeaderAccessToken(team);
+            }
             if (accessToken == null) {
                 return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다.");
             }
@@ -1175,17 +1253,18 @@ public class GitHubController {
     /**
      * AI가 해결한 코드를 GitHub에 커밋합니다.
      * POST /api/github/pr/{teamId}/{prNumber}/apply-resolution
-     * Body: { "filename": "...", "resolvedCode": "...", "headSha": "..." }
+     * Body: { "filename": "...", "resolvedCode": "...", "headSha": "...", "memberNo": 123 }
      */
     @PostMapping("/pr/{teamId}/{prNumber}/apply-resolution")
     public ResponseEntity<?> applyResolution(
             @PathVariable int teamId,
             @PathVariable int prNumber,
-            @RequestBody Map<String, String> body) {
+            @RequestBody Map<String, Object> body) {
         try {
-            String filename = body.get("filename");
-            String resolvedCode = body.get("resolvedCode");
-            String headSha = body.get("headSha");
+            String filename = (String) body.get("filename");
+            String resolvedCode = (String) body.get("resolvedCode");
+            String headSha = (String) body.get("headSha");
+            Integer memberNo = body.get("memberNo") != null ? ((Number) body.get("memberNo")).intValue() : null;
 
             if (filename == null || filename.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("파일명이 필요합니다.");
@@ -1212,14 +1291,18 @@ public class GitHubController {
                 return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
             }
 
-            String accessToken = getLeaderAccessToken(team);
-            if (accessToken == null) {
-                return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다.");
+            // 회원의 GitHub 연결 상태 확인 (필수 - 쓰기 작업)
+            GitHubConnectionCheck check = memberNo != null
+                ? checkMemberGitHubConnection(memberNo)
+                : GitHubConnectionCheck.failure("GitHub 작업을 수행하려면 로그인이 필요합니다.");
+
+            if (!check.connected) {
+                return ResponseEntity.badRequest().body(check.errorMessage);
             }
 
             // PR 정보 조회
             GitHubPullRequest pr = gitHubService.getPullRequest(
-                accessToken, repoInfo.owner, repoInfo.repo, prNumber
+                check.accessToken, repoInfo.owner, repoInfo.repo, prNumber
             );
             if (pr == null) {
                 return ResponseEntity.badRequest().body("PR을 찾을 수 없습니다.");
@@ -1227,7 +1310,7 @@ public class GitHubController {
 
             // 머지 커밋 생성 (base 브랜치를 head 브랜치에 머지하면서 충돌 해결)
             GitHubService.FileUpdateResult updateResult = gitHubService.createMergeCommitWithResolvedFile(
-                accessToken, repoInfo.owner, repoInfo.repo,
+                check.accessToken, repoInfo.owner, repoInfo.repo,
                 pr.getHeadRef(), pr.getBaseRef(),
                 filename, resolvedCode
             );
@@ -1250,7 +1333,9 @@ public class GitHubController {
 
     /**
      * 팀장의 GitHub 액세스 토큰을 조회합니다.
+     * @deprecated 개별 회원 토큰 사용으로 변경됨. getMemberAccessToken 사용 권장.
      */
+    @Deprecated
     private String getLeaderAccessToken(Team team) {
         if (team == null || team.getLeaderNo() <= 0) {
             return null;
@@ -1260,5 +1345,56 @@ public class GitHubController {
             return leader.getGithubAccessToken();
         }
         return null;
+    }
+
+    /**
+     * 특정 회원의 GitHub 액세스 토큰을 조회합니다.
+     */
+    private String getMemberAccessToken(int memberNo) {
+        if (memberNo <= 0) {
+            return null;
+        }
+        Member member = memberDao.findByNo(memberNo);
+        if (member != null && member.getGithubAccessToken() != null && !member.getGithubAccessToken().isEmpty()) {
+            return member.getGithubAccessToken();
+        }
+        return null;
+    }
+
+    /**
+     * 회원의 GitHub 연결 상태 확인 결과를 담는 클래스
+     */
+    public static class GitHubConnectionCheck {
+        public final boolean connected;
+        public final String accessToken;
+        public final String errorMessage;
+
+        private GitHubConnectionCheck(boolean connected, String accessToken, String errorMessage) {
+            this.connected = connected;
+            this.accessToken = accessToken;
+            this.errorMessage = errorMessage;
+        }
+
+        public static GitHubConnectionCheck success(String accessToken) {
+            return new GitHubConnectionCheck(true, accessToken, null);
+        }
+
+        public static GitHubConnectionCheck failure(String errorMessage) {
+            return new GitHubConnectionCheck(false, null, errorMessage);
+        }
+    }
+
+    /**
+     * 회원의 GitHub 연결 상태를 확인하고 토큰을 반환합니다.
+     */
+    private GitHubConnectionCheck checkMemberGitHubConnection(int memberNo) {
+        if (memberNo <= 0) {
+            return GitHubConnectionCheck.failure("회원 정보가 필요합니다.");
+        }
+        String accessToken = getMemberAccessToken(memberNo);
+        if (accessToken == null) {
+            return GitHubConnectionCheck.failure("GitHub 계정을 연결해주세요. 마이페이지 > 소셜 계정 연동에서 GitHub를 연결할 수 있습니다.");
+        }
+        return GitHubConnectionCheck.success(accessToken);
     }
 }

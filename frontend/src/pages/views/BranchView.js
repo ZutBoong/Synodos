@@ -89,6 +89,12 @@ function BranchView({ team, loginMember }) {
     }, []);
 
     const isGithubConnected = team?.githubRepoUrl && team.githubRepoUrl.trim() !== '';
+    const isUserGithubConnected = loginMember?.githubUsername && loginMember.githubUsername.trim() !== '';
+
+    // GitHub 미연결 시 안내 메시지
+    const showGithubWarning = () => {
+        alert('GitHub 계정을 연결해주세요.\n마이페이지 > 소셜 계정 연동에서 GitHub를 연결할 수 있습니다.');
+    };
 
     // localStorage 키 생성
     const getStorageKey = (teamId) => `branchView_selectedBranches_${teamId}`;
@@ -100,8 +106,8 @@ function BranchView({ team, loginMember }) {
         const loadBranches = async () => {
             try {
                 const [branchList, defaultBranchData] = await Promise.all([
-                    getBranches(team.teamId),
-                    getDefaultBranch(team.teamId)
+                    getBranches(team.teamId, loginMember?.no),
+                    getDefaultBranch(team.teamId, loginMember?.no)
                 ]);
                 setBranches(branchList);
                 setDefaultBranch(defaultBranchData.defaultBranch || 'main');
@@ -363,13 +369,18 @@ function BranchView({ team, loginMember }) {
     const handleCreateBranch = async (branchName) => {
         if (!branchName?.trim() || !createBranchDialog?.sha) return;
 
+        if (!isUserGithubConnected) {
+            showGithubWarning();
+            return;
+        }
+
         setDialogLoading(true);
         setDialogError(null);
         try {
-            await createBranch(team.teamId, branchName.trim(), createBranchDialog.sha);
+            await createBranch(team.teamId, branchName.trim(), createBranchDialog.sha, loginMember?.no);
             setCreateBranchDialog(null);
             // 브랜치 목록 새로고침
-            const branchList = await getBranches(team.teamId);
+            const branchList = await getBranches(team.teamId, loginMember?.no);
             setBranches(branchList);
             // 새 브랜치를 선택된 브랜치에 추가
             if (!selectedBranches.includes(branchName.trim())) {
@@ -388,10 +399,15 @@ function BranchView({ team, loginMember }) {
     const handleMergeBranch = async (base, commitMessage) => {
         if (!base || !mergeDialog?.head) return;
 
+        if (!isUserGithubConnected) {
+            showGithubWarning();
+            return;
+        }
+
         setDialogLoading(true);
         setDialogError(null);
         try {
-            const result = await mergeBranchesApi(team.teamId, base, mergeDialog.head, commitMessage || null);
+            const result = await mergeBranchesApi(team.teamId, base, mergeDialog.head, commitMessage || null, loginMember?.no);
             setMergeDialog(null);
             if (result.success) {
                 alert(result.message || '머지가 완료되었습니다.');
@@ -410,6 +426,11 @@ function BranchView({ team, loginMember }) {
     // PR 생성 핸들러
     const handleCreatePR = async (base, title, body, taskId) => {
         if (!base || !mergeDialog?.head || !title?.trim()) return;
+
+        if (!isUserGithubConnected) {
+            showGithubWarning();
+            return;
+        }
 
         setDialogLoading(true);
         setDialogError(null);
@@ -432,7 +453,7 @@ function BranchView({ team, loginMember }) {
             // Task가 연결된 경우 task PR API 사용, 아니면 일반 PR API 사용
             let response;
             if (taskId) {
-                response = await axiosInstance.post(`/api/github/task/${taskId}/pr?teamId=${team.teamId}`, {
+                response = await axiosInstance.post(`/api/github/task/${taskId}/pr?teamId=${team.teamId}&memberNo=${loginMember?.no}`, {
                     head: mergeDialog.head,
                     base: base,
                     title: title.trim(),
@@ -443,7 +464,8 @@ function BranchView({ team, loginMember }) {
                     head: mergeDialog.head,
                     base: base,
                     title: title.trim(),
-                    body: finalBody
+                    body: finalBody,
+                    memberNo: loginMember?.no
                 });
             }
 
@@ -471,6 +493,11 @@ function BranchView({ team, loginMember }) {
     const handleMergeCommit = async (base) => {
         if (!base || !mergeCommitDialog?.sha) return;
 
+        if (!isUserGithubConnected) {
+            showGithubWarning();
+            return;
+        }
+
         setDialogLoading(true);
         setDialogError(null);
 
@@ -479,16 +506,16 @@ function BranchView({ team, loginMember }) {
 
         try {
             // 1. 해당 커밋에서 임시 브랜치 생성
-            await createBranch(team.teamId, tempBranchName, mergeCommitDialog.sha);
+            await createBranch(team.teamId, tempBranchName, mergeCommitDialog.sha, loginMember?.no);
             tempBranchCreated = true;
 
             // 2. 임시 브랜치를 대상 브랜치에 머지
             const result = await mergeBranchesApi(team.teamId, base, tempBranchName,
-                `Merge commit ${mergeCommitDialog.shortSha} into ${base}`);
+                `Merge commit ${mergeCommitDialog.shortSha} into ${base}`, loginMember?.no);
 
             // 3. 임시 브랜치 삭제
             try {
-                await deleteBranch(team.teamId, tempBranchName);
+                await deleteBranch(team.teamId, tempBranchName, loginMember?.no);
             } catch (deleteErr) {
                 console.warn('임시 브랜치 삭제 실패:', deleteErr);
             }
@@ -505,7 +532,7 @@ function BranchView({ team, loginMember }) {
             // 실패 시 임시 브랜치 정리 시도
             if (tempBranchCreated) {
                 try {
-                    await deleteBranch(team.teamId, tempBranchName);
+                    await deleteBranch(team.teamId, tempBranchName, loginMember?.no);
                 } catch (deleteErr) {
                     console.warn('임시 브랜치 정리 실패:', deleteErr);
                 }
@@ -520,6 +547,11 @@ function BranchView({ team, loginMember }) {
     const handleCreatePRFromCommit = async (base, title, body, taskId) => {
         if (!base || !mergeCommitDialog?.sha || !title?.trim()) return;
 
+        if (!isUserGithubConnected) {
+            showGithubWarning();
+            return;
+        }
+
         setDialogLoading(true);
         setDialogError(null);
 
@@ -528,7 +560,7 @@ function BranchView({ team, loginMember }) {
 
         try {
             // 1. 해당 커밋에서 브랜치 생성
-            await createBranch(team.teamId, branchName, mergeCommitDialog.sha);
+            await createBranch(team.teamId, branchName, mergeCommitDialog.sha, loginMember?.no);
 
             let finalBody = body || '';
 
@@ -553,7 +585,7 @@ function BranchView({ team, loginMember }) {
             // 2. PR 생성
             let response;
             if (taskId) {
-                response = await axiosInstance.post(`/api/github/task/${taskId}/pr?teamId=${team.teamId}`, {
+                response = await axiosInstance.post(`/api/github/task/${taskId}/pr?teamId=${team.teamId}&memberNo=${loginMember?.no}`, {
                     head: branchName,
                     base: base,
                     title: title.trim(),
@@ -564,7 +596,8 @@ function BranchView({ team, loginMember }) {
                     head: branchName,
                     base: base,
                     title: title.trim(),
-                    body: finalBody
+                    body: finalBody,
+                    memberNo: loginMember?.no
                 });
             }
 
@@ -578,7 +611,7 @@ function BranchView({ team, loginMember }) {
                 alert(`PR #${prNumber}이(가) 생성되었습니다.${taskInfo}\n\n브랜치: ${branchName}`);
 
                 // 브랜치 목록 새로고침
-                const branchList = await getBranches(team.teamId);
+                const branchList = await getBranches(team.teamId, loginMember?.no);
                 setBranches(branchList);
 
                 if (prUrl && window.confirm('GitHub에서 PR을 확인하시겠습니까?')) {
@@ -587,7 +620,7 @@ function BranchView({ team, loginMember }) {
             } else {
                 // 실패 시 생성된 브랜치 정리
                 try {
-                    await deleteBranch(team.teamId, branchName);
+                    await deleteBranch(team.teamId, branchName, loginMember?.no);
                 } catch (deleteErr) {
                     console.warn('브랜치 정리 실패:', deleteErr);
                 }
@@ -596,7 +629,7 @@ function BranchView({ team, loginMember }) {
         } catch (err) {
             // 실패 시 브랜치 정리 시도
             try {
-                await deleteBranch(team.teamId, branchName);
+                await deleteBranch(team.teamId, branchName, loginMember?.no);
             } catch (deleteErr) {
                 console.warn('브랜치 정리 실패:', deleteErr);
             }
@@ -610,11 +643,16 @@ function BranchView({ team, loginMember }) {
     const handleRevertCommit = async () => {
         if (!revertDialog?.sha || !revertDialog?.branch) return;
 
+        if (!isUserGithubConnected) {
+            showGithubWarning();
+            return;
+        }
+
         setDialogLoading(true);
         setDialogError(null);
 
         try {
-            const result = await revertCommit(team.teamId, revertDialog.branch, revertDialog.sha);
+            const result = await revertCommit(team.teamId, revertDialog.branch, revertDialog.sha, loginMember?.no);
             setRevertDialog(null);
 
             if (result.success) {
@@ -633,10 +671,15 @@ function BranchView({ team, loginMember }) {
     const handleDeleteBranch = async () => {
         if (!deleteConfirmDialog?.branchName) return;
 
+        if (!isUserGithubConnected) {
+            showGithubWarning();
+            return;
+        }
+
         setDialogLoading(true);
         setDialogError(null);
         try {
-            await deleteBranch(team.teamId, deleteConfirmDialog.branchName);
+            await deleteBranch(team.teamId, deleteConfirmDialog.branchName, loginMember?.no);
             const deletedBranch = deleteConfirmDialog.branchName;
             setDeleteConfirmDialog(null);
             // 브랜치 목록에서 제거
@@ -661,7 +704,7 @@ function BranchView({ team, loginMember }) {
         setError(null);
 
         try {
-            const data = await getCommitsGraph(team.teamId, selectedBranches, depth);
+            const data = await getCommitsGraph(team.teamId, selectedBranches, depth, loginMember?.no);
             setCommitsByBranch(data.commitsByBranch || {});
         } catch (err) {
             console.error('Failed to load commits graph:', err);
@@ -669,7 +712,7 @@ function BranchView({ team, loginMember }) {
         } finally {
             setLoading(false);
         }
-    }, [isGithubConnected, team?.teamId, selectedBranches, depth]);
+    }, [isGithubConnected, team?.teamId, selectedBranches, depth, loginMember?.no]);
 
     // 검색 필터링
     const filterCommits = (commits) => {
@@ -1325,6 +1368,17 @@ function BranchView({ team, loginMember }) {
 
     return (
         <div className="branch-view dark" onClick={handleBackgroundClick}>
+            {/* GitHub 미연결 경고 배너 */}
+            {!isUserGithubConnected && (
+                <div className="github-warning-banner">
+                    <i className="fa-brands fa-github"></i>
+                    <span>GitHub 계정이 연결되지 않았습니다. 브랜치 작업(생성, 머지, 삭제 등)을 하려면 </span>
+                    <a href="/mypage" onClick={(e) => { e.stopPropagation(); }}>마이페이지</a>
+                    <span>에서 GitHub를 연결해주세요.</span>
+                </div>
+            )}
+            {/* 메인 콘텐츠 영역 */}
+            <div className="branch-view-content">
             {/* 좌측 브랜치 패널 */}
             <div className="branch-panel">
                 <div className="panel-header">
@@ -1991,6 +2045,7 @@ function BranchView({ team, loginMember }) {
                     </div>
                 </div>
             )}
+            </div>
 
             {/* 브랜치 생성 다이얼로그 */}
             {createBranchDialog && (
