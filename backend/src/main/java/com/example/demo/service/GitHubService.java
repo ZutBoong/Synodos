@@ -833,9 +833,18 @@ public class GitHubService {
                 apiUrl, HttpMethod.POST, entity, String.class
             );
 
-            JsonNode node = objectMapper.readTree(response.getBody());
-
             GitHubMergeResult result = new GitHubMergeResult();
+
+            // 204 No Content = 이미 최신 상태 (머지할 변경사항 없음)
+            if (response.getStatusCode().value() == 204 || response.getBody() == null || response.getBody().isEmpty()) {
+                result.setMerged(true);
+                result.setMessage("이미 최신 상태입니다. 머지할 변경사항이 없습니다.");
+                log.info("Already up to date: {} <- {}", base, head);
+                return result;
+            }
+
+            // 201 Created = 머지 성공
+            JsonNode node = objectMapper.readTree(response.getBody());
             result.setSha(node.path("sha").asText());
             result.setMerged(true);
             result.setMessage("머지가 완료되었습니다.");
@@ -848,17 +857,13 @@ public class GitHubService {
             GitHubMergeResult result = new GitHubMergeResult();
             result.setMerged(false);
 
-            if (e.getMessage().contains("409")) {
+            String errorMsg = e.getMessage() != null ? e.getMessage() : "";
+            if (errorMsg.contains("409")) {
                 result.setMessage("머지 충돌이 있습니다. GitHub에서 직접 해결해주세요.");
-            } else if (e.getMessage().contains("404")) {
+            } else if (errorMsg.contains("404")) {
                 result.setMessage("브랜치를 찾을 수 없습니다.");
-            } else if (e.getMessage().contains("204")) {
-                // 204 No Content = 이미 최신 상태
-                result.setMerged(true);
-                result.setMessage("이미 최신 상태입니다. 머지할 변경사항이 없습니다.");
-                return result;
             } else {
-                result.setMessage("머지에 실패했습니다: " + e.getMessage());
+                result.setMessage("머지에 실패했습니다: " + errorMsg);
             }
 
             return result;
