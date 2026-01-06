@@ -119,14 +119,14 @@ function FilesView({ team, teamMembers, loginMember, filters }) {
                                         onClick={() => handleDownload(file)}
                                         title="다운로드"
                                     >
-                                        <i className="fa-solid fa-arrow-down"></i>
+                                        다운로드
                                     </button>
                                     <button
                                         className="delete-btn"
                                         onClick={() => handleDelete(file.fileId)}
                                         title="삭제"
                                     >
-                                        <i className="fa-solid fa-xmark"></i>
+                                        삭제
                                     </button>
                                 </div>
                             </div>

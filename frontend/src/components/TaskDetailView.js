@@ -1177,7 +1177,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                                             onClick={() => handleFileDownload(file.fileId, file.originalName)}
                                             title="다운로드"
                                         >
-                                            <i className="fa-solid fa-arrow-down"></i>
+                                            다운로드
                                         </button>
                                         {loginMember?.no === file.uploaderNo && (
                                             <button
@@ -1185,7 +1185,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                                                 onClick={() => handleFileDelete(file.fileId)}
                                                 title="삭제"
                                             >
-                                                <i className="fa-solid fa-xmark"></i>
+                                                삭제
                                             </button>
                                         )}
                                     </div>
