@@ -29,18 +29,16 @@ public class NotificationService {
 
     // WebSocket으로 실시간 알림 전송
     private void sendWebSocketNotification(Notification notification) {
-        if (notification.getRecipientNo() != null) {
-            // 발신자 이름 조회
-            if (notification.getSenderNo() != null) {
-                var sender = memberDao.content(notification.getSenderNo());
-                if (sender != null) {
-                    notification.setSenderName(sender.getMemberName());
-                }
+        // 발신자 이름 조회
+        if (notification.getSenderNo() != null) {
+            var sender = memberDao.findByNo(notification.getSenderNo());
+            if (sender != null) {
+                notification.setSenderName(sender.getName());
             }
-            String destination = "/topic/user/" + notification.getRecipientNo() + "/notifications";
-            System.out.println("WebSocket notification to " + destination + ": " + notification.getTitle());
-            messagingTemplate.convertAndSend(destination, notification);
         }
+        String destination = "/topic/user/" + notification.getRecipientNo() + "/notifications";
+        System.out.println("WebSocket notification to " + destination + ": " + notification.getTitle());
+        messagingTemplate.convertAndSend(destination, notification);
     }
 
     // 팀 초대 알림
