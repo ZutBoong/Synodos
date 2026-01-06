@@ -104,6 +104,51 @@ class WebSocketService {
         }
     }
 
+    // 사용자 알림 구독
+    subscribeToUserNotifications(memberNo, onNotification) {
+        const destination = `/topic/user/${memberNo}/notifications`;
+
+        // 기존 구독 해제
+        if (this.subscriptions[destination]) {
+            try {
+                this.subscriptions[destination].unsubscribe();
+            } catch (e) {
+                console.warn('Unsubscribe error:', e);
+            }
+            delete this.subscriptions[destination];
+        }
+
+        if (this.client && this.connected) {
+            console.log('Subscribing to notifications:', destination);
+            this.subscriptions[destination] = this.client.subscribe(
+                destination,
+                (message) => {
+                    try {
+                        const notification = JSON.parse(message.body);
+                        console.log('Received notification:', notification);
+                        onNotification(notification);
+                    } catch (e) {
+                        console.error('Error parsing notification:', e);
+                    }
+                }
+            );
+        } else {
+            console.warn('Cannot subscribe to notifications - not connected');
+        }
+    }
+
+    unsubscribeFromUserNotifications(memberNo) {
+        const destination = `/topic/user/${memberNo}/notifications`;
+        if (this.subscriptions[destination]) {
+            try {
+                this.subscriptions[destination].unsubscribe();
+            } catch (e) {
+                console.warn('Unsubscribe error:', e);
+            }
+            delete this.subscriptions[destination];
+        }
+    }
+
     isConnected() {
         return this.connected;
     }

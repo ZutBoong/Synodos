@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { columnlistByTeam, tasklistByTeam } from '../api/boardApi';
 import { getTeam, getTeamMembers } from '../api/teamApi';
+import { getProfileImageUrl } from '../api/memberApi';
 import websocketService from '../api/websocketService';
 import Sidebar from '../components/Sidebar';
 import OverviewView from './views/OverviewView';
@@ -464,7 +465,11 @@ function TeamView() {
                                             .map(member => (
                                             <div key={member.memberNo} className={`member-item ${member.role === 'LEADER' ? 'leader' : ''}`}>
                                                 <div className="member-avatar">
-                                                    {member.memberName?.charAt(0) || 'U'}
+                                                    {member.profileImage ? (
+                                                        <img src={getProfileImageUrl(member.memberNo)} alt="" className="member-avatar-img" />
+                                                    ) : (
+                                                        member.memberName?.charAt(0) || 'U'
+                                                    )}
                                                     <span className="status-dot online"></span>
                                                 </div>
                                                 <div className="member-info">
@@ -490,7 +495,11 @@ function TeamView() {
                                             .map(member => (
                                             <div key={member.memberNo} className={`member-item offline ${member.role === 'LEADER' ? 'leader' : ''}`}>
                                                 <div className="member-avatar">
-                                                    {member.memberName?.charAt(0) || 'U'}
+                                                    {member.profileImage ? (
+                                                        <img src={getProfileImageUrl(member.memberNo)} alt="" className="member-avatar-img" />
+                                                    ) : (
+                                                        member.memberName?.charAt(0) || 'U'
+                                                    )}
                                                     <span className="status-dot"></span>
                                                 </div>
                                                 <div className="member-info">
@@ -521,7 +530,11 @@ function TeamView() {
                                         className={`member-avatar-collapsed ${member.role === 'LEADER' ? 'leader' : ''}`}
                                         title={`${member.memberName} (${member.memberUserid})`}
                                     >
-                                        {member.memberName?.charAt(0) || 'U'}
+                                        {member.profileImage ? (
+                                            <img src={getProfileImageUrl(member.memberNo)} alt="" className="member-avatar-img" />
+                                        ) : (
+                                            member.memberName?.charAt(0) || 'U'
+                                        )}
                                         <span className={`status-dot ${onlineMembers.includes(member.memberNo) ? 'online' : ''}`}></span>
                                     </div>
                                 ))}

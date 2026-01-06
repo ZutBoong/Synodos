@@ -13,4 +13,5 @@ public class TeamMember {
 	private Date joinedAt;
 	private String memberName; // 조회용
 	private String memberUserid; // 조회용
+	private String profileImage; // 조회용
 }

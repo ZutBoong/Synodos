@@ -2,8 +2,10 @@ package com.example.demo.service;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import com.example.demo.dao.NotificationDao;
+import com.example.demo.dao.MemberDao;
 import com.example.demo.model.Notification;
 
 @Service
@@ -12,9 +14,33 @@ public class NotificationService {
     @Autowired
     private NotificationDao dao;
 
+    @Autowired
+    private MemberDao memberDao;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
     // 알림 생성
     public int createNotification(Notification notification) {
-        return dao.insert(notification);
+        int result = dao.insert(notification);
+        sendWebSocketNotification(notification);
+        return result;
+    }
+
+    // WebSocket으로 실시간 알림 전송
+    private void sendWebSocketNotification(Notification notification) {
+        if (notification.getRecipientNo() != null) {
+            // 발신자 이름 조회
+            if (notification.getSenderNo() != null) {
+                var sender = memberDao.content(notification.getSenderNo());
+                if (sender != null) {
+                    notification.setSenderName(sender.getMemberName());
+                }
+            }
+            String destination = "/topic/user/" + notification.getRecipientNo() + "/notifications";
+            System.out.println("WebSocket notification to " + destination + ": " + notification.getTitle());
+            messagingTemplate.convertAndSend(destination, notification);
+        }
     }
 
     // 팀 초대 알림
@@ -27,6 +53,7 @@ public class NotificationService {
         n.setMessage(teamName + " 팀에 초대되었습니다.");
         n.setTeamId(teamId);
         dao.insert(n);
+        sendWebSocketNotification(n);
     }
 
     // 태스크 담당자 지정 알림
@@ -40,6 +67,7 @@ public class NotificationService {
         n.setTaskId(taskId);
         n.setTeamId(teamId);
         dao.insert(n);
+        sendWebSocketNotification(n);
     }
 
     // 컬럼 변경 알림 (담당자들에게)
@@ -52,6 +80,7 @@ public class NotificationService {
         n.setMessage("'" + columnTitle + "' 컬럼이 변경되었습니다: " + changeDescription);
         n.setColumnId(columnId);
         dao.insert(n);
+        sendWebSocketNotification(n);
     }
 
     // 태스크 변경 알림 (담당자에게)
@@ -64,6 +93,7 @@ public class NotificationService {
         n.setMessage("'" + taskTitle + "' 태스크가 변경되었습니다: " + changeDescription);
         n.setTaskId(taskId);
         dao.insert(n);
+        sendWebSocketNotification(n);
     }
 
     // 범용 알림 발송 (워크플로우용)
@@ -78,6 +108,7 @@ public class NotificationService {
         n.setColumnId(columnId);
         n.setTaskId(taskId);
         dao.insert(n);
+        sendWebSocketNotification(n);
     }
 
     // 알림 목록 조회
@@ -128,6 +159,7 @@ public class NotificationService {
         n.setTaskId(taskId);
         n.setTeamId(teamId);
         dao.insert(n);
+        sendWebSocketNotification(n);
     }
 
     // ============ 워크플로우 관련 알림 ============
@@ -143,6 +175,7 @@ public class NotificationService {
         n.setTaskId(taskId);
         n.setTeamId(teamId);
         dao.insert(n);
+        sendWebSocketNotification(n);
     }
 
     // 태스크 거절 알림 (담당자가 거절 -> 요청자에게)
@@ -156,6 +189,7 @@ public class NotificationService {
         n.setTaskId(taskId);
         n.setTeamId(teamId);
         dao.insert(n);
+        sendWebSocketNotification(n);
     }
 
     // 태스크 검토 요청 알림 (담당자가 제출 -> 검증자에게)
@@ -169,6 +203,7 @@ public class NotificationService {
         n.setTaskId(taskId);
         n.setTeamId(teamId);
         dao.insert(n);
+        sendWebSocketNotification(n);
     }
 
     // 태스크 승인 알림 (검증자가 승인 -> 담당자에게)
@@ -182,6 +217,7 @@ public class NotificationService {
         n.setTaskId(taskId);
         n.setTeamId(teamId);
         dao.insert(n);
+        sendWebSocketNotification(n);
     }
 
     // 태스크 반려 알림 (검증자가 반려 -> 담당자에게)
@@ -195,6 +231,7 @@ public class NotificationService {
         n.setTaskId(taskId);
         n.setTeamId(teamId);
         dao.insert(n);
+        sendWebSocketNotification(n);
     }
 
     // ============ 댓글/멘션 관련 알림 ============
@@ -210,6 +247,7 @@ public class NotificationService {
         n.setTaskId(taskId);
         n.setTeamId(teamId);
         dao.insert(n);
+        sendWebSocketNotification(n);
     }
 
     // 멘션 알림
@@ -223,6 +261,7 @@ public class NotificationService {
         n.setTaskId(taskId);
         n.setTeamId(teamId);
         dao.insert(n);
+        sendWebSocketNotification(n);
     }
 
     // ============ 마감일 관련 알림 ============
@@ -238,6 +277,7 @@ public class NotificationService {
         n.setTaskId(taskId);
         n.setTeamId(teamId);
         dao.insert(n);
+        sendWebSocketNotification(n);
     }
 
     // 마감일 초과 알림
@@ -251,6 +291,7 @@ public class NotificationService {
         n.setTaskId(taskId);
         n.setTeamId(teamId);
         dao.insert(n);
+        sendWebSocketNotification(n);
     }
 
     // ============ GitHub 연동 관련 알림 ============
@@ -270,5 +311,6 @@ public class NotificationService {
         n.setTaskId(taskId);
         n.setTeamId(teamId);
         dao.insert(n);
+        sendWebSocketNotification(n);
     }
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     getNotifications,
     getUnreadCount,
@@ -7,6 +7,7 @@ import {
     deleteNotification,
     deleteAllNotifications
 } from '../api/notificationApi';
+import websocketService from '../api/websocketService';
 import './NotificationBell.css';
 
 function NotificationBell({ memberNo }) {
@@ -15,13 +16,54 @@ function NotificationBell({ memberNo }) {
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const dropdownRef = useRef(null);
+    const subscribedRef = useRef(false);
 
-    // 읽지 않은 알림 수 가져오기 (주기적으로)
+    // 실시간 알림 수신 핸들러
+    const handleRealtimeNotification = useCallback((notification) => {
+        console.log('Real-time notification received:', notification);
+        // 알림 목록 상단에 추가
+        setNotifications(prev => [notification, ...prev]);
+        // 읽지 않은 알림 수 증가
+        setUnreadCount(prev => prev + 1);
+    }, []);
+
+    // WebSocket 구독 설정
+    useEffect(() => {
+        if (!memberNo) return;
+
+        const setupSubscription = () => {
+            if (websocketService.isConnected() && !subscribedRef.current) {
+                websocketService.subscribeToUserNotifications(memberNo, handleRealtimeNotification);
+                subscribedRef.current = true;
+                console.log('Subscribed to notifications for member:', memberNo);
+            }
+        };
+
+        // 이미 연결되어 있으면 바로 구독
+        if (websocketService.isConnected()) {
+            setupSubscription();
+        }
+
+        // 연결 상태 체크 (WebSocket이 나중에 연결될 경우를 대비)
+        const checkConnection = setInterval(() => {
+            if (websocketService.isConnected() && !subscribedRef.current) {
+                setupSubscription();
+            }
+        }, 1000);
+
+        return () => {
+            clearInterval(checkConnection);
+            if (subscribedRef.current) {
+                websocketService.unsubscribeFromUserNotifications(memberNo);
+                subscribedRef.current = false;
+            }
+        };
+    }, [memberNo, handleRealtimeNotification]);
+
+    // 초기 읽지 않은 알림 수 가져오기
     useEffect(() => {
         if (memberNo) {
             fetchUnreadCount();
-            const interval = setInterval(fetchUnreadCount, 30000); // 30초마다 갱신
-            return () => clearInterval(interval);
         }
     }, [memberNo]);
 

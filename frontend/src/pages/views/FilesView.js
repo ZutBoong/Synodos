@@ -121,13 +121,15 @@ function FilesView({ team, teamMembers, loginMember, filters }) {
                                     >
                                         <i className="fa-solid fa-arrow-down"></i>
                                     </button>
-                                    <button
-                                        className="delete-btn"
-                                        onClick={() => handleDelete(file.fileId)}
-                                        title="삭제"
-                                    >
-                                        <i className="fa-solid fa-xmark"></i>
-                                    </button>
+                                    {loginMember?.no === file.uploaderNo && (
+                                        <button
+                                            className="delete-btn"
+                                            onClick={() => handleDelete(file.fileId)}
+                                            title="삭제"
+                                        >
+                                            <i className="fa-solid fa-xmark"></i>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}

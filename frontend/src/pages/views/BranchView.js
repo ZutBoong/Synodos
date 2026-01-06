@@ -34,6 +34,7 @@ function BranchView({ team, loginMember }) {
     const depth = 10000; // 전체 커밋 가져오기
     const [expandedBranches, setExpandedBranches] = useState(new Set()); // 확장된 브랜치들
     const [expandedDates, setExpandedDates] = useState(new Set()); // 펼쳐진 날짜들 (시간 상세보기)
+    const [datesInitialized, setDatesInitialized] = useState(false); // 날짜 초기화 여부
 
     // 선택된 커밋 (상세 패널용)
     const [selectedCommit, setSelectedCommit] = useState(null);
@@ -199,6 +200,26 @@ function BranchView({ team, loginMember }) {
 
         loadGraph();
     }, [team?.teamId, selectedBranches, depth, isGithubConnected]);
+
+    // 날짜 확장 기본값 설정 (커밋 로드 시 모든 날짜 확장)
+    useEffect(() => {
+        if (datesInitialized) return;
+
+        const allCommits = Object.values(commitsByBranch).flat();
+        if (allCommits.length > 0) {
+            const allDateKeys = new Set();
+            allCommits.forEach(commit => {
+                if (commit.date) {
+                    const d = new Date(commit.date);
+                    allDateKeys.add(`${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`);
+                }
+            });
+            if (allDateKeys.size > 0) {
+                setExpandedDates(allDateKeys);
+                setDatesInitialized(true);
+            }
+        }
+    }, [commitsByBranch, datesInitialized]);
 
     // 브랜치 토글
     const toggleBranch = (branchName) => {

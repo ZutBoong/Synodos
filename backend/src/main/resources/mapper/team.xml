@@ -55,7 +55,7 @@
 	<!-- 팀 멤버 목록 -->
 	<select id="findMembers" parameterType="int" resultType="teamMember">
 		SELECT tm.team_id, tm.member_no, tm.role, tm.joined_at,
-			   m.name as member_name, m.userid as member_userid
+			   m.name as member_name, m.userid as member_userid, m.profile_image
 		FROM team_member tm
 		JOIN member m ON tm.member_no = m.no
 		WHERE tm.team_id = #{teamId}
