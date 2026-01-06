@@ -48,4 +48,10 @@ public interface TeamDao {
 
 	// GitHub 저장소 URL로 팀 조회
 	Team findByGithubRepoUrl(String githubRepoUrl);
+
+	// 팀장 변경
+	int updateLeader(Team team);
+
+	// 팀 멤버 역할 변경
+	int updateMemberRole(TeamMember member);
 }

@@ -43,6 +43,7 @@ function BoardView({
     const [columns, setColumns] = useState(propColumns || []);
     const [tasks, setTasks] = useState(propTasks || []);
     const [newColumnTitle, setNewColumnTitle] = useState('');
+    const [columnTitleError, setColumnTitleError] = useState(''); // 칼럼 이름 에러 메시지
     const [newTaskTitle, setNewTaskTitle] = useState({});
     const [editingColumn, setEditingColumn] = useState(null);
 
@@ -185,27 +186,34 @@ function BoardView({
         }
     };
 
-    // 필터 적용
+    // 검색어 매칭 확인 (강조 표시용)
+    const isSearchMatch = (task) => {
+        if (!filters.searchQuery) return true; // 검색어 없으면 모두 매칭
+        const query = filters.searchQuery.toLowerCase();
+        const matchTitle = task.title?.toLowerCase().includes(query);
+        const matchDesc = task.description?.toLowerCase().includes(query);
+        const matchAssignee = task.assignees?.some(a =>
+            a.memberName?.toLowerCase().includes(query)
+        );
+        return matchTitle || matchDesc || matchAssignee;
+    };
+
+    // 필터 적용 (검색어는 강조만, 필터링은 다른 조건만)
     const applyFilters = (taskList) => {
         return taskList.filter(task => {
-            if (filters.searchQuery) {
-                const query = filters.searchQuery.toLowerCase();
-                const matchTitle = task.title?.toLowerCase().includes(query);
-                const matchDesc = task.description?.toLowerCase().includes(query);
-                if (!matchTitle && !matchDesc) return false;
-            }
-
+            // 상태 필터
             if (filters.statuses?.length > 0) {
                 if (!filters.statuses.includes(task.workflowStatus)) return false;
             }
 
-
+            // 담당자 필터
             if (filters.assigneeNo) {
                 const hasAssignee = task.assignees?.some(a => a.memberNo === filters.assigneeNo)
                     || task.assigneeNo === filters.assigneeNo;
                 if (!hasAssignee) return false;
             }
 
+            // 마감일 필터
             if (filters.dueDateFilter) {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
@@ -327,8 +335,13 @@ function BoardView({
 
     // 컬럼 추가
     const handleAddColumn = async () => {
-        if (!newColumnTitle.trim() || !team) return;
+        if (!newColumnTitle.trim()) {
+            setColumnTitleError('칼럼 이름을 입력해주세요');
+            return;
+        }
+        if (!team) return;
 
+        setColumnTitleError('');
         try {
             await columnwrite({
                 title: newColumnTitle,
@@ -479,6 +492,41 @@ function BoardView({
                     }}
                     lastCommentEvent={lastCommentEvent}
                 />
+            ) : columns.length === 0 ? (
+                /* 칼럼이 없을 경우 - 빈 상태 UI */
+                <div className="empty-state">
+                    <div className="empty-state-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                            <rect x="3" y="3" width="7" height="7" rx="1" />
+                            <rect x="14" y="3" width="7" height="7" rx="1" />
+                            <rect x="3" y="14" width="7" height="7" rx="1" />
+                            <rect x="14" y="14" width="7" height="7" rx="1" />
+                        </svg>
+                    </div>
+                    <h3>아직 칼럼이 없습니다</h3>
+                    <p>새 칼럼을 추가하여 작업을 시작하세요</p>
+                    <div className="add-column-inline">
+                        <div className="column-input-wrapper">
+                            <input
+                                type="text"
+                                placeholder="새 칼럼 이름 입력"
+                                value={newColumnTitle}
+                                onChange={(e) => {
+                                    setNewColumnTitle(e.target.value);
+                                    if (columnTitleError) setColumnTitleError('');
+                                }}
+                                onKeyPress={(e) => {
+                                    if (e.key === 'Enter') {
+                                        handleAddColumn();
+                                    }
+                                }}
+                                className={columnTitleError ? 'error' : ''}
+                            />
+                            {columnTitleError && <span className="column-input-error">{columnTitleError}</span>}
+                        </div>
+                        <button onClick={handleAddColumn}>+ 칼럼 추가</button>
+                    </div>
+                </div>
             ) : (
             <DragDropContext onDragEnd={onDragEnd}>
                 <div className="columns-wrapper">
@@ -597,9 +645,12 @@ function BoardView({
                                                                     draggableId={`task-${task.taskId}`}
                                                                     index={taskIndex}
                                                                 >
-                                                                    {(provided, snapshot) => (
+                                                                    {(provided, snapshot) => {
+                                                                        const matchesSearch = isSearchMatch(task);
+                                                                        const hasSearchQuery = !!filters.searchQuery;
+                                                                        return (
                                                                         <div
-                                                                            className={`task-card ${snapshot.isDragging ? 'dragging' : ''} ${task.workflowStatus === 'DONE' ? 'done' : ''} status-${task.workflowStatus?.toLowerCase().replace('_', '-') || 'waiting'}`}
+                                                                            className={`task-card ${snapshot.isDragging ? 'dragging' : ''} ${task.workflowStatus === 'DONE' ? 'done' : ''} status-${task.workflowStatus?.toLowerCase().replace('_', '-') || 'waiting'} ${hasSearchQuery ? (matchesSearch ? 'search-match' : 'search-dim') : ''}`}
                                                                             ref={provided.innerRef}
                                                                             {...provided.draggableProps}
                                                                             {...provided.dragHandleProps}
@@ -647,7 +698,7 @@ function BoardView({
                                                                                 )}
                                                                             </div>
                                                                         </div>
-                                                                    )}
+                                                                    )}}
                                                                 </Draggable>
                                                             ))}
                                                             {provided.placeholder}
@@ -670,17 +721,24 @@ function BoardView({
                                 {provided.placeholder}
 
                                 <div className="add-column">
-                                    <input
-                                        type="text"
-                                        placeholder="새 컬럼 추가..."
-                                        value={newColumnTitle}
-                                        onChange={(e) => setNewColumnTitle(e.target.value)}
-                                        onKeyPress={(e) => {
-                                            if (e.key === 'Enter') {
-                                                handleAddColumn();
-                                            }
-                                        }}
-                                    />
+                                    <div className="column-input-wrapper">
+                                        <input
+                                            type="text"
+                                            placeholder="새 컬럼 추가..."
+                                            value={newColumnTitle}
+                                            onChange={(e) => {
+                                                setNewColumnTitle(e.target.value);
+                                                if (columnTitleError) setColumnTitleError('');
+                                            }}
+                                            onKeyPress={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    handleAddColumn();
+                                                }
+                                            }}
+                                            className={columnTitleError ? 'error' : ''}
+                                        />
+                                        {columnTitleError && <span className="column-input-error">{columnTitleError}</span>}
+                                    </div>
                                     <button onClick={handleAddColumn}>+ 컬럼 추가</button>
                                 </div>
                             </div>

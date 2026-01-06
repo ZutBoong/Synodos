@@ -383,6 +383,23 @@
     border-left-color: #6b7280;
 }
 
+/* 검색 결과 강조/흐림 */
+.board-view .task-card.search-match {
+    box-shadow: 0 0 0 2px #667eea, 0 4px 12px rgba(102, 126, 234, 0.3);
+    transform: scale(1.02);
+    z-index: 1;
+}
+
+.board-view .task-card.search-dim {
+    opacity: 0.4;
+    filter: grayscale(30%);
+}
+
+.board-view .task-card.search-dim:hover {
+    opacity: 0.7;
+    filter: grayscale(0%);
+}
+
 .board-view .task-card-title {
     font-size: 14px;
     font-weight: 600;
@@ -646,6 +663,116 @@
 .board-view .add-column button:hover {
     background: #e2e8f0;
     color: #334155;
+}
+
+/* ===== 빈 상태 (칼럼 없음) ===== */
+.board-view .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 40px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    border: 2px dashed #e2e8f0;
+    text-align: center;
+    min-height: 300px;
+    margin: 20px;
+}
+
+.board-view .empty-state-icon {
+    margin-bottom: 20px;
+    color: #94a3b8;
+}
+
+.board-view .empty-state h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.board-view .empty-state p {
+    margin: 0 0 28px 0;
+    font-size: 15px;
+    color: #94a3b8;
+}
+
+.board-view .add-column-inline {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.board-view .add-column-inline .column-input-wrapper {
+    flex: 1;
+}
+
+.board-view .add-column-inline input {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 15px;
+    background: #f8fafc;
+    transition: all 0.2s ease;
+}
+
+.board-view .add-column-inline input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.board-view .add-column-inline input::placeholder {
+    color: #94a3b8;
+}
+
+.board-view .add-column-inline button {
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
+    white-space: nowrap;
+}
+
+.board-view .add-column-inline button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+/* 칼럼 입력 래퍼 (에러 메시지 포함) */
+.board-view .column-input-wrapper {
+    position: relative;
+}
+
+.board-view .column-input-wrapper input.error {
+    border-color: #ef4444;
+    background: #fef2f2;
+}
+
+.board-view .column-input-wrapper input.error:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+.board-view .column-input-error {
+    position: absolute;
+    left: 4px;
+    top: 100%;
+    margin-top: 4px;
+    font-size: 13px;
+    color: #ef4444;
+    white-space: nowrap;
 }
 
 /* ===== 모달 공통 스타일 ===== */

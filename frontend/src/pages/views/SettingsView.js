@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     updateTeam as apiUpdateTeam, updateTeamDescription,
-    kickMember, deleteTeam, getTeamMembers, searchMember, inviteMember
+    kickMember, deleteTeam, getTeamMembers, searchMember, inviteMember, transferLeadership
 } from '../../api/teamApi';
 import {
     listUserRepositories, connectRepository, disconnectRepository,
@@ -35,6 +35,9 @@ function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewCo
     const [loadingRepos, setLoadingRepos] = useState(false);
     const [githubConnected, setGithubConnected] = useState(null);
     const [connectingRepo, setConnectingRepo] = useState(false);
+
+    // 팀장 위임
+    const [transferring, setTransferring] = useState(false);
 
     const [columns, setColumns] = useState(viewColumns || []);
     const [githubDefaultColumnId, setGithubDefaultColumnId] = useState(team?.githubDefaultColumnId || null);
@@ -428,6 +431,32 @@ function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewCo
         }
     };
 
+    // 팀장 위임 처리
+    const handleTransferLeadership = async (newLeaderNo, newLeaderName) => {
+        if (!window.confirm(`${newLeaderName}님에게 팀장을 위임하시겠습니까?\n\n위임 후에는 일반 멤버가 됩니다.`)) return;
+        if (!window.confirm('정말로 팀장 권한을 넘기시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
+
+        setTransferring(true);
+        try {
+            const result = await transferLeadership(team.teamId, loginMember.no, newLeaderNo);
+            if (result.success) {
+                alert(`${newLeaderName}님에게 팀장이 위임되었습니다.`);
+                // 팀 정보 갱신
+                if (updateTeam) updateTeam({ leaderNo: newLeaderNo });
+                fetchTeamMembers();
+                // 페이지 새로고침하여 권한 변경 반영
+                window.location.reload();
+            } else {
+                alert(result.message || '팀장 위임에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('팀장 위임 실패:', error);
+            alert('팀장 위임에 실패했습니다.');
+        } finally {
+            setTransferring(false);
+        }
+    };
+
     const handleDeleteTeam = async () => {
         if (!window.confirm('정말로 이 팀을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
         if (!window.confirm('모든 프로젝트, 태스크, 파일이 삭제됩니다.\n계속하시겠습니까?')) return;
@@ -591,7 +620,16 @@ function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewCo
                                                 <>
                                                     <span className="sv-badge member">멤버</span>
                                                     {isLeader && (
-                                                        <button className="sv-btn danger sm" onClick={() => handleKickMember(member.memberNo, member.memberName)}>추방</button>
+                                                        <div className="sv-member-actions">
+                                                            <button
+                                                                className="sv-btn secondary sm"
+                                                                onClick={() => handleTransferLeadership(member.memberNo, member.memberName)}
+                                                                disabled={transferring}
+                                                            >
+                                                                {transferring ? '처리중...' : '팀장 위임'}
+                                                            </button>
+                                                            <button className="sv-btn danger sm" onClick={() => handleKickMember(member.memberNo, member.memberName)}>추방</button>
+                                                        </div>
                                                     )}
                                                 </>
                                             )}

@@ -123,7 +123,10 @@ function CalendarView({ team, tasks: propTasks, teamMembers, loginMember, filter
                 const query = filters.searchQuery.toLowerCase();
                 const matchTitle = task.title?.toLowerCase().includes(query);
                 const matchDesc = task.description?.toLowerCase().includes(query);
-                if (!matchTitle && !matchDesc) return false;
+                const matchAssignee = task.assignees?.some(a =>
+                    a.memberName?.toLowerCase().includes(query)
+                );
+                if (!matchTitle && !matchDesc && !matchAssignee) return false;
             }
 
             if (filters.statuses?.length > 0) {

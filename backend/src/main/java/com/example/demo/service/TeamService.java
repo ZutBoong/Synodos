@@ -233,4 +233,86 @@ public class TeamService {
 		}
 		return null;
 	}
+
+	/**
+	 * 팀장 위임
+	 * @param teamId 팀 ID
+	 * @param currentLeaderNo 현재 팀장 번호
+	 * @param newLeaderNo 새 팀장 번호
+	 * @return 결과 맵 (success, message)
+	 */
+	public Map<String, Object> transferLeadership(int teamId, int currentLeaderNo, int newLeaderNo) {
+		Map<String, Object> result = new HashMap<>();
+
+		// 1. 팀 존재 확인
+		Team team = dao.findById(teamId);
+		if (team == null) {
+			result.put("success", false);
+			result.put("message", "존재하지 않는 팀입니다.");
+			return result;
+		}
+
+		// 2. 현재 팀장 권한 확인
+		if (team.getLeaderNo() != currentLeaderNo) {
+			result.put("success", false);
+			result.put("message", "팀장만 팀장을 위임할 수 있습니다.");
+			return result;
+		}
+
+		// 3. 새 팀장이 팀원인지 확인
+		if (!isMember(teamId, newLeaderNo)) {
+			result.put("success", false);
+			result.put("message", "팀원만 팀장이 될 수 있습니다.");
+			return result;
+		}
+
+		// 4. 자기 자신에게 위임 불가
+		if (currentLeaderNo == newLeaderNo) {
+			result.put("success", false);
+			result.put("message", "자기 자신에게는 위임할 수 없습니다.");
+			return result;
+		}
+
+		// 5. 팀 리더 변경
+		Team updateTeam = new Team();
+		updateTeam.setTeamId(teamId);
+		updateTeam.setLeaderNo(newLeaderNo);
+		int updateResult = dao.updateLeader(updateTeam);
+
+		if (updateResult != 1) {
+			result.put("success", false);
+			result.put("message", "팀장 변경에 실패했습니다.");
+			return result;
+		}
+
+		// 6. 역할 변경: 기존 팀장 -> MEMBER
+		TeamMember oldLeader = new TeamMember();
+		oldLeader.setTeamId(teamId);
+		oldLeader.setMemberNo(currentLeaderNo);
+		oldLeader.setRole("MEMBER");
+		dao.updateMemberRole(oldLeader);
+
+		// 7. 역할 변경: 새 팀장 -> LEADER
+		TeamMember newLeader = new TeamMember();
+		newLeader.setTeamId(teamId);
+		newLeader.setMemberNo(newLeaderNo);
+		newLeader.setRole("LEADER");
+		dao.updateMemberRole(newLeader);
+
+		// 8. 새 팀장에게 알림 발송
+		notificationService.sendNotification(
+			newLeaderNo,
+			currentLeaderNo,
+			"TEAM_LEADER",
+			"팀장 위임",
+			team.getTeamName() + " 팀의 팀장으로 지정되었습니다.",
+			teamId,
+			0,
+			0
+		);
+
+		result.put("success", true);
+		result.put("message", "팀장이 성공적으로 위임되었습니다.");
+		return result;
+	}
 }

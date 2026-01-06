@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { taskwrite, taskupdate, taskdelete, taskposition, columnposition, tasklistByTeam, columnwrite, columnlistByTeam } from '../../api/boardApi';
+import { taskwrite, taskupdate, taskdelete, taskposition, columnposition, tasklistByTeam, columnwrite, columnlistByTeam, columndelete } from '../../api/boardApi';
 import TaskDetailView from '../../components/TaskDetailView';
 import TaskCreateModal from '../../components/TaskCreateModal';
 import './ListView.css';
@@ -38,6 +38,8 @@ function ListView({
     const [addingColumnTask, setAddingColumnTask] = useState(null);
     const [createTaskModalColumnId, setCreateTaskModalColumnId] = useState(null);
     const [newColumnTitle, setNewColumnTitle] = useState('');
+    const [columnTitleError, setColumnTitleError] = useState(''); // 칼럼 이름 에러 메시지
+    const [columnMenuOpen, setColumnMenuOpen] = useState(null); // 컬럼 메뉴 상태
 
     // URL의 selectedTaskId로부터 실제 task 객체 찾기
     const selectedTask = selectedTaskId ? propTasks?.find(t => t.taskId === selectedTaskId) : null;
@@ -72,8 +74,13 @@ function ListView({
 
     // 칼럼 추가
     const handleAddColumn = async () => {
-        if (!newColumnTitle.trim() || !team) return;
+        if (!newColumnTitle.trim()) {
+            setColumnTitleError('칼럼 이름을 입력해주세요');
+            return;
+        }
+        if (!team) return;
 
+        setColumnTitleError('');
         try {
             await columnwrite({
                 title: newColumnTitle,
@@ -94,28 +101,50 @@ function ListView({
         }
     };
 
-    // 필터 적용
+    // 컬럼 삭제
+    const handleDeleteColumn = async (columnId) => {
+        if (!window.confirm('이 컬럼과 모든 태스크를 삭제하시겠습니까?')) return;
+
+        try {
+            await columndelete(columnId);
+            setColumns(prev => prev.filter(col => col.columnId !== columnId));
+            setTasks(prev => prev.filter(task => task.columnId !== columnId));
+            if (refreshData) refreshData();
+        } catch (error) {
+            console.error('컬럼 삭제 실패:', error);
+        }
+    };
+
+    // 검색어 매칭 확인 (강조 표시용)
+    const isSearchMatch = (task) => {
+        if (!filters?.searchQuery) return true; // 검색어 없으면 모두 매칭
+        const query = filters.searchQuery.toLowerCase();
+        const matchTitle = task.title?.toLowerCase().includes(query);
+        const matchDesc = task.description?.toLowerCase().includes(query);
+        const matchAssignee = task.assignees?.some(a =>
+            a.memberName?.toLowerCase().includes(query)
+        );
+        return matchTitle || matchDesc || matchAssignee;
+    };
+
+    // 필터 적용 (검색어는 강조만, 필터링은 다른 조건만)
     const applyFilters = (taskList) => {
         if (!filters) return taskList;
 
         return taskList.filter(task => {
-            if (filters.searchQuery) {
-                const query = filters.searchQuery.toLowerCase();
-                const matchTitle = task.title?.toLowerCase().includes(query);
-                const matchDesc = task.description?.toLowerCase().includes(query);
-                if (!matchTitle && !matchDesc) return false;
-            }
-
+            // 상태 필터
             if (filters.statuses?.length > 0) {
                 if (!filters.statuses.includes(task.workflowStatus)) return false;
             }
 
+            // 담당자 필터
             if (filters.assigneeNo) {
                 const hasAssignee = task.assignees?.some(a => a.memberNo === filters.assigneeNo)
                     || task.assigneeNo === filters.assigneeNo;
                 if (!hasAssignee) return false;
             }
 
+            // 마감일 필터
             if (filters.dueDateFilter) {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
@@ -403,93 +432,139 @@ function ListView({
                             </span>
                             <span className="column-name" onClick={() => toggleColumn(column.columnId)}>{column.title}</span>
                             <span className="task-count">{columnTasks.length}</span>
+
+                            {/* 컬럼 메뉴 버튼 */}
+                            <div className="column-menu-wrapper">
+                                <button
+                                    className="column-menu-btn"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setColumnMenuOpen(columnMenuOpen === column.columnId ? null : column.columnId);
+                                    }}
+                                >
+                                    ⋯
+                                </button>
+                                {columnMenuOpen === column.columnId && (
+                                    <div className="column-menu-dropdown">
+                                        <button
+                                            className="column-menu-item danger"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteColumn(column.columnId);
+                                                setColumnMenuOpen(null);
+                                            }}
+                                        >
+                                            <i className="fa-solid fa-trash"></i>
+                                            컬럼 삭제
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        {isExpanded && (
-                            <div className="column-content">
-                                <table className="task-table">
-                                    <thead>
-                                        <tr>
-                                            <th className="col-drag"></th>
-                                            <th className="col-check"></th>
-                                            <th className="col-title">제목</th>
-                                            <th className="col-assignee">담당자</th>
-                                            <th className="col-due">마감일</th>
-                                            <th className="col-status">상태</th>
-                                            <th className="col-priority">긴급</th>
-                                        </tr>
-                                    </thead>
-                                    <Droppable droppableId={`column-${column.columnId}`} type="task">
-                                        {(taskProvided, taskSnapshot) => (
-                                            <tbody
-                                                ref={taskProvided.innerRef}
-                                                {...taskProvided.droppableProps}
-                                                className={taskSnapshot.isDraggingOver ? 'dragging-over' : ''}
-                                            >
-                                                {columnTasks.map((task, taskIndex) => (
-                                                    <Draggable
-                                                        key={`task-${task.taskId}`}
-                                                        draggableId={`task-${task.taskId}`}
-                                                        index={taskIndex}
-                                                    >
-                                                        {(taskDragProvided, taskDragSnapshot) => (
-                                                            <tr
-                                                                ref={taskDragProvided.innerRef}
-                                                                {...taskDragProvided.draggableProps}
-                                                                className={`${isTaskDone(task) ? 'completed' : ''} ${taskDragSnapshot.isDragging ? 'dragging' : ''}`}
-                                                            >
-                                                                <td className="col-drag" {...taskDragProvided.dragHandleProps}>
-                                                                    <span className="drag-handle">⋮⋮</span>
-                                                                </td>
-                                                                <td className="col-check">
-                                                                    <span className={`status-indicator ${isTaskDone(task) ? 'done' : ''}`}>
-                                                                        {isTaskDone(task) ? '✓' : '○'}
-                                                                    </span>
-                                                                </td>
-                                                                <td className="col-title">
-                                                                    <span
-                                                                        className="task-title-link"
-                                                                        onClick={() => setSelectedTask(task)}
-                                                                    >
-                                                                        {task.title}
-                                                                    </span>
-                                                                </td>
-                                                                <td className="col-assignee">{renderAssigneeAvatars(task)}</td>
-                                                                <td className="col-due">{formatDueDate(task.dueDate)}</td>
-                                                                <td className="col-status">
-                                                                    <span
-                                                                        className="status-badge"
-                                                                        style={{ backgroundColor: WORKFLOW_STATUSES[task.workflowStatus]?.color || '#94a3b8' }}
-                                                                    >
-                                                                        {WORKFLOW_STATUSES[task.workflowStatus]?.label || '대기'}
-                                                                    </span>
-                                                                </td>
-                                                                <td className="col-priority">
-                                                                    {task.priority === 'URGENT' && (
-                                                                        <span className="urgent-badge">
-                                                                            <i className="fa-solid fa-triangle-exclamation"></i>
-                                                                        </span>
-                                                                    )}
-                                                                </td>
-                                                            </tr>
-                                                        )}
-                                                    </Draggable>
-                                                ))}
-                                                {taskProvided.placeholder}
-                                            </tbody>
-                                        )}
-                                    </Droppable>
-                                </table>
-
-                                {/* 태스크 추가 */}
-                                <button
-                                    className="add-task-btn"
-                                    onClick={() => setCreateTaskModalColumnId(column.columnId)}
+                        {/* Droppable은 항상 렌더링하여 드롭 가능하게 유지 */}
+                        <Droppable droppableId={`column-${column.columnId}`} type="task">
+                            {(taskProvided, taskSnapshot) => (
+                                <div
+                                    ref={taskProvided.innerRef}
+                                    {...taskProvided.droppableProps}
+                                    className={`column-droppable ${taskSnapshot.isDraggingOver ? 'dragging-over' : ''} ${!isExpanded ? 'collapsed' : ''}`}
                                 >
-                                    + 새 작업 추가
-                                </button>
-                            </div>
-                        )}
+                                    {isExpanded ? (
+                                        <div className="column-content">
+                                            <table className="task-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th className="col-drag"></th>
+                                                        <th className="col-check"></th>
+                                                        <th className="col-title">제목</th>
+                                                        <th className="col-assignee">담당자</th>
+                                                        <th className="col-due">마감일</th>
+                                                        <th className="col-status">상태</th>
+                                                        <th className="col-priority">긴급</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {columnTasks.map((task, taskIndex) => {
+                                                        const matchesSearch = isSearchMatch(task);
+                                                        const hasSearchQuery = !!filters?.searchQuery;
+                                                        return (
+                                                        <Draggable
+                                                            key={`task-${task.taskId}`}
+                                                            draggableId={`task-${task.taskId}`}
+                                                            index={taskIndex}
+                                                        >
+                                                            {(taskDragProvided, taskDragSnapshot) => (
+                                                                <tr
+                                                                    ref={taskDragProvided.innerRef}
+                                                                    {...taskDragProvided.draggableProps}
+                                                                    className={`${isTaskDone(task) ? 'completed' : ''} ${taskDragSnapshot.isDragging ? 'dragging' : ''} ${hasSearchQuery ? (matchesSearch ? 'search-match' : 'search-dim') : ''}`}
+                                                                >
+                                                                    <td className="col-drag" {...taskDragProvided.dragHandleProps}>
+                                                                        <span className="drag-handle">⋮⋮</span>
+                                                                    </td>
+                                                                    <td className="col-check">
+                                                                        <span className={`status-indicator ${isTaskDone(task) ? 'done' : ''}`}>
+                                                                            {isTaskDone(task) ? '✓' : '○'}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="col-title">
+                                                                        <span
+                                                                            className="task-title-link"
+                                                                            onClick={() => setSelectedTask(task)}
+                                                                        >
+                                                                            {task.title}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="col-assignee">{renderAssigneeAvatars(task)}</td>
+                                                                    <td className="col-due">{formatDueDate(task.dueDate)}</td>
+                                                                    <td className="col-status">
+                                                                        <span
+                                                                            className="status-badge"
+                                                                            style={{ backgroundColor: WORKFLOW_STATUSES[task.workflowStatus]?.color || '#94a3b8' }}
+                                                                        >
+                                                                            {WORKFLOW_STATUSES[task.workflowStatus]?.label || '대기'}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td className="col-priority">
+                                                                        {task.priority === 'URGENT' && (
+                                                                            <span className="urgent-badge">
+                                                                                <i className="fa-solid fa-triangle-exclamation"></i>
+                                                                            </span>
+                                                                        )}
+                                                                    </td>
+                                                                </tr>
+                                                            )}
+                                                        </Draggable>
+                                                    )})}
+                                                </tbody>
+                                            </table>
+
+                                            {/* 빈 컬럼 드롭 영역 */}
+                                            {columnTasks.length === 0 && (
+                                                <div className="empty-column-dropzone">
+                                                    여기에 태스크를 드롭하세요
+                                                </div>
+                                            )}
+
+                                            {/* 태스크 추가 */}
+                                            <button
+                                                className="add-task-btn"
+                                                onClick={() => setCreateTaskModalColumnId(column.columnId)}
+                                            >
+                                                + 새 작업 추가
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        /* 접힌 상태에서도 드롭 가능한 영역 */
+                                        <div className="collapsed-dropzone">
+                                            {taskSnapshot.isDraggingOver && <span>여기에 드롭</span>}
+                                        </div>
+                                    )}
+                                    {taskProvided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
                     </div>
                 )}
             </Draggable>
@@ -498,7 +573,10 @@ function ListView({
 
     return (
         <DragDropContext onDragEnd={onDragEnd}>
-            <div className={`list-view ${selectedTask ? 'task-detail-open' : ''}`}>
+            <div
+                className={`list-view ${selectedTask ? 'task-detail-open' : ''}`}
+                onClick={() => columnMenuOpen && setColumnMenuOpen(null)}
+            >
                 {/* 태스크 상세 패널 (전체화면) */}
                 {selectedTask ? (
                     <TaskDetailView
@@ -513,41 +591,80 @@ function ListView({
                     />
                 ) : (
                     <>
-                        {/* 칼럼들 */}
-                        <Droppable droppableId="columns" type="column">
-                            {(provided, snapshot) => (
-                                <div
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    className={`columns-droppable ${snapshot.isDraggingOver ? 'dragging-over' : ''}`}
-                                >
-                                    {columns.map((column, index) => renderColumn(column, index))}
-                                    {provided.placeholder}
+                        {/* 칼럼이 없을 경우 - 안내 메시지와 추가 UI를 함께 표시 */}
+                        {columns.length === 0 ? (
+                            <div className="empty-state">
+                                <div className="empty-state-icon">
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                        <rect x="3" y="3" width="7" height="7" rx="1" />
+                                        <rect x="14" y="3" width="7" height="7" rx="1" />
+                                        <rect x="3" y="14" width="7" height="7" rx="1" />
+                                        <rect x="14" y="14" width="7" height="7" rx="1" />
+                                    </svg>
                                 </div>
-                            )}
-                        </Droppable>
-
-                        {/* 칼럼 추가 UI */}
-                        <div className="add-column-section">
-                            <input
-                                type="text"
-                                placeholder="새 칼럼 이름"
-                                value={newColumnTitle}
-                                onChange={(e) => setNewColumnTitle(e.target.value)}
-                                onKeyPress={(e) => {
-                                    if (e.key === 'Enter') {
-                                        handleAddColumn();
-                                    }
-                                }}
-                            />
-                            <button onClick={handleAddColumn}>+ 칼럼 추가</button>
-                        </div>
-
-                        {/* 칼럼이 없을 경우 */}
-                        {columns.length === 0 && (
-                            <div className="no-columns">
-                                <p>위에서 칼럼을 추가해주세요.</p>
+                                <h3>아직 칼럼이 없습니다</h3>
+                                <p>새 칼럼을 추가하여 작업을 시작하세요</p>
+                                <div className="add-column-inline">
+                                    <div className="column-input-wrapper">
+                                        <input
+                                            type="text"
+                                            placeholder="새 칼럼 이름 입력"
+                                            value={newColumnTitle}
+                                            onChange={(e) => {
+                                                setNewColumnTitle(e.target.value);
+                                                if (columnTitleError) setColumnTitleError('');
+                                            }}
+                                            onKeyPress={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    handleAddColumn();
+                                                }
+                                            }}
+                                            className={columnTitleError ? 'error' : ''}
+                                        />
+                                        {columnTitleError && <span className="column-input-error">{columnTitleError}</span>}
+                                    </div>
+                                    <button onClick={handleAddColumn}>+ 칼럼 추가</button>
+                                </div>
                             </div>
+                        ) : (
+                            <>
+                                {/* 칼럼들 */}
+                                <Droppable droppableId="columns" type="column">
+                                    {(provided, snapshot) => (
+                                        <div
+                                            ref={provided.innerRef}
+                                            {...provided.droppableProps}
+                                            className={`columns-droppable ${snapshot.isDraggingOver ? 'dragging-over' : ''}`}
+                                        >
+                                            {columns.map((column, index) => renderColumn(column, index))}
+                                            {provided.placeholder}
+                                        </div>
+                                    )}
+                                </Droppable>
+
+                                {/* 칼럼 추가 UI */}
+                                <div className="add-column-section">
+                                    <div className="column-input-wrapper">
+                                        <input
+                                            type="text"
+                                            placeholder="새 칼럼 이름"
+                                            value={newColumnTitle}
+                                            onChange={(e) => {
+                                                setNewColumnTitle(e.target.value);
+                                                if (columnTitleError) setColumnTitleError('');
+                                            }}
+                                            onKeyPress={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    handleAddColumn();
+                                                }
+                                            }}
+                                            className={columnTitleError ? 'error' : ''}
+                                        />
+                                        {columnTitleError && <span className="column-input-error">{columnTitleError}</span>}
+                                    </div>
+                                    <button onClick={handleAddColumn}>+ 칼럼 추가</button>
+                                </div>
+                            </>
                         )}
                     </>
                 )}

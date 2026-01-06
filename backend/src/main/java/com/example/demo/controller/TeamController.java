@@ -331,4 +331,14 @@ public class TeamController {
 		}
 		return result;
 	}
+
+	// 팀장 위임 (팀장만)
+	@PostMapping("/{teamId}/transfer-leadership")
+	public Map<String, Object> transferLeadership(@PathVariable int teamId, @RequestBody Map<String, Integer> request) {
+		int currentLeaderNo = request.get("currentLeaderNo");
+		int newLeaderNo = request.get("newLeaderNo");
+		System.out.println("팀장 위임: teamId=" + teamId + ", currentLeader=" + currentLeaderNo + ", newLeader=" + newLeaderNo);
+
+		return service.transferLeadership(teamId, currentLeaderNo, newLeaderNo);
+	}
 }

@@ -401,7 +401,7 @@ function TeamView() {
                         )}
                     </div>
                     <div className="team-header-right">
-                        {team && ['list', 'board', 'timeline', 'calendar', 'files', 'branches'].includes(activeTab) && (
+                        {team && ['list', 'board', 'timeline', 'calendar', 'branches'].includes(activeTab) && (
                             <div className="header-search">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                     <circle cx="11" cy="11" r="8" />
@@ -413,6 +413,15 @@ function TeamView() {
                                     value={filters.searchQuery || ''}
                                     onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
                                 />
+                                {filters.searchQuery && (
+                                    <button
+                                        className="search-clear-btn"
+                                        onClick={() => setFilters({ ...filters, searchQuery: '' })}
+                                        title="검색 초기화"
+                                    >
+                                        ✕
+                                    </button>
+                                )}
                             </div>
                         )}
                         <button className="logout-btn" onClick={handleLogout}>로그아웃</button>

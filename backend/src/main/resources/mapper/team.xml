@@ -126,4 +126,18 @@
 		LIMIT 1
 	</select>
 
+	<!-- 팀장 변경 -->
+	<update id="updateLeader" parameterType="team">
+		UPDATE team
+		SET leader_no = #{leaderNo}
+		WHERE team_id = #{teamId}
+	</update>
+
+	<!-- 팀 멤버 역할 변경 -->
+	<update id="updateMemberRole" parameterType="teamMember">
+		UPDATE team_member
+		SET role = #{role}
+		WHERE team_id = #{teamId} AND member_no = #{memberNo}
+	</update>
+
 </mapper>

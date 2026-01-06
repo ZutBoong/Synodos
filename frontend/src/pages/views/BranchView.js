@@ -24,7 +24,7 @@ const GRAPH_CONFIG = {
     ]
 };
 
-function BranchView({ team, loginMember }) {
+function BranchView({ team, loginMember, filters }) {
     const [branches, setBranches] = useState([]);
     const [selectedBranches, setSelectedBranches] = useState([]);
     const [defaultBranch, setDefaultBranch] = useState('main');
@@ -44,8 +44,7 @@ function BranchView({ team, loginMember }) {
     const [dragState, setDragState] = useState(null); // { node, startX, startY, currentX, currentY }
     const [dropTarget, setDropTarget] = useState(null); // 드롭 대상 노드
 
-    // 검색
-    const [searchQuery, setSearchQuery] = useState('');
+    // 검색 (filters.searchQuery 사용)
 
     // 컨텍스트 메뉴
     const [contextMenu, setContextMenu] = useState(null);
@@ -714,8 +713,9 @@ function BranchView({ team, loginMember }) {
         }
     }, [isGithubConnected, team?.teamId, selectedBranches, depth, loginMember?.no]);
 
-    // 검색 필터링
+    // 검색 필터링 (filters.searchQuery 사용)
     const filterCommits = (commits) => {
+        const searchQuery = filters?.searchQuery || '';
         if (!searchQuery.trim()) return commits;
         const query = searchQuery.toLowerCase();
         return commits.filter(c =>
@@ -1429,28 +1429,6 @@ function BranchView({ team, loginMember }) {
             <div className="graph-main">
                 {/* 상단 툴바 */}
                 <div className="graph-toolbar">
-                    <div className="toolbar-left">
-                        <div className="search-box">
-                            <svg className="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <circle cx="11" cy="11" r="8" />
-                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                            </svg>
-                            <input
-                                type="text"
-                                placeholder="커밋 검색..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                            {searchQuery && (
-                                <button className="clear-btn" onClick={() => setSearchQuery('')} title="검색 초기화">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <line x1="18" y1="6" x2="6" y2="18" />
-                                        <line x1="6" y1="6" x2="18" y2="18" />
-                                    </svg>
-                                </button>
-                            )}
-                        </div>
-                    </div>
                     <div className="toolbar-right">
                         {expandedBranches.size === selectedBranches.length ? (
                             <button

@@ -92,3 +92,12 @@ export const searchMember = async (keyword) => {
     });
     return response.data;
 };
+
+// 팀장 위임
+export const transferLeadership = async (teamId, currentLeaderNo, newLeaderNo) => {
+    const response = await axiosInstance.post(`${API_PATH}/${teamId}/transfer-leadership`, {
+        currentLeaderNo,
+        newLeaderNo
+    });
+    return response.data;
+};

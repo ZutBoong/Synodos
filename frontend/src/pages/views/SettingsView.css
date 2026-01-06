@@ -446,6 +446,12 @@
     color: #94a3b8;
 }
 
+.sv-member-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
 .sv-badge {
     padding: 4px 10px;
     border-radius: 12px;
