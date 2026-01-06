@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     updateTeam as apiUpdateTeam, updateTeamDescription,
-    kickMember, deleteTeam, getTeamMembers
+    kickMember, deleteTeam, getTeamMembers, searchMember, inviteMember
 } from '../../api/teamApi';
 import {
     listUserRepositories, connectRepository, disconnectRepository,
@@ -22,6 +22,13 @@ function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewCo
     const [githubRepoUrl, setGithubRepoUrl] = useState(team?.githubRepoUrl || '');
     const [urlCopySuccess, setUrlCopySuccess] = useState(false);
     const [saving, setSaving] = useState(false);
+
+    // 아이디로 초대
+    const [inviteUserId, setInviteUserId] = useState('');
+    const [inviteSearchResult, setInviteSearchResult] = useState(null);
+    const [inviteSearching, setInviteSearching] = useState(false);
+    const [inviting, setInviting] = useState(false);
+    const [inviteMessage, setInviteMessage] = useState(null);
 
     const [showRepoSelector, setShowRepoSelector] = useState(false);
     const [repositories, setRepositories] = useState([]);
@@ -351,6 +358,63 @@ function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewCo
         }
     };
 
+    // 아이디로 회원 검색
+    const handleSearchMember = async () => {
+        if (!inviteUserId.trim()) {
+            setInviteMessage({ type: 'error', text: '아이디 또는 이메일을 입력해주세요.' });
+            return;
+        }
+
+        setInviteSearching(true);
+        setInviteMessage(null);
+        setInviteSearchResult(null);
+
+        try {
+            const result = await searchMember(inviteUserId.trim());
+            if (result.success) {
+                // 이미 팀원인지 확인
+                const isAlreadyMember = teamMembers.some(m => m.memberNo === result.member.no);
+                if (isAlreadyMember) {
+                    setInviteMessage({ type: 'error', text: '이미 팀에 속한 멤버입니다.' });
+                } else {
+                    setInviteSearchResult(result.member);
+                }
+            } else {
+                setInviteMessage({ type: 'error', text: result.message || '회원을 찾을 수 없습니다.' });
+            }
+        } catch (error) {
+            console.error('회원 검색 실패:', error);
+            setInviteMessage({ type: 'error', text: '회원 검색에 실패했습니다.' });
+        } finally {
+            setInviteSearching(false);
+        }
+    };
+
+    // 검색된 회원 초대
+    const handleInviteMember = async () => {
+        if (!inviteSearchResult) return;
+
+        setInviting(true);
+        setInviteMessage(null);
+
+        try {
+            const result = await inviteMember(team.teamId, inviteSearchResult.no, loginMember.no);
+            if (result.success) {
+                setInviteMessage({ type: 'success', text: `${inviteSearchResult.name}님을 팀에 초대했습니다.` });
+                setInviteSearchResult(null);
+                setInviteUserId('');
+                fetchTeamMembers(); // 팀원 목록 새로고침
+            } else {
+                setInviteMessage({ type: 'error', text: result.message || '초대에 실패했습니다.' });
+            }
+        } catch (error) {
+            console.error('초대 실패:', error);
+            setInviteMessage({ type: 'error', text: '초대에 실패했습니다.' });
+        } finally {
+            setInviting(false);
+        }
+    };
+
     const handleKickMember = async (memberNo, memberName) => {
         if (memberNo === loginMember.no) { alert('자신을 추방할 수 없습니다.'); return; }
         if (memberNo === team.leaderNo) { alert('팀 리더를 추방할 수 없습니다.'); return; }
@@ -439,6 +503,56 @@ function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewCo
                                     <span className="sv-card-title">팀 초대</span>
                                 </div>
                                 <div className="sv-card-body">
+                                    {/* 아이디로 직접 초대 */}
+                                    <div className="sv-input-group">
+                                        <label className="sv-input-label">아이디로 초대</label>
+                                        <div className="sv-search-invite">
+                                            <input
+                                                type="text"
+                                                className="sv-input"
+                                                placeholder="아이디 또는 이메일 입력"
+                                                value={inviteUserId}
+                                                onChange={(e) => setInviteUserId(e.target.value)}
+                                                onKeyDown={(e) => e.key === 'Enter' && handleSearchMember()}
+                                            />
+                                            <button
+                                                className="sv-btn primary sm"
+                                                onClick={handleSearchMember}
+                                                disabled={inviteSearching}
+                                            >
+                                                {inviteSearching ? '검색중...' : '검색'}
+                                            </button>
+                                        </div>
+
+                                        {/* 검색 결과 */}
+                                        {inviteSearchResult && (
+                                            <div className="sv-search-result">
+                                                <div className="sv-search-result-info">
+                                                    <div className="sv-member-avatar">{inviteSearchResult.name?.charAt(0) || '?'}</div>
+                                                    <div className="sv-search-result-detail">
+                                                        <span className="sv-search-result-name">{inviteSearchResult.name}</span>
+                                                        <span className="sv-search-result-id">@{inviteSearchResult.userid}</span>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    className="sv-btn primary sm"
+                                                    onClick={handleInviteMember}
+                                                    disabled={inviting}
+                                                >
+                                                    {inviting ? '초대중...' : '초대'}
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {/* 메시지 */}
+                                        {inviteMessage && (
+                                            <p className={`sv-message ${inviteMessage.type}`}>{inviteMessage.text}</p>
+                                        )}
+                                    </div>
+
+                                    <div className="sv-divider"></div>
+
+                                    {/* 초대 링크 */}
                                     <div className="sv-input-group">
                                         <label className="sv-input-label">초대 링크</label>
                                         <div className="sv-code-box">

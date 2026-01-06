@@ -84,3 +84,11 @@ export const getAllMembers = async () => {
     const response = await axiosInstance.get('/api/member/all');
     return response.data;
 };
+
+// 아이디 또는 이메일로 회원 검색
+export const searchMember = async (keyword) => {
+    const response = await axiosInstance.get('/api/member/search', {
+        params: { keyword }
+    });
+    return response.data;
+};

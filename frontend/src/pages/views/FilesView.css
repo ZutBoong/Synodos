@@ -132,17 +132,16 @@
 
 .download-btn,
 .delete-btn {
-    padding: 8px 12px;
+    width: 36px;
+    height: 36px;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
-    white-space: nowrap;
 }
 
 .download-btn {

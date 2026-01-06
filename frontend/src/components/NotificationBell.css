@@ -177,7 +177,7 @@
     color: #999;
 }
 
-.delete-btn {
+.notification-item .delete-btn {
     background: none;
     border: none;
     color: #ccc;
@@ -194,7 +194,7 @@
     opacity: 1;
 }
 
-.delete-btn:hover {
+.notification-item .delete-btn:hover {
     color: #e74c3c;
 }
 
