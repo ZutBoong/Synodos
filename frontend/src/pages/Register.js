@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { register, checkUserid, checkEmail } from '../api/memberApi';
 import { sendVerificationCode, verifyCode } from '../api/emailApi';
-import './Auth.css';
+import ShaderBackground from '../components/landing/shader-background';
 
 function Register() {
     const navigate = useNavigate();
@@ -68,6 +68,8 @@ function Register() {
             }
         } catch (error) {
             console.error('아이디 중복 체크 실패:', error);
+            setErrors({ ...errors, userid: error.response?.data?.message || '중복 체크 중 오류가 발생했습니다.' });
+            setChecks({ ...checks, userid: null });
         }
     };
 
@@ -86,6 +88,8 @@ function Register() {
             }
         } catch (error) {
             console.error('이메일 중복 체크 실패:', error);
+            setErrors({ ...errors, email: error.response?.data?.message || '중복 체크 중 오류가 발생했습니다.' });
+            setChecks({ ...checks, email: null });
         }
     };
 
@@ -200,95 +204,143 @@ function Register() {
 
     // Step 1: 정보 입력 폼
     const renderStep1 = () => (
-        <form onSubmit={handleSendCode}>
-            <div className="form-group">
-                <label>아이디</label>
-                <div className="input-with-button">
+        <form onSubmit={handleSendCode} className="space-y-4">
+            <div className="space-y-2">
+                <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                    아이디
+                </label>
+                <div className="flex gap-2">
                     <input
                         type="text"
                         name="userid"
                         value={form.userid}
                         onChange={handleChange}
                         placeholder="아이디를 입력하세요"
+                        className="flex-1 px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-sm font-light focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
                     />
-                    <button type="button" className="btn btn-secondary btn-small" onClick={handleCheckUserid}>
+                    <button 
+                        type="button" 
+                        className="px-4 py-3 rounded-full bg-transparent border border-white/30 text-white text-xs font-light transition-all duration-200 hover:bg-white/10 hover:border-white/50 whitespace-nowrap"
+                        onClick={handleCheckUserid}
+                    >
                         중복확인
                     </button>
                 </div>
-                {checks.userid === true && <span className="success-msg">사용 가능한 아이디입니다.</span>}
-                {errors.userid && <span className="error-msg">{errors.userid}</span>}
+                {checks.userid === true && (
+                    <span className="text-xs text-green-200 px-2">사용 가능한 아이디입니다.</span>
+                )}
+                {errors.userid && (
+                    <span className="text-xs text-red-200 px-2">{errors.userid}</span>
+                )}
             </div>
 
-            <div className="form-group">
-                <label>비밀번호</label>
+            <div className="space-y-2">
+                <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                    비밀번호
+                </label>
                 <input
                     type="password"
                     name="password"
                     value={form.password}
                     onChange={handleChange}
                     placeholder="비밀번호를 입력하세요"
+                    className="w-full px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-sm font-light focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
                 />
-                {errors.password && <span className="error-msg">{errors.password}</span>}
+                {errors.password && (
+                    <span className="text-xs text-red-200 px-2">{errors.password}</span>
+                )}
             </div>
 
-            <div className="form-group">
-                <label>비밀번호 확인</label>
+            <div className="space-y-2">
+                <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                    비밀번호 확인
+                </label>
                 <input
                     type="password"
                     name="passwordConfirm"
                     value={form.passwordConfirm}
                     onChange={handleChange}
                     placeholder="비밀번호를 다시 입력하세요"
+                    className="w-full px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-sm font-light focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
                 />
-                {errors.passwordConfirm && <span className="error-msg">{errors.passwordConfirm}</span>}
+                {errors.passwordConfirm && (
+                    <span className="text-xs text-red-200 px-2">{errors.passwordConfirm}</span>
+                )}
             </div>
 
-            <div className="form-group">
-                <label>이름</label>
+            <div className="space-y-2">
+                <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                    이름
+                </label>
                 <input
                     type="text"
                     name="name"
                     value={form.name}
                     onChange={handleChange}
                     placeholder="이름을 입력하세요"
+                    className="w-full px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-sm font-light focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
                 />
-                {errors.name && <span className="error-msg">{errors.name}</span>}
+                {errors.name && (
+                    <span className="text-xs text-red-200 px-2">{errors.name}</span>
+                )}
             </div>
 
-            <div className="form-group">
-                <label>이메일</label>
-                <div className="input-with-button">
+            <div className="space-y-2">
+                <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                    이메일
+                </label>
+                <div className="flex gap-2">
                     <input
                         type="email"
                         name="email"
                         value={form.email}
                         onChange={handleChange}
                         placeholder="이메일을 입력하세요"
+                        className="flex-1 px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-sm font-light focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
                     />
-                    <button type="button" className="btn btn-secondary btn-small" onClick={handleCheckEmail}>
+                    <button 
+                        type="button" 
+                        className="px-4 py-3 rounded-full bg-transparent border border-white/30 text-white text-xs font-light transition-all duration-200 hover:bg-white/10 hover:border-white/50 whitespace-nowrap"
+                        onClick={handleCheckEmail}
+                    >
                         중복확인
                     </button>
                 </div>
-                {checks.email === true && <span className="success-msg">사용 가능한 이메일입니다.</span>}
-                {errors.email && <span className="error-msg">{errors.email}</span>}
+                {checks.email === true && (
+                    <span className="text-xs text-green-200 px-2">사용 가능한 이메일입니다.</span>
+                )}
+                {errors.email && (
+                    <span className="text-xs text-red-200 px-2">{errors.email}</span>
+                )}
             </div>
 
-            <div className="form-group">
-                <label>전화번호 (선택)</label>
+            <div className="space-y-2">
+                <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                    전화번호 (선택)
+                </label>
                 <input
                     type="tel"
                     name="phone"
                     value={form.phone}
                     onChange={handleChange}
                     placeholder="전화번호를 입력하세요"
+                    className="w-full px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-sm font-light focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
                 />
             </div>
 
-            <div className="button-group">
-                <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+            <div className="flex gap-4 pt-2">
+                <button 
+                    type="submit" 
+                    className="flex-1 px-8 py-3 rounded-full bg-white text-black font-normal text-xs transition-all duration-200 hover:bg-white/90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isSubmitting}
+                >
                     {isSubmitting ? '처리 중...' : '이메일 인증하기'}
                 </button>
-                <button type="button" className="btn btn-secondary" onClick={() => navigate('/login')}>
+                <button 
+                    type="button" 
+                    className="flex-1 px-8 py-3 rounded-full bg-transparent border border-white/30 text-white font-normal text-xs transition-all duration-200 hover:bg-white/10 hover:border-white/50 cursor-pointer"
+                    onClick={() => navigate('/login')}
+                >
                     로그인으로
                 </button>
             </div>
@@ -297,42 +349,46 @@ function Register() {
 
     // Step 2: 이메일 인증 코드 입력
     const renderStep2 = () => (
-        <form onSubmit={handleVerifyAndRegister}>
-            <div className="verification-info">
-                <p><strong>{form.email}</strong>로 인증 코드를 발송했습니다.</p>
-                <p>이메일에서 6자리 인증 코드를 확인해주세요.</p>
+        <form onSubmit={handleVerifyAndRegister} className="space-y-6">
+            <div className="px-4 py-4 rounded-full bg-white/5 border border-white/20 text-center space-y-2">
+                <p className="text-white/90 text-xs"><strong className="text-white">{form.email}</strong>로 인증 코드를 발송했습니다.</p>
+                <p className="text-white/90 text-xs">이메일에서 6자리 인증 코드를 확인해주세요.</p>
                 {codeExpiry > 0 && (
-                    <p className="expiry-timer">남은 시간: <strong>{formatTime(codeExpiry)}</strong></p>
+                    <p className="text-yellow-300 text-xs">남은 시간: <strong>{formatTime(codeExpiry)}</strong></p>
                 )}
                 {codeExpiry === 0 && (
-                    <p className="error-msg">인증 코드가 만료되었습니다. 재발송해주세요.</p>
+                    <p className="text-red-300 text-xs">인증 코드가 만료되었습니다. 재발송해주세요.</p>
                 )}
             </div>
 
-            <div className="form-group">
-                <label>인증 코드</label>
+            <div className="space-y-2">
+                <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                    인증 코드
+                </label>
                 <input
                     type="text"
                     value={verificationCode}
                     onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="6자리 인증 코드 입력"
                     maxLength={6}
-                    className="verification-code-input"
+                    className="w-full px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-center text-lg font-light tracking-widest focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
                 />
-                {verificationError && <span className="error-msg">{verificationError}</span>}
+                {verificationError && (
+                    <span className="text-xs text-red-200 px-2">{verificationError}</span>
+                )}
             </div>
 
-            <div className="button-group">
+            <div className="flex gap-4">
                 <button
                     type="submit"
-                    className="btn btn-primary"
+                    className="flex-1 px-8 py-3 rounded-full bg-white text-black font-normal text-xs transition-all duration-200 hover:bg-white/90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={isSubmitting || codeExpiry === 0}
                 >
                     {isSubmitting ? '처리 중...' : '인증 확인 및 가입'}
                 </button>
                 <button
                     type="button"
-                    className="btn btn-secondary"
+                    className="flex-1 px-8 py-3 rounded-full bg-transparent border border-white/30 text-white font-normal text-xs transition-all duration-200 hover:bg-white/10 hover:border-white/50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleResendCode}
                     disabled={countdown > 0}
                 >
@@ -340,8 +396,12 @@ function Register() {
                 </button>
             </div>
 
-            <div className="step-back">
-                <button type="button" className="btn-link" onClick={() => setStep(1)}>
+            <div className="text-center">
+                <button 
+                    type="button" 
+                    className="text-white/70 hover:text-white text-xs transition-colors"
+                    onClick={() => setStep(1)}
+                >
                     ← 이전 단계로
                 </button>
             </div>
@@ -350,14 +410,16 @@ function Register() {
 
     // Step 3: 가입 완료
     const renderStep3 = () => (
-        <div className="complete-section">
-            <div className="complete-icon">✓</div>
-            <h3>회원가입이 완료되었습니다!</h3>
-            <p>{form.name}님, 환영합니다.</p>
-            <p>이제 로그인하여 Synodos를 이용해보세요.</p>
+        <div className="text-center space-y-6">
+            <div className="w-16 h-16 rounded-full bg-green-500/20 border border-green-500/50 flex items-center justify-center mx-auto text-3xl text-green-200">
+                ✓
+            </div>
+            <h3 className="text-xl font-light text-white">회원가입이 완료되었습니다!</h3>
+            <p className="text-white/90 text-sm">{form.name}님, 환영합니다.</p>
+            <p className="text-white/90 text-sm">이제 로그인하여 Synodos를 이용해보세요.</p>
             <button
                 type="button"
-                className="btn btn-primary"
+                className="w-full px-8 py-3 rounded-full bg-white text-black font-normal text-xs transition-all duration-200 hover:bg-white/90 cursor-pointer"
                 onClick={() => navigate('/login')}
             >
                 로그인하기
@@ -366,33 +428,76 @@ function Register() {
     );
 
     return (
-        <div className="auth-container">
-            <div className="auth-box">
-                <h2>회원가입</h2>
+        <ShaderBackground>
+            <div className="min-h-screen flex items-center justify-center px-6 py-12">
+                <div 
+                    className="w-full max-w-md p-8 rounded-3xl bg-white/10 backdrop-blur-sm border border-white/20"
+                    style={{ filter: "url(#glass-effect)" }}
+                >
+                    {/* SVG Filters */}
+                    <svg className="absolute inset-0 w-0 h-0">
+                        <defs>
+                            <filter id="glass-effect" x="-50%" y="-50%" width="200%" height="200%">
+                                <feTurbulence baseFrequency="0.005" numOctaves="1" result="noise" />
+                                <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.3" />
+                                <feColorMatrix
+                                    type="matrix"
+                                    values="1 0 0 0 0.02
+                                      0 1 0 0 0.02
+                                      0 0 1 0 0.05
+                                      0 0 0 0.9 0"
+                                    result="tint"
+                                />
+                            </filter>
+                        </defs>
+                    </svg>
 
-                {/* 단계 표시 */}
-                <div className="step-indicator">
-                    <div className={`step ${step >= 1 ? 'active' : ''} ${step > 1 ? 'completed' : ''}`}>
-                        <span className="step-number">1</span>
-                        <span className="step-label">정보 입력</span>
+                    {/* Title */}
+                    <h2 className="text-3xl font-light text-white mb-8 text-center">
+                        회원가입
+                    </h2>
+
+                    {/* 단계 표시 */}
+                    <div className="flex items-center justify-center mb-8 gap-2">
+                        <div className={`flex flex-col items-center ${step >= 1 ? 'text-white' : 'text-white/40'}`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-light border transition-all ${
+                                step > 1 ? 'bg-green-500/20 border-green-500/50' : 
+                                step >= 1 ? 'bg-white/10 border-white/30' : 
+                                'bg-white/5 border-white/20'
+                            }`}>
+                                {step > 1 ? '✓' : '1'}
+                            </div>
+                            <span className="text-xs mt-1">정보 입력</span>
+                        </div>
+                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mx-2"></div>
+                        <div className={`flex flex-col items-center ${step >= 2 ? 'text-white' : 'text-white/40'}`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-light border transition-all ${
+                                step > 2 ? 'bg-green-500/20 border-green-500/50' : 
+                                step >= 2 ? 'bg-white/10 border-white/30' : 
+                                'bg-white/5 border-white/20'
+                            }`}>
+                                {step > 2 ? '✓' : '2'}
+                            </div>
+                            <span className="text-xs mt-1">이메일 인증</span>
+                        </div>
+                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mx-2"></div>
+                        <div className={`flex flex-col items-center ${step >= 3 ? 'text-white' : 'text-white/40'}`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-light border transition-all ${
+                                step >= 3 ? 'bg-white/10 border-white/30' : 
+                                'bg-white/5 border-white/20'
+                            }`}>
+                                3
+                            </div>
+                            <span className="text-xs mt-1">완료</span>
+                        </div>
                     </div>
-                    <div className="step-line"></div>
-                    <div className={`step ${step >= 2 ? 'active' : ''} ${step > 2 ? 'completed' : ''}`}>
-                        <span className="step-number">2</span>
-                        <span className="step-label">이메일 인증</span>
-                    </div>
-                    <div className="step-line"></div>
-                    <div className={`step ${step >= 3 ? 'active' : ''}`}>
-                        <span className="step-number">3</span>
-                        <span className="step-label">완료</span>
-                    </div>
+
+                    {step === 1 && renderStep1()}
+                    {step === 2 && renderStep2()}
+                    {step === 3 && renderStep3()}
                 </div>
-
-                {step === 1 && renderStep1()}
-                {step === 2 && renderStep2()}
-                {step === 3 && renderStep3()}
             </div>
-        </div>
+        </ShaderBackground>
     );
 }
 

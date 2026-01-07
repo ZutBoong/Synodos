@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getMyTeams } from '../api/teamApi';
 import { tasklistByAssignee, getTaskArchives } from '../api/boardApi';
 import Sidebar from '../components/Sidebar';
+import ShaderBackground from '../components/landing/shader-background';
 import './MyActivity.css';
 
 // 표시할 최대 아이템 개수
@@ -23,19 +24,25 @@ function MyActivity() {
 
     useEffect(() => {
         const storedMember = localStorage.getItem('member');
-        if (!storedMember) {
-            navigate('/login');
-            return;
-        }
+        // 로그인 체크 일시적으로 비활성화 (디자인 확인용)
+        // if (!storedMember) {
+        //     navigate('/login');
+        //     return;
+        // }
 
-        const memberData = JSON.parse(storedMember);
-        setLoginMember(memberData);
-        fetchData(Number(memberData.no || memberData.memberNo));
+        if (storedMember) {
+            const memberData = JSON.parse(storedMember);
+            setLoginMember(memberData);
+            fetchData(Number(memberData.no || memberData.memberNo));
 
-        // 저장된 현재 팀 불러오기
-        const storedTeam = localStorage.getItem('currentTeam');
-        if (storedTeam) {
-            setCurrentTeam(JSON.parse(storedTeam));
+            // 저장된 현재 팀 불러오기
+            const storedTeam = localStorage.getItem('currentTeam');
+            if (storedTeam) {
+                setCurrentTeam(JSON.parse(storedTeam));
+            }
+        } else {
+            // 로그인 없이도 화면은 보이도록 (데이터는 빈 상태)
+            setLoading(false);
         }
     }, [navigate]);
 
@@ -123,16 +130,17 @@ function MyActivity() {
 
 
     return (
-        <div className="myactivity-page">
-            <Sidebar
-                isOpen={sidebarOpen}
-                onToggle={() => setSidebarOpen(!sidebarOpen)}
-                currentTeam={currentTeam}
-                onSelectTeam={handleSelectTeam}
-                loginMember={loginMember}
-            />
+        <ShaderBackground>
+            <div className="myactivity-page">
+                <Sidebar
+                    isOpen={sidebarOpen}
+                    onToggle={() => setSidebarOpen(!sidebarOpen)}
+                    currentTeam={currentTeam}
+                    onSelectTeam={handleSelectTeam}
+                    loginMember={loginMember}
+                />
 
-            <div className={`myactivity-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+                <div className={`myactivity-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
                 {/* 통합 헤더 */}
                 <header className="team-header">
                     <div className="team-header-left">
@@ -410,7 +418,8 @@ function MyActivity() {
                     </div>
                 </div>
             )}
-        </div>
+            </div>
+        </ShaderBackground>
     );
 }
 

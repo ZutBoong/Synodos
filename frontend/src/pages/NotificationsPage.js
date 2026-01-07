@@ -8,6 +8,7 @@ import {
     deleteAllNotifications
 } from '../api/notificationApi';
 import Sidebar from '../components/Sidebar';
+import ShaderBackground from '../components/landing/shader-background';
 import './NotificationsPage.css';
 
 function NotificationsPage() {
@@ -217,16 +218,17 @@ function NotificationsPage() {
     const unreadCount = notifications.filter(n => !n.isRead).length;
 
     return (
-        <div className="notifications-page">
-            <Sidebar
-                isOpen={sidebarOpen}
-                onToggle={() => setSidebarOpen(!sidebarOpen)}
-                currentTeam={currentTeam}
-                onSelectTeam={handleSelectTeam}
-                loginMember={loginMember}
-            />
+        <ShaderBackground>
+            <div className="notifications-page">
+                <Sidebar
+                    isOpen={sidebarOpen}
+                    onToggle={() => setSidebarOpen(!sidebarOpen)}
+                    currentTeam={currentTeam}
+                    onSelectTeam={handleSelectTeam}
+                    loginMember={loginMember}
+                />
 
-            <div className={`notifications-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+                <div className={`notifications-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
                 <header className="notifications-header">
                     <div className="notifications-header-left">
                         <h1 className="notifications-title">알림함</h1>
@@ -400,8 +402,9 @@ function NotificationsPage() {
                         </div>
                     </div>
                 </div>
+                </div>
             </div>
-        </div>
+        </ShaderBackground>
     );
 }
 

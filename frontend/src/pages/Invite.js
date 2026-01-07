@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { joinTeam } from '../api/teamApi';
+import ShaderBackground from '../components/landing/shader-background';
 import './Invite.css';
 
 function Invite() {
@@ -76,8 +77,26 @@ function Invite() {
     };
 
     return (
-        <div className="invite-page">
-            <div className="invite-container">
+        <ShaderBackground>
+            <div className="invite-page">
+                <div className="invite-container">
+                    {/* SVG Filters */}
+                    <svg className="absolute inset-0 w-0 h-0">
+                        <defs>
+                            <filter id="glass-effect" x="-50%" y="-50%" width="200%" height="200%">
+                                <feTurbulence baseFrequency="0.005" numOctaves="1" result="noise" />
+                                <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.3" />
+                                <feColorMatrix
+                                    type="matrix"
+                                    values="1 0 0 0 0.02
+                                      0 1 0 0 0.02
+                                      0 0 1 0 0.05
+                                      0 0 0 0.9 0"
+                                    result="tint"
+                                />
+                            </filter>
+                        </defs>
+                    </svg>
                 <div className="invite-logo">Synodos</div>
 
                 {status === 'checking' && (
@@ -147,8 +166,9 @@ function Invite() {
                         </div>
                     </div>
                 )}
+                </div>
             </div>
-        </div>
+        </ShaderBackground>
     );
 }
 
