@@ -24,25 +24,19 @@ function MyActivity() {
 
     useEffect(() => {
         const storedMember = localStorage.getItem('member');
-        // 로그인 체크 일시적으로 비활성화 (디자인 확인용)
-        // if (!storedMember) {
-        //     navigate('/login');
-        //     return;
-        // }
+        if (!storedMember) {
+            navigate('/login');
+            return;
+        }
 
-        if (storedMember) {
-            const memberData = JSON.parse(storedMember);
-            setLoginMember(memberData);
-            fetchData(Number(memberData.no || memberData.memberNo));
+        const memberData = JSON.parse(storedMember);
+        setLoginMember(memberData);
+        fetchData(Number(memberData.no || memberData.memberNo));
 
-            // 저장된 현재 팀 불러오기
-            const storedTeam = localStorage.getItem('currentTeam');
-            if (storedTeam) {
-                setCurrentTeam(JSON.parse(storedTeam));
-            }
-        } else {
-            // 로그인 없이도 화면은 보이도록 (데이터는 빈 상태)
-            setLoading(false);
+        // 저장된 현재 팀 불러오기
+        const storedTeam = localStorage.getItem('currentTeam');
+        if (storedTeam) {
+            setCurrentTeam(JSON.parse(storedTeam));
         }
     }, [navigate]);
 
