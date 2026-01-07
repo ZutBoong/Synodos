@@ -11,7 +11,7 @@ import { columnlistByTeam } from '../../api/boardApi';
 import { useNavigate } from 'react-router-dom';
 import './SettingsView.css';
 
-function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewColumns }) {
+function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewColumns, refreshData }) {
     const navigate = useNavigate();
     const [teamMembers, setTeamMembers] = useState([]);
     const [activeSection, setActiveSection] = useState('general');
@@ -123,8 +123,23 @@ function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewCo
         try {
             const result = await bulkImportIssues(team.teamId, loginMember.no);
             setSyncResult({ type: 'import', success: result.imported, skipped: result.skipped, failed: result.failed });
-            alert(result.imported > 0 ? `${result.imported}개의 Issue를 가져왔습니다.` : '가져올 Issue가 없습니다.');
+
+            // 결과 메시지 생성
+            let message = '';
+            if (result.errors && result.errors.length > 0) {
+                message = '오류: ' + result.errors.join('\n');
+            } else if (result.imported > 0) {
+                message = `${result.imported}개의 Issue를 가져왔습니다.`;
+                if (result.skipped > 0) message += ` (${result.skipped}개는 이미 연결됨)`;
+            } else if (result.skipped > 0) {
+                message = `모든 Issue가 이미 연결되어 있습니다. (${result.skipped}개)`;
+            } else {
+                message = '가져올 Issue가 없습니다.';
+            }
+            alert(message);
             fetchUnlinkedCounts();
+            // 데이터 새로고침
+            if (refreshData) refreshData();
         } catch (error) {
             alert('일괄 가져오기에 실패했습니다: ' + (error.response?.data?.error || error.message));
         } finally {
@@ -177,6 +192,8 @@ function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewCo
             setSyncResult({ type: 'export', success: result.exported, skipped: result.skipped, failed: result.failed });
             alert(result.exported > 0 ? `${result.exported}개의 Task를 내보냈습니다.` : '내보낼 Task가 없습니다.');
             fetchUnlinkedCounts();
+            // 데이터 새로고침 (Task에 GitHub Issue 연결 정보 업데이트)
+            if (refreshData) refreshData();
         } catch (error) {
             alert('일괄 내보내기에 실패했습니다: ' + (error.response?.data?.error || error.message));
         } finally {

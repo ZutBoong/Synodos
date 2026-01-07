@@ -10,10 +10,26 @@
 --
 -- ON CONFLICT DO NOTHING으로 중복 삽입을 방지합니다.
 -- =============================================
+--
+-- 🔑 개발자용 계정 (모든 권한)
+-- =============================================
+-- ID: dev / PW: 1234
+-- - 이메일 인증 완료
+-- - GitHub 연동: 아래 SQL로 설정 가능
+-- - 팀 리더 권한
+--
+-- GitHub 연동 방법 (본인 계정으로 변경):
+-- UPDATE member SET github_username = 'YourGitHubUsername', github_access_token = 'ghp_xxxx' WHERE userid = 'dev';
+-- =============================================
 
 -- =============================================
 -- 1. 회원 데이터
 -- =============================================
+-- 개발자 슈퍼계정 (GitHub 미연동 상태, 직접 설정 필요)
+INSERT INTO member (no, userid, password, name, email, phone, email_verified, register)
+VALUES (nextval('member_seq'), 'dev', '$2a$10$DYzhovtDrzm6o3IQPkhiuOE8PETt2.GR9xeAbfMQUHhLtT6pY.K2e', '개발자', 'dev@synodos.com', '010-9999-9999', true, CURRENT_TIMESTAMP)
+ON CONFLICT (userid) DO NOTHING;
+
 INSERT INTO member (no, userid, password, name, email, phone, email_verified, register)
 VALUES (nextval('member_seq'), 'admin', '$2a$10$DYzhovtDrzm6o3IQPkhiuOE8PETt2.GR9xeAbfMQUHhLtT6pY.K2e', '관리자', 'admin@synodos.com', '010-0000-0000', true, CURRENT_TIMESTAMP)
 ON CONFLICT (userid) DO NOTHING;
@@ -57,17 +73,43 @@ ON CONFLICT (userid) DO NOTHING;
 -- =============================================
 -- 2. 팀 데이터
 -- =============================================
+-- 기본 테스트 팀 (admin 리더)
 INSERT INTO team (team_id, team_name, description, leader_no, team_code, github_issue_sync_enabled, created_at)
 VALUES (nextval('team_seq'), 'Synodos 테스트 프로젝트', 'GitHub 연동 테스트를 위한 프로젝트입니다.',
         (SELECT no FROM member WHERE userid = 'admin'), 'SYNODOS1', TRUE, CURRENT_TIMESTAMP)
 ON CONFLICT (team_code) DO NOTHING;
 
+-- 개발자용 팀 (dev 리더, GitHub 저장소는 직접 설정)
+-- GitHub 저장소 연결: 팀 설정에서 연결하거나 아래 SQL 실행
+-- UPDATE team SET github_repo_url = 'https://github.com/YourUsername/YourRepo' WHERE team_code = 'DEVTEAM1';
+INSERT INTO team (team_id, team_name, description, leader_no, team_code, github_issue_sync_enabled, created_at)
+VALUES (nextval('team_seq'), '개발자 테스트팀', '개발자 테스트용 팀입니다. GitHub 저장소를 연결하여 사용하세요.',
+        (SELECT no FROM member WHERE userid = 'dev'), 'DEVTEAM1', TRUE, CURRENT_TIMESTAMP)
+ON CONFLICT (team_code) DO NOTHING;
+
 -- =============================================
 -- 3. 팀 멤버 데이터
 -- =============================================
+-- SYNODOS1 팀 멤버
 INSERT INTO team_member (team_id, member_no, role, joined_at)
 SELECT t.team_id, m.no, 'LEADER', CURRENT_TIMESTAMP
 FROM team t, member m WHERE t.team_code = 'SYNODOS1' AND m.userid = 'admin'
+ON CONFLICT (team_id, member_no) DO NOTHING;
+
+-- DEVTEAM1 팀 멤버 (dev가 리더, 모든 사용자 포함)
+INSERT INTO team_member (team_id, member_no, role, joined_at)
+SELECT t.team_id, m.no, 'LEADER', CURRENT_TIMESTAMP
+FROM team t, member m WHERE t.team_code = 'DEVTEAM1' AND m.userid = 'dev'
+ON CONFLICT (team_id, member_no) DO NOTHING;
+
+INSERT INTO team_member (team_id, member_no, role, joined_at)
+SELECT t.team_id, m.no, 'MEMBER', CURRENT_TIMESTAMP
+FROM team t, member m WHERE t.team_code = 'DEVTEAM1' AND m.userid = 'admin'
+ON CONFLICT (team_id, member_no) DO NOTHING;
+
+INSERT INTO team_member (team_id, member_no, role, joined_at)
+SELECT t.team_id, m.no, 'MEMBER', CURRENT_TIMESTAMP
+FROM team t CROSS JOIN member m WHERE t.team_code = 'DEVTEAM1' AND m.userid LIKE 'user%'
 ON CONFLICT (team_id, member_no) DO NOTHING;
 
 INSERT INTO team_member (team_id, member_no, role, joined_at)
@@ -136,6 +178,27 @@ ON CONFLICT DO NOTHING;
 
 INSERT INTO columns (column_id, team_id, title, position)
 SELECT nextval('column_seq'), team_id, 'Done', 4 FROM team WHERE team_code = 'SYNODOS1'
+ON CONFLICT DO NOTHING;
+
+-- DEVTEAM1 컬럼
+INSERT INTO columns (column_id, team_id, title, position)
+SELECT nextval('column_seq'), team_id, 'Backlog', 0 FROM team WHERE team_code = 'DEVTEAM1'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO columns (column_id, team_id, title, position)
+SELECT nextval('column_seq'), team_id, 'To Do', 1 FROM team WHERE team_code = 'DEVTEAM1'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO columns (column_id, team_id, title, position)
+SELECT nextval('column_seq'), team_id, 'In Progress', 2 FROM team WHERE team_code = 'DEVTEAM1'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO columns (column_id, team_id, title, position)
+SELECT nextval('column_seq'), team_id, 'Review', 3 FROM team WHERE team_code = 'DEVTEAM1'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO columns (column_id, team_id, title, position)
+SELECT nextval('column_seq'), team_id, 'Done', 4 FROM team WHERE team_code = 'DEVTEAM1'
 ON CONFLICT DO NOTHING;
 
 -- =============================================
@@ -319,3 +382,60 @@ SELECT nextval('notification_seq'), r.no, s.no, 'TEAM_INVITED', '팀에 초대�
        'Synodos 테스트 프로젝트 팀에 초대되었습니다.', tm.team_id, true, CURRENT_TIMESTAMP - INTERVAL '5 days'
 FROM member r, member s, team tm
 WHERE r.userid = 'user9' AND s.userid = 'admin' AND tm.team_code = 'SYNODOS1';
+
+-- =============================================
+-- 10. DEVTEAM1 태스크 데이터
+-- =============================================
+-- To Do (GitHub 연동 테스트용)
+INSERT INTO task (task_id, column_id, title, description, position, priority, workflow_status, start_date, due_date, created_by)
+SELECT nextval('task_seq'), c.column_id, 'GitHub Issue 연동 테스트', 'GitHub Issue와 연동되는지 테스트합니다.',
+       0, 'HIGH', 'WAITING', CURRENT_DATE, CURRENT_DATE + 7, (SELECT no FROM member WHERE userid = 'dev')
+FROM columns c JOIN team t ON c.team_id = t.team_id
+WHERE t.team_code = 'DEVTEAM1' AND c.title = 'To Do';
+
+INSERT INTO task (task_id, column_id, title, description, position, priority, workflow_status, start_date, due_date, created_by)
+SELECT nextval('task_seq'), c.column_id, 'PR 생성 테스트', 'Task에서 PR을 생성하는 기능을 테스트합니다.',
+       1, 'MEDIUM', 'WAITING', CURRENT_DATE, CURRENT_DATE + 14, (SELECT no FROM member WHERE userid = 'dev')
+FROM columns c JOIN team t ON c.team_id = t.team_id
+WHERE t.team_code = 'DEVTEAM1' AND c.title = 'To Do';
+
+-- In Progress
+INSERT INTO task (task_id, column_id, title, description, position, priority, workflow_status, start_date, due_date, created_by)
+SELECT nextval('task_seq'), c.column_id, '브랜치 뷰 테스트', 'GitHub 브랜치 시각화 기능을 테스트합니다.',
+       0, 'HIGH', 'IN_PROGRESS', CURRENT_DATE - 3, CURRENT_DATE + 5, (SELECT no FROM member WHERE userid = 'dev')
+FROM columns c JOIN team t ON c.team_id = t.team_id
+WHERE t.team_code = 'DEVTEAM1' AND c.title = 'In Progress';
+
+INSERT INTO task (task_id, column_id, title, description, position, priority, workflow_status, start_date, due_date, created_by)
+SELECT nextval('task_seq'), c.column_id, 'AI 머지 충돌 해결 테스트', 'AI를 사용한 머지 충돌 해결 기능을 테스트합니다.',
+       1, 'CRITICAL', 'IN_PROGRESS', CURRENT_DATE - 2, CURRENT_DATE + 3, (SELECT no FROM member WHERE userid = 'dev')
+FROM columns c JOIN team t ON c.team_id = t.team_id
+WHERE t.team_code = 'DEVTEAM1' AND c.title = 'In Progress';
+
+-- Done
+INSERT INTO task (task_id, column_id, title, description, position, priority, workflow_status, start_date, due_date, created_by)
+SELECT nextval('task_seq'), c.column_id, '프로젝트 환경 설정', '개발 환경 설정을 완료했습니다.',
+       0, 'HIGH', 'DONE', CURRENT_DATE - 10, CURRENT_DATE - 5, (SELECT no FROM member WHERE userid = 'dev')
+FROM columns c JOIN team t ON c.team_id = t.team_id
+WHERE t.team_code = 'DEVTEAM1' AND c.title = 'Done';
+
+-- =============================================
+-- 11. DEVTEAM1 담당자 데이터
+-- =============================================
+INSERT INTO task_assignee (task_id, member_no, accepted, completed, assigned_at)
+SELECT t.task_id, m.no, true, false, CURRENT_TIMESTAMP
+FROM task t, member m, columns c, team tm
+WHERE t.column_id = c.column_id AND c.team_id = tm.team_id
+  AND tm.team_code = 'DEVTEAM1' AND t.title = '브랜치 뷰 테스트' AND m.userid = 'dev';
+
+INSERT INTO task_assignee (task_id, member_no, accepted, completed, assigned_at)
+SELECT t.task_id, m.no, true, false, CURRENT_TIMESTAMP
+FROM task t, member m, columns c, team tm
+WHERE t.column_id = c.column_id AND c.team_id = tm.team_id
+  AND tm.team_code = 'DEVTEAM1' AND t.title = 'AI 머지 충돌 해결 테스트' AND m.userid = 'dev';
+
+INSERT INTO task_assignee (task_id, member_no, accepted, completed, assigned_at)
+SELECT t.task_id, m.no, true, true, CURRENT_TIMESTAMP
+FROM task t, member m, columns c, team tm
+WHERE t.column_id = c.column_id AND c.team_id = tm.team_id
+  AND tm.team_code = 'DEVTEAM1' AND t.title = '프로젝트 환경 설정' AND m.userid = 'dev';

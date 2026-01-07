@@ -4,8 +4,11 @@
 
 	<!-- 컬럼 생성 (github_prefix 기본값: [컬럼명]) -->
 	<insert id="insert" parameterType="synodoscolumn">
+		<selectKey keyProperty="columnId" resultType="int" order="BEFORE">
+			SELECT nextval('column_seq')
+		</selectKey>
 		INSERT INTO columns (column_id, title, position, team_id, github_prefix)
-		VALUES (nextval('column_seq'), #{title},
+		VALUES (#{columnId}, #{title},
 			(SELECT COALESCE(MAX(position), 0) + 1 FROM columns WHERE team_id = #{teamId}),
 			#{teamId},
 			COALESCE(#{githubPrefix}, '[' || #{title} || ']'))

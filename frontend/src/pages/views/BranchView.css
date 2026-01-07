@@ -148,6 +148,36 @@
     margin-left: 6px;
 }
 
+.pr-badge {
+    font-size: 9px;
+    color: #fff;
+    background: #238636;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+    font-weight: 500;
+}
+
+/* PR 인디케이터 (노드 원에 표시) */
+.pr-indicator circle:first-child {
+    animation: pr-pulse 2s ease-in-out infinite;
+}
+
+@keyframes pr-pulse {
+    0%, 100% {
+        opacity: 0.9;
+        stroke-width: 3;
+    }
+    50% {
+        opacity: 0.5;
+        stroke-width: 4;
+    }
+}
+
+.pr-indicator circle:last-of-type {
+    filter: drop-shadow(0 2px 4px rgba(35, 134, 54, 0.5));
+}
+
 .branch-actions {
     display: flex;
     gap: 4px;

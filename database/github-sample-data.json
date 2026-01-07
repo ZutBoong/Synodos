@@ -1,0 +1,202 @@
+{
+  "repository": "ZutBoong/Synodos-Test",
+  "exported_at": "2026-01-07",
+  "labels": [
+    {
+      "name": "status:declined",
+      "color": "6b7280",
+      "description": "Task was declined"
+    },
+    {
+      "name": "status:done",
+      "color": "10b981",
+      "description": "Task is completed"
+    },
+    {
+      "name": "status:in-progress",
+      "color": "3b82f6",
+      "description": "Task is in progress"
+    },
+    {
+      "name": "status:rejected",
+      "color": "ef4444",
+      "description": "Task was rejected"
+    },
+    {
+      "name": "status:review",
+      "color": "f59e0b",
+      "description": "Task is under review"
+    },
+    {
+      "name": "status:waiting",
+      "color": "94a3b8",
+      "description": "Task is waiting to be started"
+    }
+  ],
+  "milestones": [
+    {
+      "title": "Sprint 1",
+      "description": "First sprint",
+      "state": "open",
+      "due_on": "2026-01-15T00:00:00Z"
+    },
+    {
+      "title": "Sprint 2",
+      "description": "Second sprint",
+      "state": "open",
+      "due_on": "2026-01-31T00:00:00Z"
+    },
+    {
+      "title": "v1.0 Release",
+      "description": "Version 1.0 release",
+      "state": "open",
+      "due_on": "2026-02-15T00:00:00Z"
+    }
+  ],
+  "issues": [
+    {
+      "number": 1,
+      "title": "[Feature] Login Implementation",
+      "body": "## Description\nImplement user login and registration functionality.\n\n## Tasks\n- [ ] Create login form\n- [ ] Add JWT token handling\n- [ ] Implement session management",
+      "state": "open",
+      "labels": ["status:done"],
+      "milestone": "Sprint 1"
+    },
+    {
+      "number": 2,
+      "title": "[Feature] Dashboard Enhancement",
+      "body": "## Bug Description\nWhen JWT token expires, the app crashes instead of redirecting to login.\n\n## Steps to Reproduce\n1. Login to the app\n2. Wait for token to expire\n3. Try to access protected route\n\n## Expected Behavior\nShould redirect to login page.",
+      "state": "open",
+      "labels": ["status:in-progress"],
+      "milestone": "Sprint 1"
+    },
+    {
+      "number": 3,
+      "title": "[Bug] Token Expiration Handling",
+      "body": "## Description\nCreate a dashboard page showing key metrics and charts.\n\n## Requirements\n- User activity chart\n- Task completion stats\n- Team performance widget",
+      "state": "open",
+      "labels": ["status:waiting"],
+      "milestone": "Sprint 1"
+    },
+    {
+      "number": 4,
+      "title": "feat: Add login and authentication",
+      "body": "## Summary\nAdd login and authentication functionality.\n\n## Changes\n- Login component\n- JWT handling\n- Session management\n\nFixes #1",
+      "state": "open",
+      "labels": [],
+      "milestone": null
+    },
+    {
+      "number": 5,
+      "title": "feat: Add dashboard with widgets",
+      "body": "## Summary\nAdd dashboard page with analytics widgets.\n\n## Changes\n- Dashboard component\n- Analytics charts\n- Team metrics\n\nFixes #2",
+      "state": "open",
+      "labels": [],
+      "milestone": null
+    },
+    {
+      "number": 6,
+      "title": "fix: Handle token expiration properly",
+      "body": "## Summary\nFix token expiration handling bug.\n\n## Changes\n- Add token refresh logic\n- Redirect to login on expiration\n\nFixes #3",
+      "state": "open",
+      "labels": [],
+      "milestone": null
+    },
+    {
+      "number": 7,
+      "title": "[Feature] User profile page",
+      "body": "## Description\nCreate a user profile page with settings.\n\n## Tasks\n- [ ] Profile avatar upload\n- [ ] Edit user info\n- [ ] Password change",
+      "state": "open",
+      "labels": ["status:review"],
+      "milestone": "Sprint 2"
+    },
+    {
+      "number": 8,
+      "title": "[Bug] Search results not updating",
+      "body": "## Bug\nSearch results don't refresh after filtering.\n\n## Steps\n1. Search for item\n2. Apply filter\n3. Results stay the same",
+      "state": "open",
+      "labels": ["status:in-progress"],
+      "milestone": "Sprint 2"
+    },
+    {
+      "number": 9,
+      "title": "[Feature] Dark mode support",
+      "body": "Add dark mode theme toggle.",
+      "state": "open",
+      "labels": ["status:review"],
+      "milestone": "Sprint 2"
+    },
+    {
+      "number": 10,
+      "title": "[Bug] Memory leak in WebSocket",
+      "body": "WebSocket connections not properly closed.",
+      "state": "open",
+      "labels": ["status:in-progress"],
+      "milestone": "Sprint 2"
+    },
+    {
+      "number": 11,
+      "title": "[Feature] Export to PDF",
+      "body": "Allow users to export reports as PDF.",
+      "state": "open",
+      "labels": ["status:waiting"],
+      "milestone": "v1.0 Release"
+    },
+    {
+      "number": 12,
+      "title": "[Bug] Notification sound not playing",
+      "body": "Push notifications arrive but no sound.",
+      "state": "open",
+      "labels": ["status:waiting"],
+      "milestone": "v1.0 Release"
+    },
+    {
+      "number": 13,
+      "title": "[Feature] Calendar integration",
+      "body": "Sync tasks with Google Calendar.",
+      "state": "open",
+      "labels": ["status:waiting"],
+      "milestone": "v1.0 Release"
+    },
+    {
+      "number": 14,
+      "title": "feat: User profile page",
+      "body": "## Summary\nImplement user profile page with avatar and settings.\n\n## Changes\n- Profile component\n- Profile styles\n\nFixes #7",
+      "state": "open",
+      "labels": [],
+      "milestone": null
+    },
+    {
+      "number": 15,
+      "title": "feat: Dark mode support",
+      "body": "## Summary\nAdd dark mode theme toggle support.\n\n## Changes\n- Theme context\n- CSS variables for dark mode\n\nFixes #9",
+      "state": "open",
+      "labels": [],
+      "milestone": null
+    },
+    {
+      "number": 16,
+      "title": "fix: Search results not updating",
+      "body": "## Summary\nFix search cache not being cleared when filters change.\n\n## Changes\n- Clear cache on filter change\n\nFixes #8",
+      "state": "open",
+      "labels": [],
+      "milestone": null
+    },
+    {
+      "number": 17,
+      "title": "fix: WebSocket memory leak",
+      "body": "## Summary\nFix WebSocket connections not being properly closed.\n\n## Changes\n- Add proper cleanup method\n- Track connections in Map\n\nFixes #10",
+      "state": "open",
+      "labels": [],
+      "milestone": null
+    },
+    {
+      "number": 18,
+      "title": "feat: Export to PDF",
+      "body": "## Summary\nAdd PDF export functionality for reports.\n\n## Changes\n- PDF export service using jsPDF\n\nFixes #11",
+      "state": "open",
+      "labels": [],
+      "milestone": null
+    }
+  ]
+}

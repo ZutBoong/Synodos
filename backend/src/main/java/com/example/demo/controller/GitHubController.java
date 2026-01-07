@@ -921,6 +921,11 @@ public class GitHubController {
 
             // 3. Task에 연결된 Issue가 있으면 해당 Issue를 참조하는 PR도 검색
             TaskGitHubIssue linkedIssue = taskGitHubIssueDao.findByTaskId(taskId);
+            log.info("Task {} linked issue: {}, repoInfo: {}, hasToken: {}",
+                taskId,
+                linkedIssue != null ? "#" + linkedIssue.getIssueNumber() : "null",
+                repoInfo != null ? repoInfo.owner + "/" + repoInfo.repo : "null",
+                accessToken != null);
             if (linkedIssue != null && repoInfo != null && accessToken != null) {
                 try {
                     List<GitHubPullRequest> issuePRs = gitHubService.listPullRequestsForIssue(

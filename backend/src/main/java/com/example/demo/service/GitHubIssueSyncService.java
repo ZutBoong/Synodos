@@ -1118,31 +1118,53 @@ public class GitHubIssueSyncService {
     @Transactional
     public BulkSyncResult importAllIssues(int teamId, int memberNo) {
         BulkSyncResult result = new BulkSyncResult();
+        log.info("Starting bulk import for team {} by member {}", teamId, memberNo);
 
         // 멤버 및 팀 검증
         Member member = memberDao.findByNo(memberNo);
-        if (member == null || member.getGithubAccessToken() == null) {
-            result.addError("GitHub 계정이 연결되지 않았습니다.");
+        if (member == null) {
+            log.warn("Member {} not found", memberNo);
+            result.addError("사용자를 찾을 수 없습니다.");
+            return result;
+        }
+        if (member.getGithubAccessToken() == null) {
+            log.warn("Member {} has no GitHub access token", memberNo);
+            result.addError("GitHub 계정이 연결되지 않았습니다. 설정에서 GitHub 계정을 연결해주세요.");
             return result;
         }
 
         Team team = teamDao.findById(teamId);
-        if (team == null || team.getGithubRepoUrl() == null) {
-            result.addError("팀 또는 GitHub 저장소 설정을 찾을 수 없습니다.");
+        if (team == null) {
+            log.warn("Team {} not found", teamId);
+            result.addError("팀을 찾을 수 없습니다.");
+            return result;
+        }
+        if (team.getGithubRepoUrl() == null) {
+            log.warn("Team {} has no GitHub repo URL", teamId);
+            result.addError("GitHub 저장소가 연결되지 않았습니다. 먼저 저장소를 연결해주세요.");
             return result;
         }
 
         GitHubService.RepoInfo repoInfo = gitHubService.parseRepoUrl(team.getGithubRepoUrl());
         if (repoInfo == null) {
-            result.addError("잘못된 GitHub 저장소 URL입니다.");
+            log.warn("Failed to parse repo URL: {}", team.getGithubRepoUrl());
+            result.addError("잘못된 GitHub 저장소 URL입니다: " + team.getGithubRepoUrl());
             return result;
         }
+        log.info("Importing from GitHub repo: {}/{}", repoInfo.owner, repoInfo.repo);
 
         // 팀의 컬럼 목록 로드 (github_prefix 포함)
         List<SynodosColumn> columns = columnDao.listByTeam(teamId);
         if (columns.isEmpty()) {
-            result.addError("팀에 컬럼이 없습니다. 먼저 컬럼을 생성해주세요.");
-            return result;
+            // 컬럼이 없으면 기본 컬럼 자동 생성
+            log.info("Team {} has no columns, creating default column", teamId);
+            SynodosColumn defaultColumn = new SynodosColumn();
+            defaultColumn.setTeamId(teamId);
+            defaultColumn.setTitle("To Do");
+            defaultColumn.setPosition(0);
+            columnDao.insert(defaultColumn);
+            columns.add(defaultColumn);
+            log.info("Created default column 'To Do' for team {}", teamId);
         }
         log.info("Columns for team {}: {}", teamId, columns.stream()
             .map(c -> c.getTitle() + "=" + c.getGithubPrefix())
@@ -1194,7 +1216,14 @@ public class GitHubIssueSyncService {
                 task.setTitle(cleanTitle);
                 task.setDescription(issue.getBody());
                 task.setPosition(taskDao.getMaxPosition(targetColumnId) + 1);
-                task.setWorkflowStatus("closed".equals(issue.getState()) ? "DONE" : "WAITING");
+
+                // Label에서 상태 추출 (없으면 Issue state 기반으로 결정)
+                String workflowStatus = labelService.extractStatusFromLabels(issue.getLabels());
+                if (workflowStatus == null) {
+                    workflowStatus = "closed".equals(issue.getState()) ? "DONE" : "WAITING";
+                }
+                task.setWorkflowStatus(workflowStatus);
+
                 // Label에서 우선순위 추출 (없으면 null)
                 String priority = labelService.extractPriorityFromLabels(issue.getLabels());
                 task.setPriority(priority);

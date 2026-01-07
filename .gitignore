@@ -109,3 +109,8 @@ pids/
 # Yarn
 .yarn/cache
 .yarn/install-state.gz
+
+# GitHub sample repo scripts (스크립트 실행 시 생성되는 임시 파일)
+temp-github-sample/.git/
+temp-github-sample/src/
+temp-github-sample/temp-conflict-repo/

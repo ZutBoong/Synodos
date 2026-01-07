@@ -78,12 +78,32 @@ docker-compose down -v                 # Stop and remove volumes (DB reset)
 - Restart alone preserves data
 
 ### Test Accounts (Local Development)
-Run `sample-data.sql` manually for test data:
-```bash
-psql -U flow -d synodos -f backend/src/main/resources/sample-data.sql
+
+**샘플 데이터 자동 로드:**
+- 백엔드 실행 시 `sample-data.sql`이 자동 실행됨 (Spring Boot `spring.sql.init.data-locations`)
+- `ON CONFLICT DO NOTHING`으로 중복 방지 → 재시작해도 안전
+
+**기본 테스트 계정:**
+| ID | Password | 용도 |
+|----|----------|------|
+| `dev` | `1234` | 개발자 슈퍼계정 (GitHub 미연동) |
+| `admin` | `1234` | 관리자 계정 |
+| `user1`~`user8` | `1234` | 일반 사용자 |
+
+**테스트 팀:**
+- DEVTEAM1 (개발팀1) - 기본 컬럼과 태스크 포함
+
+**GitHub 연동 설정 (선택):**
+개발자 계정으로 GitHub 기능을 테스트하려면:
+```sql
+-- PostgreSQL에서 직접 실행
+UPDATE member SET
+  github_username = 'YourGitHubUsername',
+  github_access_token = 'ghp_xxxx...'
+WHERE userid = 'dev';
 ```
-- **Users**: admin, user1~user8 (password: `1234`)
-- **Teams**: Sample team with columns and tasks
+
+또는 로그인 후 마이페이지에서 GitHub 연동 버튼으로 OAuth 연결 가능.
 
 **Local Schema Initialization:**
 - Spring Boot auto-executes `schema.sql` on startup (`spring.sql.init.mode=always`)

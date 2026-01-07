@@ -1454,11 +1454,11 @@ public class GitHubService {
      */
     public List<GitHubPullRequest> listPullRequestsForIssue(String accessToken, String owner, String repo,
                                                             int issueNumber) {
-        // GitHub Search API를 사용하여 Issue를 참조하는 PR 검색
-        String query = String.format("repo:%s/%s is:pr %d in:body", owner, repo, issueNumber);
-        String apiUrl = "https://api.github.com/search/issues?q=" + java.net.URLEncoder.encode(query, java.nio.charset.StandardCharsets.UTF_8);
+        // PR 목록을 조회하여 body에 Issue 참조(#N, Fixes #N, Closes #N 등)가 있는지 확인
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/pulls?state=all&per_page=100", owner, repo);
+        String issueRef = "#" + issueNumber;
 
-        log.debug("Searching PRs for issue #{} in {}/{}", issueNumber, owner, repo);
+        log.info("Searching PRs referencing issue #{} in {}/{}", issueNumber, owner, repo);
 
         try {
             HttpHeaders headers = createAuthHeaders(accessToken);
@@ -1468,13 +1468,13 @@ public class GitHubService {
                 apiUrl, HttpMethod.GET, entity, String.class
             );
 
-            JsonNode root = objectMapper.readTree(response.getBody());
-            JsonNode items = root.path("items");
+            JsonNode prArray = objectMapper.readTree(response.getBody());
             List<GitHubPullRequest> prs = new ArrayList<>();
 
-            for (JsonNode node : items) {
-                if (node.has("pull_request")) {
-                    // 검색 결과는 간략한 정보만 제공하므로 필요한 필드 추출
+            for (JsonNode node : prArray) {
+                String body = node.path("body").asText("");
+                // body에 #N 참조가 있는지 확인
+                if (body.contains(issueRef)) {
                     GitHubPullRequest pr = new GitHubPullRequest();
                     pr.setNumber(node.path("number").asInt());
                     pr.setTitle(node.path("title").asText());
@@ -1482,6 +1482,17 @@ public class GitHubService {
                     pr.setHtmlUrl(node.path("html_url").asText());
                     pr.setCreatedAt(node.path("created_at").asText());
                     pr.setUpdatedAt(node.path("updated_at").asText());
+                    pr.setMerged(node.path("merged_at").asText(null) != null);
+                    pr.setMergedAt(node.path("merged_at").asText(null));
+
+                    JsonNode headNode = node.path("head");
+                    if (!headNode.isMissingNode()) {
+                        pr.setHeadRef(headNode.path("ref").asText());
+                    }
+                    JsonNode baseNode = node.path("base");
+                    if (!baseNode.isMissingNode()) {
+                        pr.setBaseRef(baseNode.path("ref").asText());
+                    }
 
                     JsonNode userNode = node.path("user");
                     if (!userNode.isMissingNode()) {
@@ -1490,9 +1501,11 @@ public class GitHubService {
                     }
 
                     prs.add(pr);
+                    log.info("Found PR #{} referencing issue #{}", pr.getNumber(), issueNumber);
                 }
             }
 
+            log.info("Found {} PRs referencing issue #{}", prs.size(), issueNumber);
             return prs;
         } catch (Exception e) {
             log.error("Failed to search PRs for issue: {}", e.getMessage());
@@ -1725,16 +1738,23 @@ public class GitHubService {
      * 특정 브랜치에서 파일 내용을 조회합니다.
      */
     public FileContent getFileContent(String accessToken, String owner, String repo, String path, String ref) {
+        // 경로에서 슬래시는 유지하고 각 부분만 인코딩 (슬래시를 %2F로 인코딩하면 404 발생)
         String encodedPath = path;
         try {
-            encodedPath = java.net.URLEncoder.encode(path, "UTF-8").replace("+", "%20");
+            String[] parts = path.split("/");
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < parts.length; i++) {
+                if (i > 0) sb.append("/");
+                sb.append(java.net.URLEncoder.encode(parts[i], "UTF-8").replace("+", "%20"));
+            }
+            encodedPath = sb.toString();
         } catch (Exception e) {
             // ignore
         }
 
         String apiUrl = String.format("https://api.github.com/repos/%s/%s/contents/%s?ref=%s",
                                       owner, repo, encodedPath, ref);
-        log.debug("Getting file content: {} at {}", path, ref);
+        log.debug("Getting file content: {} at {} (encoded: {})", path, ref, encodedPath);
 
         try {
             HttpHeaders headers = createAuthHeaders(accessToken);
@@ -1773,16 +1793,23 @@ public class GitHubService {
     public FileUpdateResult updateFileContent(String accessToken, String owner, String repo,
                                                String path, String content, String message,
                                                String branch, String sha) {
+        // 경로에서 슬래시는 유지하고 각 부분만 인코딩
         String encodedPath = path;
         try {
-            encodedPath = java.net.URLEncoder.encode(path, "UTF-8").replace("+", "%20");
+            String[] parts = path.split("/");
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < parts.length; i++) {
+                if (i > 0) sb.append("/");
+                sb.append(java.net.URLEncoder.encode(parts[i], "UTF-8").replace("+", "%20"));
+            }
+            encodedPath = sb.toString();
         } catch (Exception e) {
             // ignore
         }
 
         String apiUrl = String.format("https://api.github.com/repos/%s/%s/contents/%s",
                                       owner, repo, encodedPath);
-        log.info("Updating file: {} on branch {}", path, branch);
+        log.info("Updating file: {} on branch {} (encoded: {})", path, branch, encodedPath);
 
         try {
             HttpHeaders headers = createAuthHeaders(accessToken);

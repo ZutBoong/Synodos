@@ -262,7 +262,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
         if (!task?.taskId || !teamId) return;
         setPRLoading(true);
         try {
-            const result = await createTaskBranch(task.taskId, teamId);
+            const result = await createTaskBranch(task.taskId, teamId, null, null, loginMember?.memberNo);
             if (result.success) {
                 alert(`브랜치가 생성되었습니다: ${result.branchName}`);
                 fetchBranches();
@@ -290,7 +290,8 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                 prForm.headBranch,
                 prForm.baseBranch || defaultBranch,
                 prForm.title,
-                prForm.body
+                prForm.body,
+                loginMember?.memberNo
             );
             if (result.success) {
                 alert(`PR이 생성되었습니다: #${result.pr.number}`);
@@ -330,7 +331,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
 
         // PR 상세 정보 조회 (머지 가능 여부 확인)
         try {
-            const detail = await getPRDetail(teamId, pr.prNumber);
+            const detail = await getPRDetail(teamId, pr.prNumber, loginMember?.memberNo);
             setMergeDialog(prev => ({
                 ...prev,
                 prDetail: detail,
@@ -367,7 +368,8 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                 teamId,
                 mergeDialog.pr.prNumber,
                 null, // commitTitle - 기본값 사용
-                mergeDialog.mergeMethod
+                mergeDialog.mergeMethod,
+                loginMember?.memberNo
             );
 
             if (result.merged) {
@@ -439,7 +441,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
         });
 
         try {
-            const result = await aiResolveConflict(teamId, mergeDialog.pr.prNumber, filename);
+            const result = await aiResolveConflict(teamId, mergeDialog.pr.prNumber, filename, loginMember?.memberNo);
 
             if (result.success) {
                 setAiResolution(prev => ({
@@ -485,7 +487,8 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                 mergeDialog.pr.prNumber,
                 aiResolution.result.filename,
                 selectedOption.code,
-                aiResolution.result.headSha
+                aiResolution.result.headSha,
+                loginMember?.memberNo
             );
 
             if (result.success) {
@@ -529,7 +532,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
 
                 // GitHub 상태 확인 (실패해도 무시 - 낙관적 UI 유지)
                 try {
-                    const detail = await getPRDetail(teamId, mergeDialog.pr.prNumber);
+                    const detail = await getPRDetail(teamId, mergeDialog.pr.prNumber, loginMember?.memberNo);
                     // GitHub가 여전히 충돌이라고 하면 그대로 유지, 아니면 업데이트
                     if (!detail.hasConflicts) {
                         setMergeDialog(prev => ({ ...prev, prDetail: detail, checkingStatus: false }));
@@ -1375,7 +1378,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                                                 onClick={async () => {
                                                     setMergeDialog(prev => ({ ...prev, checkingStatus: true }));
                                                     try {
-                                                        const detail = await getPRDetail(teamId, mergeDialog.pr.prNumber);
+                                                        const detail = await getPRDetail(teamId, mergeDialog.pr.prNumber, loginMember?.memberNo);
                                                         setMergeDialog(prev => ({ ...prev, prDetail: detail, checkingStatus: false }));
                                                     } catch (e) {
                                                         setMergeDialog(prev => ({ ...prev, checkingStatus: false }));

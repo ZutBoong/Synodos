@@ -46,6 +46,9 @@ function BranchView({ team, loginMember, filters }) {
 
     // 검색 (filters.searchQuery 사용)
 
+    // Open PRs (브랜치별 PR 표시용)
+    const [openPRs, setOpenPRs] = useState([]);
+
     // 컨텍스트 메뉴
     const [contextMenu, setContextMenu] = useState(null);
     const [branchContextMenu, setBranchContextMenu] = useState(null); // 브랜치 패널용
@@ -104,12 +107,14 @@ function BranchView({ team, loginMember, filters }) {
 
         const loadBranches = async () => {
             try {
-                const [branchList, defaultBranchData] = await Promise.all([
+                const [branchList, defaultBranchData, prList] = await Promise.all([
                     getBranches(team.teamId, loginMember?.no),
-                    getDefaultBranch(team.teamId, loginMember?.no)
+                    getDefaultBranch(team.teamId, loginMember?.no),
+                    getTeamPRs(team.teamId, 'open', loginMember?.no).catch(() => [])
                 ]);
                 setBranches(branchList);
                 setDefaultBranch(defaultBranchData.defaultBranch || 'main');
+                setOpenPRs(Array.isArray(prList) ? prList : []);
 
                 if (branchList.length > 0) {
                     const defaultName = defaultBranchData.defaultBranch || 'main';
@@ -1088,14 +1093,21 @@ function BranchView({ team, loginMember, filters }) {
                 const row = branchRows[expBranch] ?? 0;
                 const color = GRAPH_CONFIG.branchColors[Math.abs(row) % GRAPH_CONFIG.branchColors.length];
 
+                // 실제 표시되는 노드의 SHA만 수집 (commitPositions에 있는 것만)
+                const displayedNodeShas = new Set(
+                    nodes.filter(n => n.branch === expBranch).map(n => n.commit.sha)
+                );
+
                 // 같은 브랜치 내에서만 parent 연결 (다른 브랜치로의 연결은 수직선으로만)
-                const branchCommitShas = new Set(commits.map(c => c.sha));
                 commits.forEach(commit => {
+                    // 현재 커밋이 표시되지 않으면 스킵
+                    if (!displayedNodeShas.has(commit.sha)) return;
+
                     if (commit.parents?.length > 0) {
                         const isMergeCommit = commit.parents.length >= 2;
                         commit.parents.forEach((parentSha, parentIdx) => {
-                            // 같은 브랜치 내의 parent만 연결
-                            if (!branchCommitShas.has(parentSha)) return;
+                            // 같은 브랜치 내의 parent만 연결 (표시되는 노드만)
+                            if (!displayedNodeShas.has(parentSha)) return;
 
                             // 복합 키로 조회
                             const fromPos = commitPositions[`${commit.sha}-${expBranch}`];
@@ -1116,6 +1128,41 @@ function BranchView({ team, loginMember, filters }) {
                         });
                     }
                 });
+
+                // 노드 간에 엣지가 없는 경우를 대비해 X 순서대로 연결 (backup)
+                const branchNodes = nodes
+                    .filter(n => n.branch === expBranch)
+                    .sort((a, b) => b.x - a.x); // X 내림차순
+
+                // 기존 엣지에서 연결된 노드 쌍 수집
+                const connectedPairs = new Set();
+                edges.forEach(e => {
+                    if (e.from && e.to) {
+                        connectedPairs.add(`${e.from}-${e.to}`);
+                        connectedPairs.add(`${e.to}-${e.from}`);
+                    }
+                });
+
+                // 연결되지 않은 연속 노드 연결
+                for (let i = 0; i < branchNodes.length - 1; i++) {
+                    const fromNode = branchNodes[i];
+                    const toNode = branchNodes[i + 1];
+                    const pairKey = `${fromNode.id}-${toNode.id}`;
+                    if (!connectedPairs.has(pairKey)) {
+                        edges.push({
+                            from: fromNode.id,
+                            to: toNode.id,
+                            fromX: fromNode.x,
+                            fromY: fromNode.y,
+                            toX: toNode.x,
+                            toY: toNode.y,
+                            color,
+                            crossBranch: false
+                        });
+                        connectedPairs.add(pairKey);
+                        connectedPairs.add(`${toNode.id}-${fromNode.id}`);
+                    }
+                }
 
                 // 머지 연결: 이 브랜치에서 다른 브랜치로 머지된 경우 (다른 브랜치의 머지 커밋에서 이 브랜치의 커밋으로)
                 // 기본 브랜치의 머지 커밋 확인
@@ -1443,6 +1490,8 @@ function BranchView({ team, loginMember, filters }) {
                             : isSelected
                                 ? GRAPH_CONFIG.branchColors[colorIndex]
                                 : '#6e7681';
+                        // 해당 브랜치에 open PR이 있는지 확인
+                        const branchPR = openPRs.find(pr => pr.headRef === branch.name);
 
                         return (
                             <div
@@ -1465,6 +1514,11 @@ function BranchView({ team, loginMember, filters }) {
                                     )}
                                     {isEmpty && (
                                         <span className="empty-badge">empty</span>
+                                    )}
+                                    {branchPR && (
+                                        <span className="pr-badge" title={`PR #${branchPR.number}: ${branchPR.title}`}>
+                                            PR #{branchPR.number}
+                                        </span>
                                     )}
                                 </span>
                             </div>
@@ -1848,6 +1902,10 @@ function BranchView({ team, loginMember, filters }) {
                                         const isDragging = dragState?.node?.id === node.id;
                                         const isDropTarget = dropTarget?.id === node.id;
                                         const initial = (node.commit.authorLogin || node.commit.authorName || '?')[0].toUpperCase();
+                                        // PR 대기 중인 브랜치의 HEAD인지 확인 (type이 'head'이거나, 브랜치의 HEAD SHA와 일치)
+                                        const branchInfo = branches.find(b => b.name === node.branch);
+                                        const isHeadCommit = node.type === 'head' || (branchInfo && branchInfo.sha === node.commit.sha);
+                                        const nodePR = isHeadCommit ? openPRs.find(pr => pr.headRef === node.branch) : null;
 
                                         return (
                                             <g
@@ -1869,6 +1927,26 @@ function BranchView({ team, loginMember, filters }) {
                                                 }}
                                                 style={{ cursor: node.isEmptyBranch ? 'default' : (dragState ? 'grabbing' : 'grab') }}
                                             >
+                                                {/* PR 대기 중 표시 */}
+                                                {nodePR && (
+                                                    <g className="pr-indicator">
+                                                        <title>PR #{nodePR.number}: {nodePR.title}</title>
+                                                        <circle
+                                                            cx={node.x}
+                                                            cy={node.y}
+                                                            r={GRAPH_CONFIG.nodeRadius + 8}
+                                                            fill="none"
+                                                            stroke="#238636"
+                                                            strokeWidth={3}
+                                                            opacity={0.9}
+                                                        />
+                                                        {/* PR 배지 */}
+                                                        <g transform={`translate(${node.x + GRAPH_CONFIG.nodeRadius}, ${node.y - GRAPH_CONFIG.nodeRadius - 4})`}>
+                                                            <rect x="-12" y="-8" width="24" height="16" rx="4" fill="#238636" />
+                                                            <text x="0" y="4" textAnchor="middle" fill="#fff" fontSize="9" fontWeight="bold">PR</text>
+                                                        </g>
+                                                    </g>
+                                                )}
                                                 {/* 드롭 타겟 표시 */}
                                                 {isDropTarget && (
                                                     <circle

@@ -67,6 +67,41 @@
 - **Webhook**: GitHub 이벤트 실시간 수신
 - **AI 충돌 해결**: 머지 충돌 시 AI가 해결책 제안
 
+#### GitHub 테스트 저장소 설정
+
+GitHub 기능 테스트를 위한 샘플 저장소를 자동 생성하는 스크립트가 제공됩니다.
+
+**사전 준비:**
+1. [GitHub CLI](https://cli.github.com/) 설치
+2. `gh auth login`으로 인증
+3. PowerShell 실행 권한 설정: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
+
+**스크립트 위치:** `temp-github-sample/`
+
+| 스크립트 | 용도 | 생성되는 저장소 |
+|----------|------|----------------|
+| `setup-github-repo.ps1` | 일반 테스트 (자동 머지 가능) | `Synodos-Test` |
+| `setup-conflict-repo.ps1` | 충돌 테스트 (머지 충돌 발생) | `Synodos-Conflict-Test` |
+
+**실행 방법:**
+```powershell
+cd temp-github-sample
+
+# 일반 테스트 저장소
+.\setup-github-repo.ps1 -Owner "YourGitHubUsername"
+
+# 충돌 테스트 저장소 (AI 충돌 해결 테스트용)
+.\setup-conflict-repo.ps1 -Owner "YourGitHubUsername"
+```
+
+**생성되는 내용:**
+- 브랜치: `main`, `feature/*` 등 여러 브랜치
+- PR: 머지 대기 중인 Pull Request
+- Issues: PR과 연결된 이슈 (충돌 테스트용)
+- Labels: 상태 라벨 (`feature`, `refactor`, `conflict` 등)
+
+> **참고**: 스크립트 재실행 시 동명의 저장소가 있으면 자동 삭제 후 재생성됩니다.
+
 ### 인증
 - JWT 토큰 인증
 - 소셜 로그인 (Google, Naver, Kakao, GitHub)
@@ -125,12 +160,21 @@ docker-compose down -v
 
 샘플 데이터가 자동으로 생성됩니다. (비밀번호는 모두 `1234`)
 
-| 아이디 | 이름 | 역할 |
-|--------|------|------|
-| admin | 관리자 | 팀 소유자 |
-| user1 | 홍길동 | 팀 멤버 |
-| user2 | 김철수 | 팀 멤버 |
-| user3 | 이영희 | 팀 멤버 |
+| 아이디 | 이름 | 역할 | 용도 |
+|--------|------|------|------|
+| **dev** | 개발자 | 슈퍼계정 | 개발/테스트용 (GitHub 미연동) |
+| admin | 관리자 | 팀 소유자 | 일반 테스트 |
+| user1~user8 | 테스트 유저 | 팀 멤버 | 멀티유저 테스트 |
+
+**개발자 계정 GitHub 연동 (선택):**
+```sql
+-- PostgreSQL에서 실행
+UPDATE member SET
+  github_username = 'YourGitHubUsername',
+  github_access_token = 'ghp_xxxx...'
+WHERE userid = 'dev';
+```
+또는 로그인 후 마이페이지에서 GitHub OAuth 연결
 
 ---
 
@@ -161,12 +205,9 @@ psql -U flow -d synodos -f database/postgresql_schema.sql
 ```bash
 # 데이터베이스 전체 리셋 (모든 테이블 삭제)
 psql -U flow -d synodos -f database/reset.sql
-
-# 샘플 데이터 추가 (테스트 계정, 팀, 태스크 등)
-psql -U flow -d synodos -f backend/src/main/resources/sample-data.sql
 ```
 
-> **참고**: 백엔드 재시작 시 테이블 구조(schema.sql)는 자동 생성되지만, 샘플 데이터는 자동 생성되지 않습니다.
+> **참고**: 백엔드 실행 시 `schema.sql`(테이블 구조)과 `sample-data.sql`(테스트 데이터)이 자동 실행됩니다. `ON CONFLICT DO NOTHING`으로 중복 방지되어 재시작해도 안전합니다.
 
 ### 2. SMTP 설정 (이메일 인증용)
 
