@@ -1566,42 +1566,6 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                                                 </div>
                                             )}
 
-                                            {/* 충돌 해결 안내 */}
-                                            <div className="conflict-resolution-guide">
-                                                <div className="guide-header">
-                                                    <i className="fa-solid fa-lightbulb"></i>
-                                                    충돌 해결 방법
-                                                </div>
-                                                <div className="guide-options">
-                                                    <a
-                                                        href={mergeDialog.prDetail.htmlUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="guide-option github"
-                                                    >
-                                                        <i className="fa-brands fa-github"></i>
-                                                        <div className="option-content">
-                                                            <strong>GitHub에서 해결</strong>
-                                                            <span>웹 에디터로 충돌 해결</span>
-                                                        </div>
-                                                        <i className="fa-solid fa-external-link"></i>
-                                                    </a>
-                                                    <div className="guide-option local">
-                                                        <i className="fa-solid fa-terminal"></i>
-                                                        <div className="option-content">
-                                                            <strong>로컬에서 해결</strong>
-                                                            <code>
-                                                                git fetch origin<br/>
-                                                                git checkout {mergeDialog.prDetail.headRef}<br/>
-                                                                git merge origin/{mergeDialog.prDetail.baseRef}<br/>
-                                                                <span className="comment"># 충돌 해결 후</span><br/>
-                                                                git add . && git commit<br/>
-                                                                git push
-                                                            </code>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div>
                                     )}
                                 </>

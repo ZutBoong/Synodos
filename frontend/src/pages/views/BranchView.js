@@ -247,6 +247,7 @@ function BranchView({ team, loginMember, filters }) {
     // 드래그 시작
     const handleDragStart = (node, e) => {
         if (e.button !== 0) return; // 좌클릭만
+        if (node.isEmptyBranch) return; // 빈 브랜치는 드래그 불가
         e.preventDefault();
         const rect = viewportRef.current?.getBoundingClientRect();
         setDragState({
@@ -274,6 +275,12 @@ function BranchView({ team, loginMember, filters }) {
 
         const handleMouseUp = (e) => {
             if (dropTarget && dragState.node.branch !== dropTarget.branch) {
+                // 빈 브랜치는 머지 불가
+                if (dragState.node.isEmptyBranch) {
+                    setDragState(null);
+                    setDropTarget(null);
+                    return;
+                }
                 // 다른 브랜치에 드롭 -> 머지 다이얼로그 열기
                 setMergeCommitDialog({
                     sha: dragState.node.commit.sha,
@@ -307,7 +314,8 @@ function BranchView({ team, loginMember, filters }) {
             x: e.clientX - (rect?.left || 0),
             y: e.clientY - (rect?.top || 0),
             commit: node.commit,
-            branch: node.branch
+            branch: node.branch,
+            isEmptyBranch: node.isEmptyBranch
         });
     };
 
@@ -319,9 +327,10 @@ function BranchView({ team, loginMember, filters }) {
             action: (c) => {
                 setCreateBranchDialog({ sha: c.sha, shortSha: c.shortSha, message: c.message });
                 setDialogError(null);
-            }
+            },
+            hideIf: (c, branch, isEmptyBranch) => isEmptyBranch
         },
-        { type: 'divider' },
+        { type: 'divider', hideIf: (c, branch, isEmptyBranch) => isEmptyBranch },
         {
             label: '이 커밋까지 머지',
             icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="18" r="3" /><circle cx="6" cy="6" r="3" /><path d="M6 21V9a9 9 0 0 0 9 9" /></svg>,
@@ -335,9 +344,9 @@ function BranchView({ team, loginMember, filters }) {
                 });
                 setDialogError(null);
             },
-            hideIf: (c, branch) => branch === defaultBranch
+            hideIf: (c, branch, isEmptyBranch) => branch === defaultBranch || isEmptyBranch
         },
-        { type: 'divider' },
+        { type: 'divider', hideIf: (c, branch, isEmptyBranch) => isEmptyBranch },
         {
             label: '이 커밋 되돌리기',
             icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 14L4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11" /></svg>,
@@ -349,7 +358,19 @@ function BranchView({ team, loginMember, filters }) {
                     branch: branch
                 });
                 setDialogError(null);
-            }
+            },
+            hideIf: (c, branch, isEmptyBranch) => isEmptyBranch
+        },
+        { type: 'divider', hideIf: (c, branch, isEmptyBranch) => !isEmptyBranch || branch === defaultBranch },
+        {
+            label: '브랜치 삭제',
+            icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>,
+            action: (c, branch) => {
+                setDeleteConfirmDialog({ branchName: branch });
+                setDialogError(null);
+            },
+            hideIf: (c, branch, isEmptyBranch) => !isEmptyBranch || branch === defaultBranch,
+            danger: true
         },
     ];
 
@@ -1029,11 +1050,19 @@ function BranchView({ team, loginMember, filters }) {
             }
         });
 
+        // 빈 브랜치 확인용 (기본 브랜치 SHA)
+        const defaultBranchInfo = branches.find(b => b.name === defaultBranch);
+        const defaultBranchSha = defaultBranchInfo?.sha;
+
         // 노드 생성 (같은 SHA도 다른 브랜치면 다른 노드)
         uniqueCommits.forEach(commit => {
             const row = branchRows[commit.branch] ?? 0;
             const colorIndex = Math.abs(row) % GRAPH_CONFIG.branchColors.length;
-            const color = GRAPH_CONFIG.branchColors[colorIndex];
+            // 빈 브랜치 확인 (기본 브랜치와 SHA가 동일하면 새 커밋 없음)
+            const branchInfo = branches.find(b => b.name === commit.branch);
+            const isEmptyBranch = commit.branch !== defaultBranch &&
+                branchInfo && defaultBranchSha && branchInfo.sha === defaultBranchSha;
+            const color = isEmptyBranch ? '#6e7681' : GRAPH_CONFIG.branchColors[colorIndex];
             const x = commitXPositions[commit.sha] ?? GRAPH_CONFIG.leftPadding;
             const y = baseY + row * GRAPH_CONFIG.rowHeight;
 
@@ -1046,7 +1075,8 @@ function BranchView({ team, loginMember, filters }) {
                 commit,
                 branch: commit.branch,
                 row,
-                type: commit.type
+                type: commit.type,
+                isEmptyBranch
             });
         });
 
@@ -1404,14 +1434,20 @@ function BranchView({ team, loginMember, filters }) {
                         // 선택된 브랜치의 row를 기반으로 색상 할당
                         const row = branchRows[branch.name] ?? 0;
                         const colorIndex = Math.abs(row) % GRAPH_CONFIG.branchColors.length;
-                        const color = isSelected
-                            ? GRAPH_CONFIG.branchColors[colorIndex]
-                            : '#6e7681';
+                        // 새로 생성된 브랜치 확인 (기본 브랜치와 SHA가 동일하면 새 커밋 없음)
+                        const defaultBranchInfo = branches.find(b => b.name === defaultBranch);
+                        const isEmpty = branch.name !== defaultBranch &&
+                            defaultBranchInfo && branch.sha === defaultBranchInfo.sha;
+                        const color = isEmpty
+                            ? '#4a4a4a'  // 빈 브랜치는 어두운 회색
+                            : isSelected
+                                ? GRAPH_CONFIG.branchColors[colorIndex]
+                                : '#6e7681';
 
                         return (
                             <div
                                 key={branch.name}
-                                className={`branch-item ${isSelected ? 'selected' : ''}`}
+                                className={`branch-item ${isSelected ? 'selected' : ''} ${isEmpty ? 'empty-branch' : ''}`}
                                 onContextMenu={(e) => handleBranchContextMenu(branch.name, e)}
                             >
                                 <div
@@ -1421,10 +1457,14 @@ function BranchView({ team, loginMember, filters }) {
                                 <span
                                     className="branch-name"
                                     onClick={() => toggleBranch(branch.name)}
+                                    style={isEmpty ? { color: '#6e7681' } : {}}
                                 >
                                     {branch.name}
                                     {branch.name === defaultBranch && (
                                         <span className="default-badge">default</span>
+                                    )}
+                                    {isEmpty && (
+                                        <span className="empty-badge">empty</span>
                                     )}
                                 </span>
                             </div>
@@ -1688,7 +1728,12 @@ function BranchView({ team, loginMember, filters }) {
                                         const startX = minX - 10;
                                         const endX = maxX;
                                         const colorIndex = Math.abs(row) % GRAPH_CONFIG.branchColors.length;
-                                        const color = GRAPH_CONFIG.branchColors[colorIndex];
+                                        // 빈 브랜치 확인
+                                        const branchInfo = branches.find(b => b.name === branch);
+                                        const defaultBranchInfo = branches.find(b => b.name === defaultBranch);
+                                        const isEmptyBranch = branch !== defaultBranch &&
+                                            branchInfo && defaultBranchInfo && branchInfo.sha === defaultBranchInfo.sha;
+                                        const color = isEmptyBranch ? '#6e7681' : GRAPH_CONFIG.branchColors[colorIndex];
 
                                         const isExpanded = expandedBranches.has(branch);
 
@@ -1735,9 +1780,12 @@ function BranchView({ team, loginMember, filters }) {
 
                                     {/* 연결선 */}
                                     {edges.map((edge, index) => {
-                                        const branch = nodes.find(n => n.id === edge.from)?.branch;
+                                        const fromNode = nodes.find(n => n.id === edge.from);
+                                        const branch = fromNode?.branch;
                                         const row = branchRows[branch] ?? 0;
                                         const colorIndex = Math.abs(row) % GRAPH_CONFIG.branchColors.length;
+                                        // 빈 브랜치는 회색으로 표시
+                                        const edgeColor = fromNode?.isEmptyBranch ? '#6e7681' : edge.color;
                                         // 머지 연결은 점선으로 표시
                                         const dashArray = edge.isMerge ? "6 4" : undefined;
 
@@ -1750,10 +1798,10 @@ function BranchView({ team, loginMember, filters }) {
                                                     y1={edge.fromY}
                                                     x2={edge.toX}
                                                     y2={edge.toY}
-                                                    stroke={edge.color}
+                                                    stroke={edgeColor}
                                                     strokeWidth={3}
                                                     strokeDasharray={dashArray}
-                                                    filter={`url(#glow-${colorIndex})`}
+                                                    filter={fromNode?.isEmptyBranch ? undefined : `url(#glow-${colorIndex})`}
                                                 />
                                             );
                                         } else if (edge.isVertical || edge.fromX === edge.toX) {
@@ -1765,7 +1813,7 @@ function BranchView({ team, loginMember, filters }) {
                                                         y1={edge.fromY}
                                                         x2={edge.toX}
                                                         y2={edge.toY}
-                                                        stroke={edge.color}
+                                                        stroke={edgeColor}
                                                         strokeWidth={3}
                                                         strokeOpacity={0.7}
                                                         strokeDasharray={dashArray}
@@ -1783,7 +1831,7 @@ function BranchView({ team, loginMember, filters }) {
                                                 <g key={`edge-${index}`}>
                                                     <path
                                                         d={pathD}
-                                                        stroke={edge.color}
+                                                        stroke={edgeColor}
                                                         strokeWidth={3}
                                                         fill="none"
                                                         strokeOpacity={0.7}
@@ -1819,7 +1867,7 @@ function BranchView({ team, loginMember, filters }) {
                                                     setDropTarget(null);
                                                     if (!dragState) setHoveredCommit(null);
                                                 }}
-                                                style={{ cursor: dragState ? 'grabbing' : 'grab' }}
+                                                style={{ cursor: node.isEmptyBranch ? 'default' : (dragState ? 'grabbing' : 'grab') }}
                                             >
                                                 {/* 드롭 타겟 표시 */}
                                                 {isDropTarget && (
@@ -1927,7 +1975,7 @@ function BranchView({ team, loginMember, filters }) {
                                     >
                                         {contextMenuActions.map((action, i) => {
                                             // hideIf 조건 확인
-                                            if (action.hideIf && action.hideIf(contextMenu.commit, contextMenu.branch)) {
+                                            if (action.hideIf && action.hideIf(contextMenu.commit, contextMenu.branch, contextMenu.isEmptyBranch)) {
                                                 return null;
                                             }
                                             return action.type === 'divider' ? (
@@ -1935,7 +1983,7 @@ function BranchView({ team, loginMember, filters }) {
                                             ) : (
                                                 <button
                                                     key={i}
-                                                    className="context-menu-item"
+                                                    className={`context-menu-item ${action.danger ? 'danger' : ''}`}
                                                     onClick={() => {
                                                         action.action(contextMenu.commit, contextMenu.branch);
                                                         setContextMenu(null);
@@ -2087,7 +2135,14 @@ function BranchView({ team, loginMember, filters }) {
             )}
 
             {/* 머지 다이얼로그 */}
-            {mergeDialog && (
+            {mergeDialog && (() => {
+                // 새로 생성된 브랜치인지 확인 (기본 브랜치와 SHA가 동일하면 새 커밋 없음)
+                const headBranchInfo = branches.find(b => b.name === mergeDialog.head);
+                const defaultBranchInfo = branches.find(b => b.name === defaultBranch);
+                const isEmptyBranch = mergeDialog.head !== defaultBranch &&
+                    headBranchInfo && defaultBranchInfo && headBranchInfo.sha === defaultBranchInfo.sha;
+
+                return (
                 <div className="dialog-overlay" onClick={() => { if (!dialogLoading) { setMergeDialog(null); setSelectedTaskId(''); } }}>
                     <div className="dialog dialog-wide" onClick={(e) => e.stopPropagation()}>
                         <div className="dialog-header">
@@ -2099,6 +2154,25 @@ function BranchView({ team, loginMember, filters }) {
                             </button>
                         </div>
                         <div className="dialog-body">
+                            {isEmptyBranch && (
+                                <div className="dialog-warning" style={{
+                                    background: '#2d2a1d',
+                                    border: '1px solid #5c5426',
+                                    borderRadius: '6px',
+                                    padding: '12px',
+                                    marginBottom: '16px',
+                                    color: '#d4a017',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px'
+                                }}>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                                    </svg>
+                                    <span>이 브랜치에는 커밋이 없어 머지할 수 없습니다. 먼저 커밋을 추가해주세요.</span>
+                                </div>
+                            )}
                             {/* 머지 타입 선택 */}
                             <div className="merge-type-selector">
                                 <button
@@ -2210,7 +2284,8 @@ function BranchView({ team, loginMember, filters }) {
                                         }
                                         handleCreatePR(base, title, body, selectedTaskId);
                                     }}
-                                    disabled={dialogLoading}
+                                    disabled={dialogLoading || isEmptyBranch}
+                                    title={isEmptyBranch ? '커밋이 없는 브랜치는 PR을 생성할 수 없습니다' : ''}
                                 >
                                     {dialogLoading ? 'PR 생성 중...' : 'PR 생성'}
                                 </button>
@@ -2222,7 +2297,8 @@ function BranchView({ team, loginMember, filters }) {
                                         const commitMessage = document.getElementById('merge-commit-message')?.value;
                                         handleMergeBranch(base, commitMessage);
                                     }}
-                                    disabled={dialogLoading}
+                                    disabled={dialogLoading || isEmptyBranch}
+                                    title={isEmptyBranch ? '커밋이 없는 브랜치는 머지할 수 없습니다' : ''}
                                 >
                                     {dialogLoading ? '머지 중...' : '머지'}
                                 </button>
@@ -2230,7 +2306,8 @@ function BranchView({ team, loginMember, filters }) {
                         </div>
                     </div>
                 </div>
-            )}
+                );
+            })()}
 
             {/* 커밋 머지 다이얼로그 */}
             {mergeCommitDialog && (
