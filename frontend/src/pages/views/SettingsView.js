@@ -746,6 +746,20 @@ function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewCo
                                         <p className="sv-hint" style={{ marginTop: 0, marginBottom: '16px' }}>
                                             Issue 제목이 특정 명령어로 시작하면 자동으로 해당 컬럼에 Task가 생성됩니다.<br />예: "[버그] 로그인 오류" → "버그" 컬럼
                                         </p>
+                                        {/* 컬럼 자체에 설정된 githubPrefix 표시 (자동 생성된 컬럼) */}
+                                        {columns.filter(col => col.githubPrefix).length > 0 && (
+                                            <div className="sv-mapping-list" style={{ marginBottom: '12px' }}>
+                                                {columns.filter(col => col.githubPrefix).map((col) => (
+                                                    <div key={`col-${col.columnId}`} className="sv-mapping-item sv-mapping-auto">
+                                                        <span className="sv-mapping-prefix">{col.githubPrefix}</span>
+                                                        <span className="sv-mapping-arrow">→</span>
+                                                        <span className="sv-mapping-column">{col.title}</span>
+                                                        <span className="sv-mapping-badge">자동</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {/* 팀 레벨 수동 매핑 */}
                                         {columnMappings.length > 0 && (
                                             <div className="sv-mapping-list">
                                                 {columnMappings.map((mapping, index) => {

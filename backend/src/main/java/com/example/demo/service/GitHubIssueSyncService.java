@@ -441,9 +441,9 @@ public class GitHubIssueSyncService {
             defaultColumnId = columns.get(0).getColumnId();
         }
 
-        // 제목에서 명령어로 컬럼 결정
+        // 제목에서 명령어로 컬럼 결정 (매칭되는 컬럼이 없으면 자동 생성)
         String issueTitle = payload.getIssue().getTitle();
-        Integer targetColumnId = findColumnByTitlePrefix(issueTitle, columns);
+        Integer targetColumnId = findOrCreateColumnByTitlePrefix(issueTitle, columns, teamId);
         if (targetColumnId == null) {
             targetColumnId = defaultColumnId;
         }
@@ -1015,6 +1015,77 @@ public class GitHubIssueSyncService {
     }
 
     /**
+     * 제목에서 prefix 추출 (대괄호 형식)
+     * 예: "[버그] 로그인 오류" → "[버그]"
+     * 예: "[Feature] Login" → "[Feature]"
+     * 예: "로그인 오류" → null
+     */
+    private String extractPrefixFromTitle(String title) {
+        if (title == null || title.trim().isEmpty()) {
+            return null;
+        }
+
+        String trimmed = title.trim();
+        // [xxx] 형식의 prefix 추출
+        if (trimmed.startsWith("[")) {
+            int endIndex = trimmed.indexOf(']');
+            if (endIndex > 1) {
+                return trimmed.substring(0, endIndex + 1);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 제목의 prefix에 매칭되는 컬럼을 찾거나, 없으면 새로 생성
+     * @param title Issue 제목
+     * @param columns 팀의 컬럼 목록
+     * @param teamId 팀 ID
+     * @return 매칭되거나 새로 생성된 컬럼 ID, prefix가 없으면 null
+     */
+    private Integer findOrCreateColumnByTitlePrefix(String title, List<SynodosColumn> columns, int teamId) {
+        // 1. 기존 컬럼에서 찾기
+        Integer existingColumnId = findColumnByTitlePrefix(title, columns);
+        if (existingColumnId != null) {
+            return existingColumnId;
+        }
+
+        // 2. 제목에서 prefix 추출
+        String prefix = extractPrefixFromTitle(title);
+        if (prefix == null) {
+            log.debug("No prefix found in title: {}", title);
+            return null;
+        }
+
+        // 3. 새 컬럼 생성
+        log.info("Creating new column for prefix '{}' in team {}", prefix, teamId);
+
+        // 현재 팀의 최대 position 찾기
+        int maxPosition = columns.stream()
+            .mapToInt(SynodosColumn::getPosition)
+            .max()
+            .orElse(-1);
+
+        // prefix에서 대괄호 제거하여 컬럼 제목으로 사용 (예: "[버그]" → "버그")
+        String columnTitle = prefix.substring(1, prefix.length() - 1);
+
+        SynodosColumn newColumn = new SynodosColumn();
+        newColumn.setTeamId(teamId);
+        newColumn.setTitle(columnTitle);
+        newColumn.setPosition(maxPosition + 1);
+        newColumn.setGithubPrefix(prefix);
+
+        columnDao.insert(newColumn);
+        log.info("Created new column: id={}, title='{}', prefix='{}' for team {}",
+                 newColumn.getColumnId(), columnTitle, prefix, teamId);
+
+        // 새 컬럼을 목록에 추가 (이후 동일 prefix 처리 시 재사용)
+        columns.add(newColumn);
+
+        return newColumn.getColumnId();
+    }
+
+    /**
      * 제목에서 명령어를 제거한 실제 제목 반환
      * 예: "[버그] 로그인 오류" → "로그인 오류"
      */
@@ -1108,8 +1179,8 @@ public class GitHubIssueSyncService {
                     continue;
                 }
 
-                // 제목에서 명령어로 컬럼 결정
-                Integer targetColumnId = findColumnByTitlePrefix(issue.getTitle(), columns);
+                // 제목에서 명령어로 컬럼 결정 (매칭되는 컬럼이 없으면 자동 생성)
+                Integer targetColumnId = findOrCreateColumnByTitlePrefix(issue.getTitle(), columns, teamId);
                 if (targetColumnId == null) {
                     targetColumnId = defaultColumnId;
                 }
