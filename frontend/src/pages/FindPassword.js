@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { resetPassword } from '../api/memberApi';
 import { sendPasswordResetCode, verifyCode } from '../api/emailApi';
-import './Auth.css';
+import ShaderBackground from '../components/landing/shader-background';
 
 function FindPassword() {
     const navigate = useNavigate();
@@ -161,172 +161,265 @@ function FindPassword() {
     };
 
     return (
-        <div className="auth-container">
-            <div className="auth-box">
-                <h2>비밀번호 찾기</h2>
+        <ShaderBackground>
+            <div className="min-h-screen flex items-center justify-center px-6 py-12">
+                <div 
+                    className="w-full max-w-md p-8 rounded-3xl bg-white/10 backdrop-blur-sm border border-white/20"
+                    style={{ filter: "url(#glass-effect)" }}
+                >
+                    {/* SVG Filters */}
+                    <svg className="absolute inset-0 w-0 h-0">
+                        <defs>
+                            <filter id="glass-effect" x="-50%" y="-50%" width="200%" height="200%">
+                                <feTurbulence baseFrequency="0.005" numOctaves="1" result="noise" />
+                                <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.3" />
+                                <feColorMatrix
+                                    type="matrix"
+                                    values="1 0 0 0 0.02
+                                      0 1 0 0 0.02
+                                      0 0 1 0 0.05
+                                      0 0 0 0.9 0"
+                                    result="tint"
+                                />
+                            </filter>
+                        </defs>
+                    </svg>
 
-                {/* 단계 표시 */}
-                <div className="step-indicator">
-                    <div className={`step ${step >= 1 ? 'active' : ''} ${step > 1 ? 'completed' : ''}`}>
-                        <span className="step-number">1</span>
-                        <span className="step-label">이메일 입력</span>
-                    </div>
-                    <div className="step-line"></div>
-                    <div className={`step ${step >= 2 ? 'active' : ''} ${step > 2 ? 'completed' : ''}`}>
-                        <span className="step-number">2</span>
-                        <span className="step-label">인증</span>
-                    </div>
-                    <div className="step-line"></div>
-                    <div className={`step ${step >= 3 ? 'active' : ''} ${step > 3 ? 'completed' : ''}`}>
-                        <span className="step-number">3</span>
-                        <span className="step-label">비밀번호 변경</span>
-                    </div>
-                </div>
+                    {/* Title */}
+                    <h2 className="text-3xl font-light text-white mb-8 text-center">
+                        비밀번호 찾기
+                    </h2>
 
-                {/* Step 1: 이메일 입력 */}
-                {step === 1 && (
-                    <form onSubmit={handleSendCode}>
-                        <div className="form-group">
-                            <label>이메일</label>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                                placeholder="가입 시 등록한 이메일을 입력하세요"
-                            />
+                    {/* 단계 표시 */}
+                    <div className="flex items-center justify-center mb-8 gap-2">
+                        <div className={`flex flex-col items-center ${step >= 1 ? 'text-white' : 'text-white/40'}`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-light border transition-all ${
+                                step > 1 ? 'bg-green-500/20 border-green-500/50' : 
+                                step >= 1 ? 'bg-white/10 border-white/30' : 
+                                'bg-white/5 border-white/20'
+                            }`}>
+                                {step > 1 ? '✓' : '1'}
+                            </div>
+                            <span className="text-xs mt-1">이메일 입력</span>
                         </div>
-
-                        {error && <div className="error-msg" style={{ marginBottom: '15px' }}>{error}</div>}
-
-                        <div className="button-group">
-                            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-                                {isSubmitting ? '처리 중...' : '인증 코드 받기'}
-                            </button>
-                            <button type="button" className="btn btn-secondary" onClick={() => navigate('/login')}>
-                                로그인으로
-                            </button>
+                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mx-2"></div>
+                        <div className={`flex flex-col items-center ${step >= 2 ? 'text-white' : 'text-white/40'}`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-light border transition-all ${
+                                step > 2 ? 'bg-green-500/20 border-green-500/50' : 
+                                step >= 2 ? 'bg-white/10 border-white/30' : 
+                                'bg-white/5 border-white/20'
+                            }`}>
+                                {step > 2 ? '✓' : '2'}
+                            </div>
+                            <span className="text-xs mt-1">인증</span>
                         </div>
-                    </form>
-                )}
+                        <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mx-2"></div>
+                        <div className={`flex flex-col items-center ${step >= 3 ? 'text-white' : 'text-white/40'}`}>
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-light border transition-all ${
+                                step > 3 ? 'bg-green-500/20 border-green-500/50' : 
+                                step >= 3 ? 'bg-white/10 border-white/30' : 
+                                'bg-white/5 border-white/20'
+                            }`}>
+                                {step > 3 ? '✓' : '3'}
+                            </div>
+                            <span className="text-xs mt-1">비밀번호 변경</span>
+                        </div>
+                    </div>
 
-                {/* Step 2: 인증 코드 입력 */}
-                {step === 2 && (
-                    <form onSubmit={handleVerifyCode}>
-                        <div className="verification-info">
-                            <p><strong>{email}</strong>로 인증 코드를 발송했습니다.</p>
-                            {userid && <p>아이디: <strong>{userid}</strong></p>}
-                            {codeExpiry > 0 && (
-                                <p className="expiry-timer">남은 시간: <strong>{formatTime(codeExpiry)}</strong></p>
+                    {/* Step 1: 이메일 입력 */}
+                    {step === 1 && (
+                        <form onSubmit={handleSendCode} className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                                    이메일
+                                </label>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                                    placeholder="가입 시 등록한 이메일을 입력하세요"
+                                    className="w-full px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-sm font-light focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
+                                />
+                            </div>
+
+                            {error && (
+                                <div className="px-4 py-3 rounded-full bg-red-500/20 border border-red-500/30 text-red-200 text-xs text-center">
+                                    {error}
+                                </div>
                             )}
-                            {codeExpiry === 0 && (
-                                <p className="error-msg">인증 코드가 만료되었습니다. 재발송해주세요.</p>
+
+                            <div className="flex gap-4">
+                                <button 
+                                    type="submit" 
+                                    className="flex-1 px-8 py-3 rounded-full bg-white text-black font-normal text-xs transition-all duration-200 hover:bg-white/90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? '처리 중...' : '인증 코드 받기'}
+                                </button>
+                                <button 
+                                    type="button" 
+                                    className="flex-1 px-8 py-3 rounded-full bg-transparent border border-white/30 text-white font-normal text-xs transition-all duration-200 hover:bg-white/10 hover:border-white/50 cursor-pointer"
+                                    onClick={() => navigate('/login')}
+                                >
+                                    로그인으로
+                                </button>
+                            </div>
+                        </form>
+                    )}
+
+                    {/* Step 2: 인증 코드 입력 */}
+                    {step === 2 && (
+                        <form onSubmit={handleVerifyCode} className="space-y-6">
+                            <div className="px-4 py-4 rounded-full bg-white/5 border border-white/20 text-center space-y-2">
+                                <p className="text-white/90 text-xs"><strong className="text-white">{email}</strong>로 인증 코드를 발송했습니다.</p>
+                                {userid && <p className="text-white/90 text-xs">아이디: <strong className="text-white">{userid}</strong></p>}
+                                {codeExpiry > 0 && (
+                                    <p className="text-yellow-300 text-xs">남은 시간: <strong>{formatTime(codeExpiry)}</strong></p>
+                                )}
+                                {codeExpiry === 0 && (
+                                    <p className="text-red-300 text-xs">인증 코드가 만료되었습니다. 재발송해주세요.</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                                    인증 코드
+                                </label>
+                                <input
+                                    type="text"
+                                    value={verificationCode}
+                                    onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                    placeholder="6자리 인증 코드 입력"
+                                    maxLength={6}
+                                    className="w-full px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-center text-lg font-light tracking-widest focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
+                                />
+                            </div>
+
+                            {error && (
+                                <div className="px-4 py-3 rounded-full bg-red-500/20 border border-red-500/30 text-red-200 text-xs text-center">
+                                    {error}
+                                </div>
                             )}
-                        </div>
 
-                        <div className="form-group">
-                            <label>인증 코드</label>
-                            <input
-                                type="text"
-                                value={verificationCode}
-                                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                placeholder="6자리 인증 코드 입력"
-                                maxLength={6}
-                                className="verification-code-input"
-                            />
-                        </div>
+                            <div className="flex gap-4">
+                                <button
+                                    type="submit"
+                                    className="flex-1 px-8 py-3 rounded-full bg-white text-black font-normal text-xs transition-all duration-200 hover:bg-white/90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={isSubmitting || codeExpiry === 0}
+                                >
+                                    {isSubmitting ? '확인 중...' : '인증 확인'}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="flex-1 px-8 py-3 rounded-full bg-transparent border border-white/30 text-white font-normal text-xs transition-all duration-200 hover:bg-white/10 hover:border-white/50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                    onClick={handleResendCode}
+                                    disabled={countdown > 0}
+                                >
+                                    {countdown > 0 ? `재발송 (${countdown}초)` : '재발송'}
+                                </button>
+                            </div>
 
-                        {error && <div className="error-msg" style={{ marginBottom: '15px' }}>{error}</div>}
+                            <div className="text-center">
+                                <button 
+                                    type="button" 
+                                    className="text-white/70 hover:text-white text-xs transition-colors"
+                                    onClick={() => setStep(1)}
+                                >
+                                    ← 이전 단계로
+                                </button>
+                            </div>
+                        </form>
+                    )}
 
-                        <div className="button-group">
-                            <button
-                                type="submit"
-                                className="btn btn-primary"
-                                disabled={isSubmitting || codeExpiry === 0}
+                    {/* Step 3: 비밀번호 변경 */}
+                    {step === 3 && (
+                        <form onSubmit={handleResetPassword} className="space-y-6">
+                            <div className="px-4 py-4 rounded-full bg-green-500/20 border border-green-500/30 text-center">
+                                <p className="text-green-200 text-xs">이메일 인증이 완료되었습니다.</p>
+                                <p className="text-green-200/80 text-xs mt-1">새 비밀번호를 설정해주세요.</p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                                    새 비밀번호
+                                </label>
+                                <input
+                                    type="password"
+                                    name="password"
+                                    value={passwordForm.password}
+                                    onChange={handlePasswordChange}
+                                    placeholder="새 비밀번호를 입력하세요"
+                                    className="w-full px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-sm font-light focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                                    새 비밀번호 확인
+                                </label>
+                                <input
+                                    type="password"
+                                    name="passwordConfirm"
+                                    value={passwordForm.passwordConfirm}
+                                    onChange={handlePasswordChange}
+                                    placeholder="새 비밀번호를 다시 입력하세요"
+                                    className="w-full px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-sm font-light focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
+                                />
+                            </div>
+
+                            {error && (
+                                <div className="px-4 py-3 rounded-full bg-red-500/20 border border-red-500/30 text-red-200 text-xs text-center">
+                                    {error}
+                                </div>
+                            )}
+
+                            <button 
+                                type="submit" 
+                                className="w-full px-8 py-3 rounded-full bg-white text-black font-normal text-xs transition-all duration-200 hover:bg-white/90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={isSubmitting}
                             >
-                                {isSubmitting ? '확인 중...' : '인증 확인'}
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-secondary"
-                                onClick={handleResendCode}
-                                disabled={countdown > 0}
-                            >
-                                {countdown > 0 ? `재발송 (${countdown}초)` : '재발송'}
-                            </button>
-                        </div>
-
-                        <div className="step-back">
-                            <button type="button" className="btn-link" onClick={() => setStep(1)}>
-                                ← 이전 단계로
-                            </button>
-                        </div>
-                    </form>
-                )}
-
-                {/* Step 3: 비밀번호 변경 */}
-                {step === 3 && (
-                    <form onSubmit={handleResetPassword}>
-                        <div className="verification-info" style={{ background: '#d1fae5' }}>
-                            <p style={{ color: '#10b981' }}>이메일 인증이 완료되었습니다.</p>
-                            <p>새 비밀번호를 설정해주세요.</p>
-                        </div>
-
-                        <div className="form-group">
-                            <label>새 비밀번호</label>
-                            <input
-                                type="password"
-                                name="password"
-                                value={passwordForm.password}
-                                onChange={handlePasswordChange}
-                                placeholder="새 비밀번호를 입력하세요"
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>새 비밀번호 확인</label>
-                            <input
-                                type="password"
-                                name="passwordConfirm"
-                                value={passwordForm.passwordConfirm}
-                                onChange={handlePasswordChange}
-                                placeholder="새 비밀번호를 다시 입력하세요"
-                            />
-                        </div>
-
-                        {error && <div className="error-msg" style={{ marginBottom: '15px' }}>{error}</div>}
-
-                        <div className="button-group">
-                            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
                                 {isSubmitting ? '변경 중...' : '비밀번호 변경'}
                             </button>
+                        </form>
+                    )}
+
+                    {/* Step 4: 완료 */}
+                    {step === 4 && (
+                        <div className="text-center space-y-6">
+                            <div className="w-16 h-16 rounded-full bg-green-500/20 border border-green-500/50 flex items-center justify-center mx-auto text-3xl text-green-200">
+                                ✓
+                            </div>
+                            <h3 className="text-xl font-light text-white">비밀번호가 변경되었습니다!</h3>
+                            <p className="text-white/90 text-sm">새 비밀번호로 로그인해주세요.</p>
+                            <button
+                                className="w-full px-8 py-3 rounded-full bg-white text-black font-normal text-xs transition-all duration-200 hover:bg-white/90 cursor-pointer"
+                                onClick={() => navigate('/login')}
+                            >
+                                로그인하기
+                            </button>
                         </div>
-                    </form>
-                )}
+                    )}
 
-                {/* Step 4: 완료 */}
-                {step === 4 && (
-                    <div className="complete-section">
-                        <div className="complete-icon">✓</div>
-                        <h3>비밀번호가 변경되었습니다!</h3>
-                        <p>새 비밀번호로 로그인해주세요.</p>
-                        <button
-                            className="btn btn-primary"
-                            onClick={() => navigate('/login')}
-                        >
-                            로그인하기
-                        </button>
-                    </div>
-                )}
-
-                {step < 4 && (
-                    <div className="auth-links">
-                        <span onClick={() => navigate('/find-id')}>아이디 찾기</span>
-                        <span className="divider">|</span>
-                        <span onClick={() => navigate('/register')}>회원가입</span>
-                    </div>
-                )}
+                    {step < 4 && (
+                        <div className="text-center space-x-4 text-xs mt-8">
+                            <span 
+                                onClick={() => navigate('/find-id')} 
+                                className="text-white/90 hover:text-white cursor-pointer transition-colors"
+                            >
+                                아이디 찾기
+                            </span>
+                            <span className="text-white/50">|</span>
+                            <span 
+                                onClick={() => navigate('/register')} 
+                                className="text-white/90 hover:text-white cursor-pointer transition-colors"
+                            >
+                                회원가입
+                            </span>
+                        </div>
+                    )}
+                </div>
             </div>
-        </div>
+        </ShaderBackground>
     );
 }
 

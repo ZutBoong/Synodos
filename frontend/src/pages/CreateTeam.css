@@ -1,6 +1,6 @@
 .create-team-page {
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -10,19 +10,26 @@
 .create-team-container {
     width: 100%;
     max-width: 800px;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     display: flex;
     flex-direction: column;
     max-height: 90vh;
+    position: relative;
 }
 
 /* 헤더 */
 .create-team-header {
     padding: 30px 40px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     color: white;
 }
 
@@ -30,11 +37,11 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
     color: white;
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 8px 16px;
-    border-radius: 8px;
+    border-radius: 20px;
     cursor: pointer;
     font-size: 14px;
     font-weight: 500;
@@ -43,7 +50,8 @@
 }
 
 .back-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .create-team-header h1 {
@@ -71,12 +79,12 @@ section h2 {
     margin: 0 0 20px 0;
     font-size: 20px;
     font-weight: 700;
-    color: #1e293b;
+    color: white;
 }
 
 .section-description {
     margin: 0 0 20px 0;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.8);
     font-size: 14px;
 }
 
@@ -90,30 +98,38 @@ section h2 {
     margin-bottom: 8px;
     font-weight: 600;
     font-size: 14px;
-    color: #334155;
+    color: rgba(255, 255, 255, 0.95);
 }
 
 .form-group .required {
-    color: #ef4444;
+    color: #fecaca;
 }
 
 .form-group input[type="text"],
 .form-group textarea {
     width: 100%;
     padding: 12px 16px;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
     font-size: 15px;
     transition: all 0.2s ease;
     font-family: inherit;
     box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.form-group input[type="text"]::placeholder,
+.form-group textarea::placeholder {
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .form-group input[type="text"]:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
 }
 
 .form-group textarea {
@@ -136,24 +152,31 @@ section h2 {
     left: 16px;
     top: 50%;
     transform: translateY(-50%);
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.6);
     pointer-events: none;
 }
 
 .member-search input {
     width: 100%;
     padding: 12px 16px 12px 48px;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
     font-size: 15px;
     transition: all 0.2s ease;
     box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.member-search input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .member-search input:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
 }
 
 /* 드롭다운 회원 목록 */
@@ -164,10 +187,12 @@ section h2 {
     right: 0;
     max-height: 320px;
     overflow-y: auto;
-    background: white;
-    border: 2px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     z-index: 1000;
     padding: 8px;
 }
@@ -177,32 +202,32 @@ section h2 {
 }
 
 .members-dropdown::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 4px;
 }
 
 .members-dropdown::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: rgba(255, 255, 255, 0.3);
     border-radius: 4px;
 }
 
 .members-dropdown::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: rgba(255, 255, 255, 0.5);
 }
 
 /* 선택된 팀원 */
 .selected-members {
     margin-bottom: 20px;
     padding: 16px;
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
-    border: 2px dashed #cbd5e1;
+    border: 1px dashed rgba(255, 255, 255, 0.3);
 }
 
 .selected-members-header {
     font-size: 13px;
     font-weight: 600;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.8);
     margin-bottom: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -218,7 +243,8 @@ section h2 {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
     padding: 6px 12px;
     border-radius: 20px;
@@ -251,19 +277,19 @@ section h2 {
     align-items: center;
     gap: 12px;
     padding: 12px;
-    border-radius: 10px;
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
     margin-bottom: 4px;
 }
 
 .member-item:hover {
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .member-item.selected {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-    border: 2px solid #667eea;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 .member-avatar {
@@ -290,18 +316,18 @@ section h2 {
 .member-name {
     font-weight: 600;
     font-size: 15px;
-    color: #1e293b;
+    color: white;
 }
 
 .member-id {
     font-size: 13px;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .member-checkbox {
     width: 24px;
     height: 24px;
-    border: 2px solid #cbd5e1;
+    border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 6px;
     display: flex;
     align-items: center;
@@ -310,15 +336,15 @@ section h2 {
 }
 
 .member-item.selected .member-checkbox {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-color: #667eea;
-    color: white;
+    background: white;
+    border-color: white;
+    color: black;
 }
 
 .no-members {
     padding: 40px 20px;
     text-align: center;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.7);
     font-size: 14px;
 }
 
@@ -326,10 +352,10 @@ section h2 {
 .error-message {
     margin: 20px 40px;
     padding: 12px 16px;
-    background: #fef2f2;
-    border: 2px solid #fecaca;
-    border-radius: 10px;
-    color: #dc2626;
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 12px;
+    color: #fecaca;
     font-size: 14px;
     font-weight: 500;
 }
@@ -337,8 +363,10 @@ section h2 {
 /* 하단 액션 */
 .create-team-footer {
     padding: 20px 40px;
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
     display: flex;
     justify-content: flex-end;
     gap: 12px;
@@ -348,7 +376,7 @@ section h2 {
 .create-btn {
     padding: 12px 24px;
     border: none;
-    border-radius: 10px;
+    border-radius: 20px;
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
@@ -356,24 +384,27 @@ section h2 {
 }
 
 .cancel-btn {
-    background: #e2e8f0;
-    color: #64748b;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
 }
 
 .cancel-btn:hover {
-    background: #cbd5e1;
-    color: #475569;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: white;
 }
 
 .create-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
+    background: white;
+    color: black;
+    box-shadow: 0 4px 14px rgba(255, 255, 255, 0.2);
 }
 
 .create-btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.95);
 }
 
 .create-btn:disabled {
@@ -385,9 +416,9 @@ section h2 {
 .github-section {
     margin-top: 24px;
     padding: 24px;
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 12px;
-    border: 2px solid #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .github-section h2 {
@@ -405,11 +436,11 @@ section h2 {
 .optional-label {
     font-size: 13px;
     font-weight: normal;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .github-loading {
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.8);
     font-size: 14px;
     padding: 12px 0;
 }
@@ -423,16 +454,16 @@ section h2 {
     align-items: center;
     gap: 12px;
     padding: 14px 16px;
-    background: white;
-    border: 2px solid #667eea;
-    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
 }
 
 .selected-repo .repo-name {
     flex: 1;
     font-weight: 600;
     font-size: 15px;
-    color: #1e293b;
+    color: white;
 }
 
 .change-repo-btn,
@@ -447,23 +478,29 @@ section h2 {
 }
 
 .change-repo-btn {
-    background: #e2e8f0;
-    color: #475569;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 8px;
 }
 
 .change-repo-btn:hover {
-    background: #cbd5e1;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .remove-repo-btn {
     background: transparent;
-    color: #ef4444;
+    color: #fecaca;
     font-size: 18px;
     padding: 6px 10px;
+    border: none;
+    border-radius: 8px;
 }
 
 .remove-repo-btn:hover {
-    background: #fef2f2;
+    background: rgba(239, 68, 68, 0.2);
+    color: white;
 }
 
 .repo-dropdown-wrapper {
@@ -472,10 +509,10 @@ section h2 {
 
 .select-repo-btn {
     padding: 12px 24px;
-    background: #24292e;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: white;
-    border: none;
-    border-radius: 10px;
+    border-radius: 20px;
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;
@@ -483,7 +520,8 @@ section h2 {
 }
 
 .select-repo-btn:hover {
-    background: #1a1f24;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .select-repo-btn:disabled {
@@ -499,10 +537,12 @@ section h2 {
     max-width: 450px;
     max-height: 320px;
     overflow-y: auto;
-    background: white;
-    border: 2px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     z-index: 100;
 }
 
@@ -512,12 +552,12 @@ section h2 {
     justify-content: space-between;
     padding: 14px 16px;
     cursor: pointer;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.2s ease;
 }
 
 .repo-option:hover {
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .repo-option:last-child {
@@ -527,7 +567,7 @@ section h2 {
 .repo-option .repo-name {
     font-size: 14px;
     font-weight: 500;
-    color: #1e293b;
+    color: white;
 }
 
 .private-badge {
@@ -542,46 +582,48 @@ section h2 {
 .no-repos {
     padding: 24px;
     text-align: center;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.7);
     font-size: 14px;
 }
 
 .github-not-connected {
     text-align: center;
     padding: 24px;
-    background: white;
-    border: 2px dashed #cbd5e1;
-    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
     margin-top: 16px;
 }
 
 .github-not-connected p {
     margin: 0 0 16px 0;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.8);
     font-size: 14px;
 }
 
 .connect-github-link {
     display: inline-block;
     padding: 10px 20px;
-    background: #24292e;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: white;
     text-decoration: none;
-    border-radius: 8px;
+    border-radius: 20px;
     font-size: 14px;
     font-weight: 600;
     transition: all 0.2s ease;
 }
 
 .connect-github-link:hover {
-    background: #1a1f24;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .github-not-connected .hint {
     margin-top: 16px;
     margin-bottom: 0;
     font-size: 12px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 /* 반응형 */

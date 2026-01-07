@@ -6,7 +6,7 @@ import ShaderBackground from "../../components/landing/shader-background";
 import Header from "../../components/landing/header";
 import HeroContent from "../../components/landing/hero-content";
 import Circle from "../../components/landing/circle";
-/* import LogoCenter from "../../components/landing/LogoCenter"; */
+import LogoCenter from "../../components/landing/LogoCenter";
 
 function ScrollTopButton({ show, onClick }) {
     if (!show) return null;
@@ -57,8 +57,8 @@ export default function Landing() {
 
             {/* 1) 첫 화면(히어로) */}
             <section ref={topRef} className="relative min-h-screen">
-                {/* ✅ 중앙 로고는 여기 */}
-
+                {/* ✅ 중앙 로고 */}
+                <LogoCenter />
 
                 <Header onStart={() => navigate("/login")} />
                 <HeroContent onMoreInfo={scrollToInfo} onStart={() => navigate("/login")} />

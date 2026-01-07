@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createTeam } from '../api/teamApi';
 import { getAllMembers } from '../api/teamApi';
 import { getGitHubStatus, listUserRepositories } from '../api/githubIssueApi';
+import ShaderBackground from '../components/landing/shader-background';
 import './CreateTeam.css';
 
 function CreateTeam() {
@@ -151,8 +152,26 @@ function CreateTeam() {
     };
 
     return (
-        <div className="create-team-page">
-            <div className="create-team-container">
+        <ShaderBackground>
+            <div className="create-team-page">
+                <div className="create-team-container">
+                    {/* SVG Filters */}
+                    <svg className="absolute inset-0 w-0 h-0">
+                        <defs>
+                            <filter id="glass-effect" x="-50%" y="-50%" width="200%" height="200%">
+                                <feTurbulence baseFrequency="0.005" numOctaves="1" result="noise" />
+                                <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.3" />
+                                <feColorMatrix
+                                    type="matrix"
+                                    values="1 0 0 0 0.02
+                                      0 1 0 0 0.02
+                                      0 0 1 0 0.05
+                                      0 0 0 0.9 0"
+                                    result="tint"
+                                />
+                            </filter>
+                        </defs>
+                    </svg>
                 <div className="create-team-header">
                     <button className="back-btn" onClick={() => navigate(-1)}>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -381,8 +400,9 @@ function CreateTeam() {
                         {loading ? '생성 중...' : '팀 만들기'}
                     </button>
                 </div>
+                </div>
             </div>
-        </div>
+        </ShaderBackground>
     );
 }
 

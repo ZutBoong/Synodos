@@ -16,6 +16,7 @@ import {
     unlinkSocialAccount
 } from '../api/memberApi';
 import Sidebar from '../components/Sidebar';
+import ShaderBackground from '../components/landing/shader-background';
 import './MyPage.css';
 
 function MyPage() {
@@ -596,17 +597,18 @@ function MyPage() {
     };
 
     return (
-        <div className="mypage-page">
-            <Sidebar
-                isOpen={sidebarOpen}
-                onToggle={() => setSidebarOpen(!sidebarOpen)}
-                currentTeam={currentTeam}
-                onSelectTeam={handleSelectTeam}
-                loginMember={loginMember}
-            />
+        <ShaderBackground>
+            <div className="mypage-page">
+                <Sidebar
+                    isOpen={sidebarOpen}
+                    onToggle={() => setSidebarOpen(!sidebarOpen)}
+                    currentTeam={currentTeam}
+                    onSelectTeam={handleSelectTeam}
+                    loginMember={loginMember}
+                />
 
-            <div className={`mypage-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-                <header className="mypage-header">
+                <div className={`mypage-layout ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+                    <header className="mypage-header">
                     <div className="mypage-header-left">
                         <h1 className="mypage-title">마이페이지</h1>
                     </div>
@@ -1146,7 +1148,8 @@ function MyPage() {
                     </div>
                 </div>
             )}
-        </div>
+            </div>
+        </ShaderBackground>
     );
 }
 
