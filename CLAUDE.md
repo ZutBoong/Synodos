@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Synodos is a team-based Kanban board application with a Spring Boot backend and React frontend, using PostgreSQL database for persistence. Features include JWT authentication, real-time updates via WebSocket, task comments, verification workflow, team chat, and AI-powered analysis via Gemini.
+Synodos is a team-based Kanban board application with a Spring Boot backend and React frontend, using PostgreSQL database for persistence. Features include JWT authentication, real-time updates via WebSocket, task comments, verification workflow, team chat, GitHub integration (issues, PRs, branches), and AI-powered analysis via OpenAI API.
 
 ## Build and Run Commands
 
@@ -21,17 +21,17 @@ cd backend
 .\mvnw spring-boot:run "-Dspring-boot.run.profiles=local"
 ```
 
-### Claude Code Bash 환경 (중요)
-이 프로젝트는 Windows 환경이지만 Claude Code의 Bash는 Unix-like 환경입니다.
-Windows 경로와 명령어를 실행할 때는 반드시 `cmd /c`로 감싸서 실행해야 합니다:
+### Claude Code Bash Environment (Important)
+This project runs on Windows, but Claude Code's Bash uses a Unix-like environment.
+When executing Windows paths and commands, always wrap them with `cmd /c`:
 ```bash
-# 백엔드 컴파일
+# Backend compile
 cmd /c "cd /d C:\Synodos\backend && mvnw.cmd compile -q"
 
-# 백엔드 테스트
+# Backend test
 cmd /c "cd /d C:\Synodos\backend && mvnw.cmd test -q"
 
-# 프론트엔드 빌드
+# Frontend build
 cmd /c "cd /d C:\Synodos\frontend && npm run build"
 ```
 
@@ -68,26 +68,26 @@ psql -U flow -d synodos -f database/postgresql_schema.sql
 docker-compose up --build              # Start all services
 docker-compose up -d --build           # Start in background
 docker-compose down                    # Stop all services
-docker-compose down -v                 # Stop and remove volumes (DB 리셋)
+docker-compose down -v                 # Stop and remove volumes (DB reset)
 ```
 
-**Docker 데이터베이스 동작:**
-- 첫 실행 시 `schema.sql`로 테이블 생성 (시드 데이터 없음)
-- `postgres_data` 볼륨으로 데이터 영속화
-- **리셋하려면**: `docker-compose down -v` (볼륨 삭제 필수)
-- 재시작만으로는 데이터 유지됨
+**Docker Database Behavior:**
+- First run creates tables via `schema.sql` (no seed data)
+- Data persists via `postgres_data` volume
+- **To reset**: `docker-compose down -v` (must delete volume)
+- Restart alone preserves data
 
-### Test Accounts (로컬 개발용)
-로컬 개발 시 `sample-data.sql`을 수동으로 실행하여 테스트 데이터 생성:
+### Test Accounts (Local Development)
+Run `sample-data.sql` manually for test data:
 ```bash
 psql -U flow -d synodos -f backend/src/main/resources/sample-data.sql
 ```
 - **Users**: admin, user1~user8 (password: `1234`)
 - **Teams**: Sample team with columns and tasks
 
-**로컬 스키마 초기화:**
-- Spring Boot 시작 시 `schema.sql` 자동 실행 (`spring.sql.init.mode=always`)
-- `CREATE TABLE IF NOT EXISTS` 사용으로 기존 데이터 유지
+**Local Schema Initialization:**
+- Spring Boot auto-executes `schema.sql` on startup (`spring.sql.init.mode=always`)
+- Uses `CREATE TABLE IF NOT EXISTS` to preserve existing data
 
 ## Architecture
 
@@ -100,15 +100,99 @@ backend/src/main/java/com/example/demo/
 ├── model/          # Data entities with Lombok annotations
 ├── config/         # WebSocket and Security configuration
 ├── security/       # JWT token provider and authentication filter
-└── dto/            # Data transfer objects (AuthResponse, BoardEvent, AnalysisRequest)
+└── dto/            # Data transfer objects
 ```
-Key entities: Member, Team, TeamMember, SynodosColumn, Task, Comment, ChatMessage, Notification, TaskAssignee, TaskVerifier, TaskFavorite, TaskArchive, ProjectFile, TaskGitHubIssue, TaskGitHubPR
+
+### Controllers (Complete List)
+| Controller | Description |
+|------------|-------------|
+| `MemberController` | Authentication, registration, profile |
+| `TeamController` | Team CRUD, member management, GitHub repo linking |
+| `TaskController` | Task CRUD, drag-drop, filters, calendar |
+| `SynodosColumnController` | Board columns management |
+| `CommentController` | Task comments |
+| `ChatController` | Team chat messaging |
+| `FileController` | File upload/download |
+| `NotificationController` | Notification CRUD |
+| `PresenceController` | WebSocket presence tracking |
+| `TaskWorkflowController` | Task workflow transitions |
+| `TaskAssigneeController` | Multiple assignees management |
+| `TaskVerifierController` | Multiple verifiers management |
+| `TaskFavoriteController` | Task favorites/bookmarks |
+| `TaskArchiveController` | Task archiving |
+| `AnalysisController` | AI code analysis |
+| `EmailVerificationController` | Email verification |
+| `GitHubController` | Branch/commit/PR operations, conflict resolution |
+| `GitHubOAuthController` | GitHub OAuth flow |
+| `GitHubWebhookController` | GitHub webhook events |
+| `GitHubIssueSyncController` | GitHub issue sync |
+
+### Models (Complete List)
+| Model | Description |
+|-------|-------------|
+| `Member` | User with OAuth, GitHub integration |
+| `MemberSocialLink` | Multiple social account linking |
+| `Team` | Team with GitHub repo config |
+| `TeamMember` | Team membership with roles |
+| `SynodosColumn` | Kanban board columns |
+| `Task` | Task with workflow, priority, dates |
+| `TaskAssignee` | Task assignees (multiple) |
+| `TaskVerifier` | Task verifiers (multiple) |
+| `Comment` | Task comments with GitHub sync |
+| `ChatMessage` | Team chat messages |
+| `Notification` | System notifications |
+| `ProjectFile` | File attachments |
+| `TaskFavorite` | User's favorite tasks |
+| `TaskArchive` | Archived task snapshots (JSONB) |
+| `EmailVerification` | Verification codes |
+| `TaskCommit` | Task-to-commit linking |
+| `TaskGitHubIssue` | Task-to-GitHub-issue sync |
+| `TaskGitHubPR` | Task-to-PR linking |
+| `GitHubIssueSyncLog` | Sync operation history |
+| `GitHubUserMapping` | User-to-GitHub mapping |
+
+### Services (Complete List)
+
+**Core Services:**
+- `MemberService` - User management, authentication
+- `TeamService` - Team operations, GitHub repo integration
+- `TaskService` - Task CRUD, workflow, filters
+- `SynodosColumnService` - Column management
+- `CommentService` - Comment CRUD
+- `ChatService` - Chat messaging
+- `FileService` - File operations
+
+**Workflow Services:**
+- `TaskWorkflowService` - Task state machine
+- `TaskAssigneeService` - Multiple assignees, acceptance workflow
+- `TaskVerifierService` - Multiple verifiers, approval workflow
+
+**Feature Services:**
+- `TaskFavoriteService` - Favorite management
+- `TaskArchiveService` - Archive operations
+- `NotificationService` - Persistent notifications
+- `BoardNotificationService` - Real-time WebSocket notifications
+- `DeadlineSchedulerService` - Scheduled deadline alerts
+- `PresenceService` - User online status
+
+**GitHub Integration Services:**
+- `GitHubService` - Branch/commit/PR operations, merge, revert
+- `GitHubIssueService` - GitHub issue API operations
+- `GitHubIssueSyncService` - Bidirectional task-issue sync
+- `GitHubCommentSyncService` - Comment sync with GitHub issues
+- `GitHubLabelService` - Label management
+- `GitHubWebhookService` - Webhook event processing
+
+**External Services:**
+- `GeminiService` - OpenAI API for code analysis, conflict resolution
+- `EmailService` - SMTP/AWS SES email
+- `EmailVerificationService` - Verification codes
 
 ### External Integrations
-- **Gemini AI**: `GeminiService` calls Gemini API for AI-powered analysis (model: `gemini-2.0-flash`)
-- **GitHub**: `GitHubService` for Git commit integration, `GitHubIssueService` for issue sync, `GitHubWebhookService` for webhook handling
-- **OAuth2**: Supports Google, Naver, Kakao social login via `OAuth2SuccessHandler`
-- **Email**: Gmail SMTP (default) or AWS SES for email verification
+- **OpenAI API**: `GeminiService` calls OpenAI for AI-powered analysis and conflict resolution
+- **GitHub**: Branch/commit operations, PR creation/merge, issue sync, webhooks
+- **OAuth2**: Google, Naver, Kakao, GitHub social login
+- **Email**: Gmail SMTP (default) or AWS SES
 
 ### MyBatis Conventions
 - Mapper XMLs in `resources/mapper/` (one per entity)
@@ -136,16 +220,73 @@ notificationService.notifyTaskUpdated(task, teamId);
 ### Frontend Structure (React 18 + React Router)
 ```
 frontend/src/
-├── api/            # Axios API clients (axiosInstance, boardApi, teamApi, githubApi, etc.)
-├── components/     # Reusable UI (Sidebar, Header, TaskDetailView, ChatPanel, etc.)
-├── pages/          # Route components (Login, Register, Home, TeamView, etc.)
-└── pages/views/    # Board sub-views (BoardView, ListView, CalendarView, BranchView, etc.)
+├── api/            # Axios API clients
+├── components/     # Reusable UI components
+├── pages/          # Route page components
+└── pages/views/    # Team sub-views
 ```
 
-**주요 컴포넌트:**
-- `TaskDetailView`: 태스크 상세/편집 패널 (BoardView, ListView, Calendar에서 공통 사용)
-- `TaskCreateModal`: 새 태스크 생성 모달
-- `BranchView`: GitHub 브랜치/커밋 시각화, PR 생성, 머지 기능
+### Frontend API Clients
+| API Client | Description |
+|------------|-------------|
+| `axiosInstance.js` | Axios config with JWT injection |
+| `boardApi.js` | Task/column CRUD, workflow, favorites |
+| `teamApi.js` | Team CRUD, member management |
+| `memberApi.js` | Auth, profile, password reset |
+| `commentApi.js` | Comment CRUD |
+| `chatApi.js` | Chat messaging |
+| `fileApi.js` | File upload/download |
+| `notificationApi.js` | Notification CRUD |
+| `analysisApi.js` | AI code analysis |
+| `emailApi.js` | Email verification |
+| `githubApi.js` | Branch/commit/PR operations |
+| `githubIssueApi.js` | GitHub issue sync |
+| `websocketService.js` | WebSocket STOMP client |
+
+### Frontend Pages
+| Page | Description |
+|------|-------------|
+| `Home.js` | Dashboard/team selection |
+| `TeamView.js` | Main team workspace |
+| `MyPage.js` | User profile |
+| `MyActivity.js` | User's tasks/notifications |
+| `NotificationsPage.js` | Notification center |
+| `Login.js`, `Register.js` | Authentication |
+| `FindId.js`, `FindPassword.js` | Account recovery |
+| `OAuth2Redirect.js` | OAuth callback handler |
+| `SocialSignupComplete.js` | Social signup setup |
+| `CreateTeam.js` | Team creation |
+| `Invite.js` | Team invitation |
+| `GitHubCallback.js` | GitHub OAuth callback |
+
+### Frontend Views (Team Sub-views)
+| View | Description |
+|------|-------------|
+| `OverviewView.js` | Team dashboard with statistics |
+| `BoardView.js` | Kanban board with drag-drop |
+| `ListView.js` | Task list with filters/sorting |
+| `CalendarView.js` | Calendar grid (deadline-based) |
+| `TimelineView.js` | Gantt chart visualization |
+| `BranchView.js` | GitHub branch/commit/PR management |
+| `ChatView.js` | Team chat interface |
+| `FilesView.js` | File management |
+| `AdminView.js` | Team admin settings |
+| `SettingsView.js` | GitHub integration config |
+
+### Key Components
+| Component | Description |
+|-----------|-------------|
+| `Header.js` | Top navigation, team switcher |
+| `Sidebar.js` | Team menu and navigation |
+| `TaskDetailView.js` | Task editor panel (right sidebar) |
+| `TaskCreateModal.js` | Quick task creation |
+| `CommentSection.js` | Comment threading |
+| `CommitBrowser.js` | GitHub commit viewer |
+| `LinkedCommits.js` | Task-to-commit display |
+| `GitHubIssueLink.js` | GitHub issue status |
+| `FilterBar.js` | Task filtering UI |
+| `ChatPanel.js` | Chat UI |
+| `NotificationBell.js` | Notification indicator |
 
 ### Frontend State Management
 - Component-level state with React Hooks (no Redux/Context)
@@ -155,6 +296,7 @@ frontend/src/
 ### Real-Time Communication (WebSocket)
 - Endpoint: `/ws` (STOMP over SockJS)
 - Subscribe: `/topic/team/{teamId}` for board events
+- Subscribe: `/topic/user/{memberNo}/notifications` for personal notifications
 - Publish: `/app/presence/join/{teamId}`, `/app/presence/leave/{teamId}`
 - Event types: `TASK_CREATED`, `TASK_UPDATED`, `TASK_MOVED`, `TASK_DELETED`, `COLUMN_CREATED`, etc.
 
@@ -162,32 +304,78 @@ frontend/src/
 - **Real-time:** `BoardNotificationService` → WebSocket `/topic/team/{teamId}`
 - **Persistent:** `NotificationService` → database `notification` table
 
+Notification types:
+- `TEAM_INVITE`, `TASK_ASSIGNEE`, `TASK_VERIFIER`, `TASK_REVIEW`
+- `DEADLINE_APPROACHING`, `DEADLINE_PASSED`, `TASK_REJECTED`
+- `COMMENT_ADDED`, `MENTION`
+
 ### GitHub Issue Sync
 - Tasks can be linked to GitHub issues via `TaskGitHubIssue` entity
 - `GitHubWebhookController` receives webhook events from GitHub
 - `GitHubIssueSyncService` handles bidirectional sync between tasks and issues
 - User mappings stored in `GitHubUserMapping` table
+- Conflict detection with 5-minute window
 
-**GitHub 저장소 연결 흐름:**
-1. 팀 설정에서 "GitHub 저장소 연결" 클릭
-2. 사용자의 GitHub 저장소 목록 조회 (`GitHubService.listUserRepositories`)
-3. 저장소 선택 시 자동으로 Webhook 등록 (`GitHubService.createWebhook`)
-4. Webhook URL은 `GITHUB_WEBHOOK_BASE_URL` 환경변수에서 가져옴
-   - 설정 안 됨 + localhost → 프론트에서 ngrok URL 입력 프롬프트
-   - 설정됨 → 자동으로 해당 URL 사용
-5. Webhook 이벤트: `issues`, `issue_comment`, `push`
+**GitHub Repository Connection Flow:**
+1. Click "Connect GitHub Repository" in team settings
+2. Fetch user's GitHub repository list (`GitHubService.listUserRepositories`)
+3. On repository selection, auto-register webhook (`GitHubService.createWebhook`)
+4. Webhook URL from `GITHUB_WEBHOOK_BASE_URL` environment variable
+   - Not set + localhost → Frontend prompts for ngrok URL
+   - Set → Automatically uses that URL
+5. Webhook events: `issues`, `issue_comment`, `push`
 
 ### GitHub PR Integration
-- `TaskGitHubPR` 엔티티로 Task-PR 연결 관리
-- `BranchView`에서 브랜치 머지 시 Direct Merge / PR 생성 선택 가능
-- PR 생성 시 Task 연결 옵션 제공
-- `TaskDetailView`에서 연결된 PR 목록 표시
-  - Synodos에서 생성한 PR
-  - GitHub Issue를 참조하는 PR (자동 발견, "Issue 참조" 배지 표시)
+- `TaskGitHubPR` entity manages Task-PR connections
+- `BranchView` allows Direct Merge or PR creation on branch merge
+- PR creation offers Task linking option
+- `TaskDetailView` displays linked PRs:
+  - PRs created in Synodos
+  - PRs referencing GitHub Issues (auto-discovered, shows "Issue Reference" badge)
 
 ### API Endpoint Pattern
 Backend endpoints: `/api/{resource}{action}` (e.g., `/api/taskwrite`, `/api/tasklist`, `/api/taskdelete/{id}`)
 Frontend proxy forwards all `/api/*` requests to backend port 8081.
+
+### Key API Endpoints
+
+**Task Operations:**
+- `POST /api/taskwrite` - Create
+- `GET /api/tasklist[/columnId][/team/{teamId}]` - List
+- `GET /api/taskcontent/{id}` - Detail
+- `PUT /api/taskupdate` - Update
+- `DELETE /api/taskdelete/{id}` - Delete
+- `PUT /api/taskposition` - Drag-drop
+- `GET /api/task/calendar/{teamId}` - Calendar view data
+- `GET /api/tasklist/verification/pending/{memberNo}` - Pending reviews
+
+**Workflow:**
+- `POST /api/task/workflow/{id}/accept?memberNo={no}` - Accept
+- `POST /api/task/workflow/{id}/complete?memberNo={no}` - Complete
+- `POST /api/task/workflow/{id}/approve?memberNo={no}` - Approve
+- `POST /api/task/workflow/{id}/reject?memberNo={no}` - Reject
+- `POST /api/task/workflow/{id}/decline?memberNo={no}` - Decline
+- `POST /api/task/workflow/{id}/restart?memberNo={no}` - Restart
+
+**Assignees/Verifiers:**
+- `GET/POST /api/task/{id}/[verifiers|assignees]` - Manage multiple
+- `DELETE /api/task/{id}/verifier/{memberNo}` - Remove
+
+**GitHub:**
+- `GET /api/github/branches/{teamId}` - List branches
+- `GET /api/github/commits/{teamId}` - List commits
+- `POST /api/github/branch/{teamId}` - Create branch
+- `POST /api/github/merge/{teamId}` - Merge branches
+- `DELETE /api/github/branch/{teamId}/{name}` - Delete branch
+- `POST /api/github/pr/{teamId}` - Create PR
+- `GET /api/github/task/{id}/pr` - Get task PRs
+- `POST /api/github/task/{id}/pr/{prId}/merge` - Merge PR
+- `POST /api/github/conflict/resolve` - AI conflict resolution
+
+**GitHub Issue Sync:**
+- `GET /api/github-issue/team/{teamId}/status` - Sync status
+- `POST /api/github-issue/task/{taskId}/link` - Link task to issue
+- `POST /api/github-issue/team/{teamId}/sync` - Trigger sync
 
 ## Key Configuration
 - Backend port: 8081, Frontend dev port: 3000 (proxies to 8081)
@@ -196,43 +384,43 @@ Frontend proxy forwards all `/api/*` requests to backend port 8081.
 
 ### Configuration Files
 
-| 파일 | 용도 | Git |
-|------|------|-----|
-| `.env` | Docker 배포용 | .gitignore |
-| `application-local.properties` | 로컬 개발용 | .gitignore |
+| File | Purpose | Git |
+|------|---------|-----|
+| `.env` | Docker deployment | .gitignore |
+| `application-local.properties` | Local development | .gitignore |
 
-### Environment Variable Pattern (중요)
+### Environment Variable Pattern (Important)
 
-이 프로젝트는 로컬/배포 환경을 다음 패턴으로 분리합니다:
+This project separates local/deployment environments with this pattern:
 
-1. **`application.properties`**: 환경변수 참조 정의
+1. **`application.properties`**: Define environment variable references
    ```properties
    github.webhook.base-url=${GITHUB_WEBHOOK_BASE_URL:}
-   # ${VAR_NAME:default} 형식 - 환경변수 없으면 default 사용
+   # ${VAR_NAME:default} format - uses default if env var not set
    ```
 
-2. **로컬 개발**: `application-local.properties`에 직접 값 설정
+2. **Local Development**: Set values directly in `application-local.properties`
    ```properties
    github.oauth.client-id=actual-value-here
    ```
 
-3. **Docker 배포**: `.env` → `docker-compose.yml`로 주입
+3. **Docker Deployment**: `.env` → injected via `docker-compose.yml`
    ```yaml
    # docker-compose.yml
    environment:
      GITHUB_WEBHOOK_BASE_URL: ${GITHUB_WEBHOOK_BASE_URL:-}
    ```
 
-**새 환경변수 추가 시 체크리스트:**
-- [ ] `application.properties`에 `${VAR_NAME:}` 참조 추가
-- [ ] `.env.example`에 설명과 함께 추가
-- [ ] `.env`에 실제 값 추가
-- [ ] `docker-compose.yml`의 backend environment에 추가
-- [ ] 필요시 `application-local.properties`에 로컬용 값 추가
+**New Environment Variable Checklist:**
+- [ ] Add `${VAR_NAME:}` reference to `application.properties`
+- [ ] Add with description to `.env.example`
+- [ ] Add actual value to `.env`
+- [ ] Add to `docker-compose.yml` backend environment
+- [ ] Add local value to `application-local.properties` if needed
 
-**민감도 판단 기준:**
-- 민감: API 키, 비밀번호, OAuth secret → `.env`, `application-local.properties` (gitignore)
-- 비민감: 공개 URL, 포트, 모드 설정 → `application.properties`에 직접 또는 기본값
+**Sensitivity Guidelines:**
+- Sensitive: API keys, passwords, OAuth secrets → `.env`, `application-local.properties` (gitignored)
+- Non-sensitive: Public URLs, ports, mode settings → `application.properties` directly or as defaults
 
 ### Local Development (application-local.properties)
 Copy `application-local.properties.example` and configure:
@@ -241,8 +429,8 @@ Copy `application-local.properties.example` and configure:
 spring.mail.username=your-email@gmail.com
 spring.mail.password=your-16-digit-app-password
 
-# Gemini AI
-gemini.api.key=your-gemini-api-key
+# AI API (OpenAI)
+gemini.api.key=your-openai-api-key
 
 # OAuth2 - Google
 spring.security.oauth2.client.registration.google.client-id=your-client-id
@@ -255,6 +443,10 @@ spring.security.oauth2.client.registration.naver.client-secret=your-client-secre
 # OAuth2 - Kakao
 spring.security.oauth2.client.registration.kakao.client-id=your-client-id
 spring.security.oauth2.client.registration.kakao.client-secret=your-client-secret
+
+# GitHub
+github.oauth.client-id=your-client-id
+github.oauth.client-secret=your-client-secret
 ```
 
 ### Docker Deployment (.env)
@@ -262,8 +454,9 @@ Copy `.env.example` to `.env` and configure:
 - `DB_USERNAME`, `DB_PASSWORD` - Database credentials
 - `JWT_SECRET` - JWT signing key
 - `SMTP_USERNAME`, `SMTP_PASSWORD` - Gmail SMTP
-- `GEMINI_API_KEY` - Gemini AI API key
+- `GEMINI_API_KEY` - OpenAI API key
 - OAuth credentials (GOOGLE, NAVER, KAKAO, GITHUB)
+- `GITHUB_WEBHOOK_BASE_URL` - External webhook URL
 
 ### Email Configuration
 - `email.environment=dev` - Logs emails to console
@@ -271,9 +464,40 @@ Copy `.env.example` to `.env` and configure:
 
 ## Data Hierarchy
 ```
-Team → SynodosColumn → Task → [Comments, TaskAssignee, TaskVerifier]
+Team → SynodosColumn → Task → [Comments, TaskAssignee, TaskVerifier, TaskGitHubIssue, TaskGitHubPR]
      → TeamMember (links Member to Team with role)
      → ChatMessage
+     → ProjectFile
 ```
 - Drag-and-drop uses `@hello-pangea/dnd` library
 - File uploads: max 50MB per file (`spring.servlet.multipart.max-file-size`)
+
+## Database Schema (20+ tables)
+
+### Core Tables
+- `member` - Users (20+ columns including OAuth, GitHub, email verification)
+- `member_social_link` - Multiple social account mapping
+- `team` - Teams with GitHub repo integration
+- `team_member` - Membership with roles
+- `columns` - Kanban columns with GitHub prefix mapping
+- `task` - Tasks with workflow status, priority, dates, rejection tracking
+- `task_assignee` - Multiple assignees with acceptance/completion status
+- `task_verifier` - Multiple verifiers with approval status
+
+### Communication Tables
+- `comment` - Task comments with GitHub sync
+- `chat_message` - Team chat
+- `notification` - System notifications
+
+### Feature Tables
+- `task_favorite` - Favorites bookmarks
+- `task_archive` - Archived task snapshots (JSONB)
+- `file` - File attachments
+- `email_verification` - Verification codes
+
+### GitHub Integration Tables
+- `task_commit` - Commit linking
+- `task_github_issue` - GitHub issue sync with conflict detection
+- `task_github_pr` - PR linking
+- `github_issue_sync_log` - Sync history
+- `github_user_mapping` - User-to-GitHub-account mapping

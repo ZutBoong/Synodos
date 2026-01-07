@@ -3,17 +3,8 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { taskwrite, taskupdate, taskdelete, taskposition, columnposition, tasklistByTeam, columnwrite, columnlistByTeam, columndelete } from '../../api/boardApi';
 import TaskDetailView from '../../components/TaskDetailView';
 import TaskCreateModal from '../../components/TaskCreateModal';
+import { WORKFLOW_STATUSES } from '../../constants/workflowStatuses';
 import './ListView.css';
-
-// 워크플로우 상태
-const WORKFLOW_STATUSES = {
-    WAITING: { label: 'Waiting', color: '#94a3b8' },
-    IN_PROGRESS: { label: 'In Progress', color: '#3b82f6' },
-    REVIEW: { label: 'Review', color: '#f59e0b' },
-    DONE: { label: 'Done', color: '#10b981' },
-    REJECTED: { label: 'Rejected', color: '#ef4444' },
-    DECLINED: { label: 'Declined', color: '#6b7280' }
-};
 
 
 function ListView({

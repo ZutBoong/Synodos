@@ -7,9 +7,11 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import com.example.demo.model.Task;
 import com.example.demo.service.TaskService;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
-@CrossOrigin("*")
 @RequestMapping("/api")
 public class TaskController {
 
@@ -18,75 +20,54 @@ public class TaskController {
 
 	// 태스크 생성
 	@PostMapping("taskwrite")
-	public Integer taskwrite(@RequestBody Task task) {
-		System.out.println("task insert: " + task);
+	public Integer taskwrite(@Valid @RequestBody Task task) {
 		// 새 태스크의 position 설정
 		int maxPos = service.getMaxPosition(task.getColumnId());
 		task.setPosition(maxPos + 1);
-		int result = service.insert(task);
-		if (result == 1)
-			System.out.println("태스크 생성 성공");
-		return result;
+		return service.insert(task);
 	}
 
 	// 전체 태스크 목록
 	@GetMapping("tasklist")
 	public List<Task> tasklist() {
-		List<Task> list = service.listAll();
-		System.out.println("tasklist: " + list);
-		return list;
+		return service.listAll();
 	}
 
 	// 컬럼별 태스크 목록
 	@GetMapping("tasklist/{columnId}")
 	public List<Task> tasklistByColumn(@PathVariable("columnId") int columnId) {
-		List<Task> list = service.listByColumn(columnId);
-		System.out.println("tasklist by column: " + list);
-		return list;
+		return service.listByColumn(columnId);
 	}
 
 	// 팀별 태스크 목록
 	@GetMapping("tasklist/team/{teamId}")
 	public List<Task> tasklistByTeam(@PathVariable("teamId") int teamId) {
-		List<Task> list = service.listByTeam(teamId);
-		System.out.println("tasklist by team: " + list);
-		return list;
+		return service.listByTeam(teamId);
 	}
 
 	// 태스크 상세
 	@GetMapping("taskcontent/{taskId}")
 	public Task taskcontent(@PathVariable("taskId") int taskId) {
 		Task result = service.content(taskId);
-		System.out.println("task content: " + result);
 		return result;
 	}
 
 	// 태스크 수정
 	@PutMapping("taskupdate")
-	public Integer taskupdate(@RequestBody Task task) {
-		System.out.println("task update: " + task);
-		int result = service.update(task);
-		if (result == 1)
-			System.out.println("태스크 수정 성공");
-		return result;
+	public Integer taskupdate(@Valid @RequestBody Task task) {
+		return service.update(task);
 	}
 
 	// 태스크 삭제
 	@DeleteMapping("taskdelete/{taskId}")
 	public Integer taskdelete(@PathVariable("taskId") int taskId) {
-		System.out.println("task delete: " + taskId);
-		int result = service.delete(taskId);
-		if (result == 1)
-			System.out.println("태스크 삭제 성공");
-		return result;
+		return service.delete(taskId);
 	}
 
 	// 태스크 위치/컬럼 변경 (드래그앤드롭)
 	@PutMapping("taskposition")
 	public Integer taskposition(@RequestBody Task task) {
-		System.out.println("task position update: " + task);
-		int result = service.updatePosition(task);
-		return result;
+		return service.updatePosition(task);
 	}
 
 	// ========== Issue Tracker 확장 엔드포인트 ==========
@@ -94,9 +75,7 @@ public class TaskController {
 	// 담당자별 태스크 목록 (내 이슈)
 	@GetMapping("tasklist/assignee/{memberNo}")
 	public List<Task> tasklistByAssignee(@PathVariable("memberNo") int memberNo) {
-		List<Task> list = service.listByAssignee(memberNo);
-		System.out.println("tasklist by assignee: " + list);
-		return list;
+		return service.listByAssignee(memberNo);
 	}
 
 	// 워크플로우 상태별 태스크 목록 (팀 내)
@@ -104,9 +83,7 @@ public class TaskController {
 	public List<Task> tasklistByStatusAndTeam(
 			@PathVariable("teamId") int teamId,
 			@PathVariable("workflowStatus") String workflowStatus) {
-		List<Task> list = service.listByStatusAndTeam(teamId, workflowStatus);
-		System.out.println("tasklist by workflow status: " + list);
-		return list;
+		return service.listByStatusAndTeam(teamId, workflowStatus);
 	}
 
 	// 태스크 담당자만 변경
@@ -116,25 +93,16 @@ public class TaskController {
 			@RequestBody Task task,
 			@RequestParam(value = "senderNo", required = false) Integer senderNo) {
 		task.setTaskId(taskId);
-		System.out.println("task assignee update: " + task);
-		int result;
 		if (senderNo != null) {
-			// senderNo가 있으면 알림 포함
-			result = service.updateAssigneeWithNotification(task, senderNo);
-		} else {
-			result = service.updateAssignee(task);
+			return service.updateAssigneeWithNotification(task, senderNo);
 		}
-		if (result == 1)
-			System.out.println("태스크 담당자 변경 성공");
-		return result;
+		return service.updateAssignee(task);
 	}
 
 	// 내 검증 대기 목록 (검증자로 배정된 REVIEW 상태 태스크)
 	@GetMapping("tasklist/verification/pending/{memberNo}")
 	public List<Task> tasklistPendingVerification(@PathVariable("memberNo") int memberNo) {
-		List<Task> list = service.listPendingVerification(memberNo);
-		System.out.println("tasklist pending verification: " + list);
-		return list;
+		return service.listPendingVerification(memberNo);
 	}
 
 	// ========== 캘린더 엔드포인트 ==========
@@ -145,10 +113,7 @@ public class TaskController {
 			@PathVariable("teamId") int teamId,
 			@RequestParam("start") @DateTimeFormat(pattern = "yyyy-MM-dd") Date startDate,
 			@RequestParam("end") @DateTimeFormat(pattern = "yyyy-MM-dd") Date endDate) {
-		System.out.println("calendar tasklist: team=" + teamId + ", start=" + startDate + ", end=" + endDate);
-		List<Task> list = service.listByDateRange(teamId, startDate, endDate);
-		System.out.println("calendar tasklist result: " + list.size() + "개");
-		return list;
+		return service.listByDateRange(teamId, startDate, endDate);
 	}
 
 	// ========== 타임라인 엔드포인트 ==========

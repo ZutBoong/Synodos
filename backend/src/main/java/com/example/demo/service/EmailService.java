@@ -97,150 +97,59 @@ public class EmailService {
 	}
 
 	/**
-	 * 회원가입 인증 이메일 본문 생성
+	 * 공통 이메일 템플릿 생성
+	 * @param code 인증 코드
+	 * @param purpose 목적 설명 (예: "회원가입을 위한")
+	 * @param requestType 요청 유형 (예: "회원가입")
+	 * @param warningMessage 경고 메시지 (예: "이 메일을 무시해주세요")
 	 */
+	private String buildEmailTemplate(String code, String purpose, String requestType, String warningMessage) {
+		return """
+			<!DOCTYPE html>
+			<html>
+			<head>
+				<meta charset="UTF-8">
+				<style>
+					body { font-family: 'Malgun Gothic', sans-serif; background-color: #f8fafc; padding: 20px; }
+					.container { max-width: 500px; margin: 0 auto; background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+					.header { text-align: center; margin-bottom: 30px; }
+					.logo { font-size: 24px; font-weight: bold; background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+					.code-box { background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); color: white; font-size: 32px; font-weight: bold; text-align: center; padding: 20px; border-radius: 8px; letter-spacing: 8px; margin: 20px 0; }
+					.message { color: #64748b; text-align: center; line-height: 1.6; }
+					.footer { margin-top: 30px; text-align: center; color: #94a3b8; font-size: 12px; }
+				</style>
+			</head>
+			<body>
+				<div class="container">
+					<div class="header">
+						<div class="logo">Synodos</div>
+					</div>
+					<p class="message">%s 이메일 인증 코드입니다.<br>아래 코드를 입력해주세요.</p>
+					<div class="code-box">%s</div>
+					<p class="message">이 코드는 5분간 유효합니다.</p>
+					<div class="footer">
+						본 메일은 Synodos %s 요청에 의해 발송되었습니다.<br>
+						본인이 요청하지 않았다면 %s.
+					</div>
+				</div>
+			</body>
+			</html>
+			""".formatted(purpose, code, requestType, warningMessage);
+	}
+
 	private String buildRegisterEmailBody(String code) {
-		return """
-			<!DOCTYPE html>
-			<html>
-			<head>
-				<meta charset="UTF-8">
-				<style>
-					body { font-family: 'Malgun Gothic', sans-serif; background-color: #f8fafc; padding: 20px; }
-					.container { max-width: 500px; margin: 0 auto; background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-					.header { text-align: center; margin-bottom: 30px; }
-					.logo { font-size: 24px; font-weight: bold; background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-					.code-box { background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); color: white; font-size: 32px; font-weight: bold; text-align: center; padding: 20px; border-radius: 8px; letter-spacing: 8px; margin: 20px 0; }
-					.message { color: #64748b; text-align: center; line-height: 1.6; }
-					.footer { margin-top: 30px; text-align: center; color: #94a3b8; font-size: 12px; }
-				</style>
-			</head>
-			<body>
-				<div class="container">
-					<div class="header">
-						<div class="logo">Synodos</div>
-					</div>
-					<p class="message">회원가입을 위한 이메일 인증 코드입니다.<br>아래 코드를 입력해주세요.</p>
-					<div class="code-box">%s</div>
-					<p class="message">이 코드는 5분간 유효합니다.</p>
-					<div class="footer">
-						본 메일은 Synodos 회원가입 요청에 의해 발송되었습니다.<br>
-						본인이 요청하지 않았다면 이 메일을 무시해주세요.
-					</div>
-				</div>
-			</body>
-			</html>
-			""".formatted(code);
+		return buildEmailTemplate(code, "회원가입을 위한", "회원가입", "이 메일을 무시해주세요");
 	}
 
-	/**
-	 * 비밀번호 재설정 인증 이메일 본문 생성
-	 */
 	private String buildPasswordResetEmailBody(String code) {
-		return """
-			<!DOCTYPE html>
-			<html>
-			<head>
-				<meta charset="UTF-8">
-				<style>
-					body { font-family: 'Malgun Gothic', sans-serif; background-color: #f8fafc; padding: 20px; }
-					.container { max-width: 500px; margin: 0 auto; background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-					.header { text-align: center; margin-bottom: 30px; }
-					.logo { font-size: 24px; font-weight: bold; background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-					.code-box { background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); color: white; font-size: 32px; font-weight: bold; text-align: center; padding: 20px; border-radius: 8px; letter-spacing: 8px; margin: 20px 0; }
-					.message { color: #64748b; text-align: center; line-height: 1.6; }
-					.footer { margin-top: 30px; text-align: center; color: #94a3b8; font-size: 12px; }
-				</style>
-			</head>
-			<body>
-				<div class="container">
-					<div class="header">
-						<div class="logo">Synodos</div>
-					</div>
-					<p class="message">비밀번호 재설정을 위한 인증 코드입니다.<br>아래 코드를 입력해주세요.</p>
-					<div class="code-box">%s</div>
-					<p class="message">이 코드는 5분간 유효합니다.</p>
-					<div class="footer">
-						본 메일은 Synodos 비밀번호 재설정 요청에 의해 발송되었습니다.<br>
-						본인이 요청하지 않았다면 이 메일을 무시해주세요.
-					</div>
-				</div>
-			</body>
-			</html>
-			""".formatted(code);
+		return buildEmailTemplate(code, "비밀번호 재설정을 위한", "비밀번호 재설정", "이 메일을 무시해주세요");
 	}
 
-	/**
-	 * 비밀번호 변경 인증 이메일 본문 생성
-	 */
 	private String buildPasswordChangeEmailBody(String code) {
-		return """
-			<!DOCTYPE html>
-			<html>
-			<head>
-				<meta charset="UTF-8">
-				<style>
-					body { font-family: 'Malgun Gothic', sans-serif; background-color: #f8fafc; padding: 20px; }
-					.container { max-width: 500px; margin: 0 auto; background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-					.header { text-align: center; margin-bottom: 30px; }
-					.logo { font-size: 24px; font-weight: bold; background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-					.code-box { background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); color: white; font-size: 32px; font-weight: bold; text-align: center; padding: 20px; border-radius: 8px; letter-spacing: 8px; margin: 20px 0; }
-					.message { color: #64748b; text-align: center; line-height: 1.6; }
-					.footer { margin-top: 30px; text-align: center; color: #94a3b8; font-size: 12px; }
-				</style>
-			</head>
-			<body>
-				<div class="container">
-					<div class="header">
-						<div class="logo">Synodos</div>
-					</div>
-					<p class="message">비밀번호 변경을 위한 인증 코드입니다.<br>아래 코드를 입력해주세요.</p>
-					<div class="code-box">%s</div>
-					<p class="message">이 코드는 5분간 유효합니다.</p>
-					<div class="footer">
-						본 메일은 Synodos 비밀번호 변경 요청에 의해 발송되었습니다.<br>
-						본인이 요청하지 않았다면 즉시 비밀번호를 변경해주세요.
-					</div>
-				</div>
-			</body>
-			</html>
-			""".formatted(code);
+		return buildEmailTemplate(code, "비밀번호 변경을 위한", "비밀번호 변경", "즉시 비밀번호를 변경해주세요");
 	}
 
-	/**
-	 * 이메일 변경 인증 이메일 본문 생성
-	 */
 	private String buildEmailChangeEmailBody(String code) {
-		return """
-			<!DOCTYPE html>
-			<html>
-			<head>
-				<meta charset="UTF-8">
-				<style>
-					body { font-family: 'Malgun Gothic', sans-serif; background-color: #f8fafc; padding: 20px; }
-					.container { max-width: 500px; margin: 0 auto; background: white; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-					.header { text-align: center; margin-bottom: 30px; }
-					.logo { font-size: 24px; font-weight: bold; background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-					.code-box { background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); color: white; font-size: 32px; font-weight: bold; text-align: center; padding: 20px; border-radius: 8px; letter-spacing: 8px; margin: 20px 0; }
-					.message { color: #64748b; text-align: center; line-height: 1.6; }
-					.footer { margin-top: 30px; text-align: center; color: #94a3b8; font-size: 12px; }
-				</style>
-			</head>
-			<body>
-				<div class="container">
-					<div class="header">
-						<div class="logo">Synodos</div>
-					</div>
-					<p class="message">이메일 변경을 위한 인증 코드입니다.<br>아래 코드를 입력해주세요.</p>
-					<div class="code-box">%s</div>
-					<p class="message">이 코드는 5분간 유효합니다.</p>
-					<div class="footer">
-						본 메일은 Synodos 이메일 변경 요청에 의해 발송되었습니다.<br>
-						본인이 요청하지 않았다면 이 메일을 무시해주세요.
-					</div>
-				</div>
-			</body>
-			</html>
-			""".formatted(code);
+		return buildEmailTemplate(code, "이메일 변경을 위한", "이메일 변경", "이 메일을 무시해주세요");
 	}
 }

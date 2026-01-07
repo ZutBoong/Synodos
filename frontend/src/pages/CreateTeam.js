@@ -46,20 +46,14 @@ function CreateTeam() {
     // GitHub 연동 상태 확인
     useEffect(() => {
         const checkGitHubStatus = async () => {
-            console.log('[DEBUG] checkGitHubStatus 시작 - loginMember:', loginMember);
             if (!loginMember || !loginMember.no) {
-                console.log('[DEBUG] loginMember 없음, 스킵');
                 return;
             }
             try {
-                console.log('[DEBUG] getGitHubStatus 호출 - memberNo:', loginMember.no);
                 const status = await getGitHubStatus(loginMember.no);
-                console.log('[DEBUG] getGitHubStatus 응답:', status);
                 const result = status.connected && status.hasRepoAccess;
-                console.log('[DEBUG] githubConnected 설정:', result);
                 setGithubConnected(result);
             } catch (error) {
-                console.error('[DEBUG] GitHub 상태 확인 실패:', error);
                 setGithubConnected(false);
             }
         };

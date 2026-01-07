@@ -160,10 +160,12 @@ public class DeadlineSchedulerService {
      * 최근 24시간 이내에 같은 타입의 알림이 발송되었는지 확인
      */
     private boolean hasRecentNotification(int taskId, String notificationType) {
-        // NotificationDao에 조회 메서드 추가 필요 시 여기서 체크
-        // 현재는 단순화를 위해 false 반환 (중복 알림 가능)
-        // TODO: 중복 알림 방지 로직 구현
-        return false;
+        try {
+            return notificationDao.hasRecentNotification(taskId, notificationType);
+        } catch (Exception e) {
+            log.warn("Failed to check recent notification for task {}: {}", taskId, e.getMessage());
+            return false;
+        }
     }
 
     /**

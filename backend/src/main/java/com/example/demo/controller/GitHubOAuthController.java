@@ -188,15 +188,12 @@ public class GitHubOAuthController {
      */
     @GetMapping("/status/{memberNo}")
     public ResponseEntity<?> getStatus(@PathVariable int memberNo) {
-        log.info("[DEBUG] getGitHubStatus 호출 - memberNo: {}", memberNo);
-
         Member member = memberDao.findByNo(memberNo);
         if (member == null) {
-            log.warn("[DEBUG] getGitHubStatus - 회원 없음: {}", memberNo);
             return ResponseEntity.badRequest().body(Map.of("error", "회원을 찾을 수 없습니다."));
         }
 
-        // 1. member 테이블에서 GitHub 연동 확인 (repo 권한 포함)
+        // member 테이블에서 GitHub 연동 확인 (repo 권한 포함)
         boolean hasGithubInMember = member.getGithubUsername() != null && !member.getGithubUsername().isEmpty();
         boolean hasAccessToken = member.getGithubAccessToken() != null && !member.getGithubAccessToken().isEmpty();
 
@@ -205,9 +202,6 @@ public class GitHubOAuthController {
 
         String githubUsername = member.getGithubUsername() != null ? member.getGithubUsername() : "";
         String connectedAt = member.getGithubConnectedAt() != null ? member.getGithubConnectedAt().toString() : "";
-
-        log.info("[DEBUG] getGitHubStatus 결과 - memberNo: {}, githubUsername: '{}', hasToken: {}, connected: {}",
-            memberNo, githubUsername, hasAccessToken, connected);
 
         return ResponseEntity.ok(Map.of(
             "connected", connected,

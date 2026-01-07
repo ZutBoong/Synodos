@@ -2,7 +2,9 @@ package com.example.demo.controller;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.crypto.Mac;
@@ -14,10 +16,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.example.demo.dao.TaskGitHubPRDao;
+import com.example.demo.dao.TaskVerifierDao;
+import com.example.demo.dao.MemberDao;
 import com.example.demo.dao.TeamDao;
 import com.example.demo.dto.GitHubWebhookPayload;
 import com.example.demo.dto.GitHubIssuePayload;
+import com.example.demo.model.Member;
 import com.example.demo.model.Team;
+import com.example.demo.model.TaskGitHubPR;
+import com.example.demo.model.TaskVerifier;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.example.demo.service.GitHubWebhookService;
 import com.example.demo.service.GitHubWebhookService.WebhookResult;
 import com.example.demo.service.GitHubIssueSyncService;
@@ -50,6 +59,15 @@ public class GitHubWebhookController {
     private TeamDao teamDao;
 
     @Autowired
+    private TaskGitHubPRDao taskGitHubPRDao;
+
+    @Autowired
+    private TaskVerifierDao taskVerifierDao;
+
+    @Autowired
+    private MemberDao memberDao;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     @Value("${github.webhook.secret:}")
@@ -68,13 +86,16 @@ public class GitHubWebhookController {
 
         log.info("Received GitHub webhook - Event: {}, Delivery: {}", event, deliveryId);
 
-        // 시크릿 검증 (설정된 경우)
+        // 시크릿 검증 (설정된 경우만)
         if (webhookSecret != null && !webhookSecret.isEmpty()) {
             if (!verifySignature(rawPayload, signature)) {
-                log.warn("Invalid webhook signature");
+                log.warn("Invalid webhook signature for delivery: {}", deliveryId);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Invalid signature"));
             }
+        } else {
+            log.warn("Webhook secret not configured - signature verification skipped. " +
+                     "Set GITHUB_WEBHOOK_SECRET for production security.");
         }
 
         // 이벤트 타입별 처리
@@ -85,6 +106,8 @@ public class GitHubWebhookController {
                 return handleIssuesEvent(rawPayload, deliveryId);
             case "issue_comment":
                 return handleIssueCommentEvent(rawPayload, deliveryId);
+            case "pull_request":
+                return handlePullRequestEvent(rawPayload, deliveryId);
             case "ping":
                 return ResponseEntity.ok(Map.of("message", "pong", "status", "Webhook configured successfully"));
             default:
@@ -297,5 +320,133 @@ public class GitHubWebhookController {
             sb.append(String.format("%02x", b));
         }
         return sb.toString();
+    }
+
+    /**
+     * Pull Request 이벤트 처리
+     * - review_requested: Reviewer 추가 시 Task Verifier로 동기화
+     * - review_request_removed: Reviewer 제거 시 Task Verifier에서 제거
+     */
+    private ResponseEntity<?> handlePullRequestEvent(String rawPayload, String deliveryId) {
+        try {
+            JsonNode payload = objectMapper.readTree(rawPayload);
+            String action = payload.path("action").asText();
+            int prNumber = payload.path("pull_request").path("number").asInt();
+            String repoUrl = payload.path("repository").path("html_url").asText();
+
+            log.info("PR event received - action: {}, PR: #{}, repo: {}", action, prNumber, repoUrl);
+
+            // Repository URL로 팀 찾기
+            Team team = findTeamByRepoUrl(repoUrl);
+            if (team == null) {
+                log.info("No team found for repo: {}", repoUrl);
+                return ResponseEntity.ok(Map.of(
+                    "success", false,
+                    "message", "No team configured for this repository"
+                ));
+            }
+
+            // PR과 연결된 Task 찾기
+            TaskGitHubPR prMapping = taskGitHubPRDao.findByPrNumber(team.getTeamId(), prNumber);
+            if (prMapping == null) {
+                log.info("No task linked to PR #{} in team {}", prNumber, team.getTeamId());
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "PR not linked to any task",
+                    "prNumber", prNumber
+                ));
+            }
+
+            int taskId = prMapping.getTaskId();
+            List<String> syncedVerifiers = new ArrayList<>();
+
+            // review_requested: Reviewer 추가됨 → Verifier 동기화
+            if ("review_requested".equals(action)) {
+                JsonNode requestedReviewer = payload.path("requested_reviewer");
+                if (!requestedReviewer.isMissingNode()) {
+                    String username = requestedReviewer.path("login").asText();
+                    syncedVerifiers = syncReviewerToVerifier(taskId, username);
+                }
+            }
+            // review_request_removed: Reviewer 제거됨 → Verifier에서 제거
+            else if ("review_request_removed".equals(action)) {
+                JsonNode removedReviewer = payload.path("requested_reviewer");
+                if (!removedReviewer.isMissingNode()) {
+                    String username = removedReviewer.path("login").asText();
+                    removeVerifierByGithubUsername(taskId, username);
+                }
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("event", "pull_request");
+            response.put("action", action);
+            response.put("prNumber", prNumber);
+            response.put("taskId", taskId);
+            response.put("syncedVerifiers", syncedVerifiers);
+            response.put("teamId", team.getTeamId());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("Failed to process pull_request webhook: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Webhook processing failed: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * GitHub Reviewer를 Task Verifier로 동기화
+     */
+    private List<String> syncReviewerToVerifier(int taskId, String githubUsername) {
+        List<String> synced = new ArrayList<>();
+        try {
+            // GitHub username으로 멤버 조회
+            Member member = memberDao.findByGithubUsername(githubUsername);
+            if (member == null) {
+                log.debug("No member found for GitHub username: {}", githubUsername);
+                return synced;
+            }
+
+            // 이미 Verifier인지 확인
+            List<TaskVerifier> currentVerifiers = taskVerifierDao.listByTask(taskId);
+            boolean alreadyVerifier = currentVerifiers.stream()
+                .anyMatch(v -> v.getMemberNo() == member.getNo());
+
+            if (!alreadyVerifier) {
+                // 새 Verifier 추가
+                TaskVerifier newVerifier = new TaskVerifier();
+                newVerifier.setTaskId(taskId);
+                newVerifier.setMemberNo(member.getNo());
+                taskVerifierDao.insert(newVerifier);
+                synced.add(member.getName());
+                log.info("Added verifier {} (GitHub: {}) to task #{} from PR reviewer",
+                         member.getName(), githubUsername, taskId);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to sync reviewer {} to verifier for task #{}: {}",
+                     githubUsername, taskId, e.getMessage());
+        }
+        return synced;
+    }
+
+    /**
+     * GitHub username으로 Task Verifier 제거
+     */
+    private void removeVerifierByGithubUsername(int taskId, String githubUsername) {
+        try {
+            Member member = memberDao.findByGithubUsername(githubUsername);
+            if (member == null) {
+                log.debug("No member found for GitHub username: {}", githubUsername);
+                return;
+            }
+
+            taskVerifierDao.delete(taskId, member.getNo());
+            log.info("Removed verifier {} (GitHub: {}) from task #{}",
+                     member.getName(), githubUsername, taskId);
+        } catch (Exception e) {
+            log.warn("Failed to remove verifier {} from task #{}: {}",
+                     githubUsername, taskId, e.getMessage());
+        }
     }
 }

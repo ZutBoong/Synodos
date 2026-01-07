@@ -20,6 +20,7 @@
 | Spring Boot Mail | 3.2.0 |
 | MyBatis Spring Boot Starter | 3.0.3 |
 | JJWT (JWT) | 0.12.3 |
+| Apache HttpClient5 | 5.3 |
 | Lombok | Spring 관리 |
 
 ### Frontend
@@ -31,20 +32,49 @@
 | @hello-pangea/dnd | 16.5.0 |
 | @stomp/stompjs | 7.2.1 |
 | sockjs-client | 1.6.1 |
+| Framer Motion | 12.23.0 |
+| TailwindCSS | 3.4.0 |
 
 ## 주요 기능
 
-- 팀/프로젝트 관리
+### 태스크 관리
 - 칸반 보드 (드래그 앤 드롭)
-- 태스크 관리 (복수 담당자, 마감일, 우선순위)
+- 복수 담당자/검증자 지정
+- 태스크 워크플로우 (대기 → 진행중 → 검토 → 완료/반려)
 - 태스크 댓글
-- 태그 시스템
-- 검증자 워크플로우
+- 우선순위 및 마감일 관리
+- 즐겨찾기 및 아카이브
+
+### 팀 협업
+- 팀/프로젝트 관리
 - 팀 채팅 (실시간 WebSocket)
-- 캘린더 뷰
-- Git 커밋 연동
-- 실시간 알림
+- 실시간 알림 (WebSocket + DB 저장)
+- 마감일 알림 (스케줄러)
+- 파일 첨부 및 관리
+
+### 다양한 뷰
+- **Board View**: 칸반 보드 형태
+- **List View**: 목록 형태 (필터/정렬)
+- **Calendar View**: 캘린더 뷰 (마감일 기준)
+- **Timeline View**: 간트 차트 형태
+- **Branch View**: GitHub 브랜치/커밋 시각화
+
+### GitHub 통합
+- **저장소 연결**: 팀별 GitHub 저장소 연동
+- **이슈 동기화**: 태스크 ↔ GitHub Issue 양방향 동기화
+- **PR 통합**: 브랜치에서 PR 생성, 머지
+- **커밋 연동**: 태스크와 Git 커밋 연결
+- **Webhook**: GitHub 이벤트 실시간 수신
+- **AI 충돌 해결**: 머지 충돌 시 AI가 해결책 제안
+
+### 인증
+- JWT 토큰 인증
+- 소셜 로그인 (Google, Naver, Kakao, GitHub)
 - 이메일 인증 (회원가입, 비밀번호 찾기)
+
+### AI 기능
+- 코드 분석 (OpenAI API)
+- Git 충돌 자동 해결 제안
 
 ---
 
@@ -59,7 +89,7 @@ cd Synodos
 
 # 환경 변수 설정
 cp .env.example .env
-nano .env  # SMTP 설정 입력
+nano .env  # SMTP, OAuth 설정 입력
 
 # 실행
 docker-compose up --build
@@ -177,6 +207,46 @@ npm start
 
 ---
 
+## 프로젝트 구조
+
+```
+Synodos/
+├── backend/                     # Spring Boot 백엔드
+│   └── src/main/java/com/example/demo/
+│       ├── controller/         # REST API 엔드포인트
+│       ├── service/            # 비즈니스 로직
+│       ├── dao/                # MyBatis 매퍼 인터페이스
+│       ├── model/              # 엔티티 클래스
+│       ├── dto/                # 데이터 전송 객체
+│       ├── config/             # WebSocket, Security 설정
+│       └── security/           # JWT, OAuth2 처리
+├── frontend/                    # React 프론트엔드
+│   └── src/
+│       ├── api/               # API 클라이언트
+│       ├── components/        # 재사용 컴포넌트
+│       ├── pages/             # 페이지 컴포넌트
+│       └── pages/views/       # 팀 뷰 컴포넌트
+└── database/                    # SQL 스키마 파일
+```
+
+### 핵심 엔티티
+
+| 엔티티 | 설명 |
+|--------|------|
+| Member | 사용자 (OAuth, GitHub 연동 포함) |
+| Team | 팀 (GitHub 저장소 설정) |
+| SynodosColumn | 칸반 컬럼 |
+| Task | 태스크 (워크플로우 상태, 우선순위, 마감일) |
+| TaskAssignee | 태스크 담당자 (복수) |
+| TaskVerifier | 태스크 검증자 (복수) |
+| Comment | 태스크 댓글 (GitHub 동기화) |
+| ChatMessage | 팀 채팅 |
+| Notification | 알림 |
+| TaskGitHubIssue | 태스크-GitHub Issue 연결 |
+| TaskGitHubPR | 태스크-PR 연결 |
+
+---
+
 ## AWS EC2 배포
 
 ### 아키텍처
@@ -234,6 +304,19 @@ JWT_SECRET=your-production-secret-key
 # SMTP 설정 (Gmail 앱 비밀번호)
 SMTP_USERNAME=your-email@gmail.com
 SMTP_PASSWORD=your-16-digit-app-password
+
+# OAuth2 (선택)
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+NAVER_CLIENT_ID=...
+NAVER_CLIENT_SECRET=...
+KAKAO_CLIENT_ID=...
+KAKAO_CLIENT_SECRET=...
+GITHUB_CLIENT_ID=...
+GITHUB_CLIENT_SECRET=...
+
+# GitHub Webhook (외부 접근 가능한 URL)
+GITHUB_WEBHOOK_BASE_URL=https://your-domain.com
 ```
 
 ```bash
@@ -313,20 +396,41 @@ sudo certbot --nginx -d yourdomain.com
 
 ---
 
-## 프로젝트 구조
+## API 엔드포인트
 
-```
-Synodos/
-├── backend/                 # Spring Boot 백엔드
-│   ├── src/main/java/      # Java 소스
-│   └── src/main/resources/ # 설정 및 MyBatis 매퍼
-├── frontend/               # React 프론트엔드
-│   └── src/
-│       ├── api/           # API 클라이언트
-│       ├── components/    # 재사용 컴포넌트
-│       └── pages/         # 페이지 컴포넌트
-└── database/              # SQL 스키마 파일
-```
+### 인증
+- `POST /api/member/login` - 로그인
+- `POST /api/member/register` - 회원가입
+- `POST /api/email/send-verification` - 이메일 인증 코드 발송
+- `POST /api/email/verify` - 이메일 인증 확인
+
+### 태스크
+- `POST /api/taskwrite` - 태스크 생성
+- `GET /api/tasklist/team/{teamId}` - 팀 태스크 목록
+- `GET /api/taskcontent/{id}` - 태스크 상세
+- `PUT /api/taskupdate` - 태스크 수정
+- `DELETE /api/taskdelete/{id}` - 태스크 삭제
+- `PUT /api/taskposition` - 위치 변경 (드래그 앤 드롭)
+
+### 워크플로우
+- `POST /api/task/workflow/{id}/accept` - 작업 수락
+- `POST /api/task/workflow/{id}/complete` - 작업 완료
+- `POST /api/task/workflow/{id}/approve` - 검토 승인
+- `POST /api/task/workflow/{id}/reject` - 검토 반려
+- `POST /api/task/workflow/{id}/decline` - 작업 거절
+
+### GitHub
+- `GET /api/github/branches/{teamId}` - 브랜치 목록
+- `GET /api/github/commits/{teamId}` - 커밋 목록
+- `POST /api/github/branch/{teamId}` - 브랜치 생성
+- `POST /api/github/merge/{teamId}` - 머지
+- `POST /api/github/pr/{teamId}` - PR 생성
+- `POST /api/github/conflict/resolve` - AI 충돌 해결
+
+### WebSocket
+- 엔드포인트: `/ws` (STOMP over SockJS)
+- 구독: `/topic/team/{teamId}` (보드 이벤트)
+- 구독: `/topic/user/{memberNo}/notifications` (개인 알림)
 
 ---
 

@@ -87,4 +87,14 @@
         WHERE recipient_no = #{recipientNo} AND is_read = false
     </select>
 
+    <!-- 최근 24시간 내 특정 태스크에 대한 특정 타입의 알림 존재 여부 -->
+    <select id="hasRecentNotification" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1 FROM notification
+            WHERE task_id = #{taskId}
+              AND notification_type = #{type}
+              AND created_at > CURRENT_TIMESTAMP - INTERVAL '24 hours'
+        )
+    </select>
+
 </mapper>

@@ -391,7 +391,7 @@ public class GitHubService {
             Map<String, Object> body = Map.of(
                 "name", "web",
                 "active", true,
-                "events", List.of("issues", "push", "issue_comment"),
+                "events", List.of("issues", "push", "issue_comment", "pull_request"),
                 "config", config
             );
 
@@ -1255,6 +1255,131 @@ public class GitHubService {
         } catch (Exception e) {
             log.error("Failed to get PR: {}", e.getMessage());
             throw new RuntimeException("PR 조회에 실패했습니다: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Pull Request에 Reviewer 요청
+     * @param accessToken GitHub 액세스 토큰
+     * @param owner 저장소 소유자
+     * @param repo 저장소 이름
+     * @param prNumber PR 번호
+     * @param reviewers 리뷰어 GitHub username 목록
+     * @return 요청된 리뷰어 목록
+     */
+    public List<String> requestReviewers(String accessToken, String owner, String repo,
+                                          int prNumber, List<String> reviewers) {
+        if (reviewers == null || reviewers.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/pulls/%d/requested_reviewers",
+                                      owner, repo, prNumber);
+        log.info("Requesting reviewers for PR #{} in {}/{}: {}", prNumber, owner, repo, reviewers);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            headers.set("Content-Type", "application/json");
+
+            Map<String, Object> body = new java.util.HashMap<>();
+            body.put("reviewers", reviewers);
+
+            String jsonBody = objectMapper.writeValueAsString(body);
+            HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl, HttpMethod.POST, entity, String.class
+            );
+
+            JsonNode node = objectMapper.readTree(response.getBody());
+            List<String> requestedReviewers = new ArrayList<>();
+
+            JsonNode requestedNode = node.path("requested_reviewers");
+            if (requestedNode.isArray()) {
+                for (JsonNode reviewer : requestedNode) {
+                    requestedReviewers.add(reviewer.path("login").asText());
+                }
+            }
+
+            log.info("Reviewers requested successfully: {}", requestedReviewers);
+            return requestedReviewers;
+        } catch (Exception e) {
+            log.warn("Failed to request reviewers (non-fatal): {}", e.getMessage());
+            // 리뷰어 요청 실패는 치명적이지 않으므로 빈 목록 반환
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * Pull Request에서 Reviewer 제거
+     * @param accessToken GitHub 액세스 토큰
+     * @param owner 저장소 소유자
+     * @param repo 저장소 이름
+     * @param prNumber PR 번호
+     * @param reviewers 제거할 리뷰어 GitHub username 목록
+     */
+    public void removeReviewers(String accessToken, String owner, String repo,
+                                 int prNumber, List<String> reviewers) {
+        if (reviewers == null || reviewers.isEmpty()) {
+            return;
+        }
+
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/pulls/%d/requested_reviewers",
+                                      owner, repo, prNumber);
+        log.info("Removing reviewers from PR #{} in {}/{}: {}", prNumber, owner, repo, reviewers);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            headers.set("Content-Type", "application/json");
+
+            Map<String, Object> body = new java.util.HashMap<>();
+            body.put("reviewers", reviewers);
+
+            String jsonBody = objectMapper.writeValueAsString(body);
+            HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
+
+            restTemplate.exchange(apiUrl, HttpMethod.DELETE, entity, String.class);
+            log.info("Reviewers removed successfully");
+        } catch (Exception e) {
+            log.warn("Failed to remove reviewers (non-fatal): {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Pull Request의 현재 Reviewer 목록 조회
+     * @param accessToken GitHub 액세스 토큰
+     * @param owner 저장소 소유자
+     * @param repo 저장소 이름
+     * @param prNumber PR 번호
+     * @return 요청된 리뷰어 username 목록
+     */
+    public List<String> getRequestedReviewers(String accessToken, String owner, String repo, int prNumber) {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/pulls/%d/requested_reviewers",
+                                      owner, repo, prNumber);
+        log.debug("Getting requested reviewers for PR #{} in {}/{}", prNumber, owner, repo);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl, HttpMethod.GET, entity, String.class
+            );
+
+            JsonNode node = objectMapper.readTree(response.getBody());
+            List<String> reviewers = new ArrayList<>();
+
+            JsonNode usersNode = node.path("users");
+            if (usersNode.isArray()) {
+                for (JsonNode user : usersNode) {
+                    reviewers.add(user.path("login").asText());
+                }
+            }
+
+            return reviewers;
+        } catch (Exception e) {
+            log.warn("Failed to get requested reviewers: {}", e.getMessage());
+            return new ArrayList<>();
         }
     }
 

@@ -21,8 +21,10 @@ import com.example.demo.model.MemberSocialLink;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 
+@Slf4j
 @Component
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
@@ -235,30 +237,19 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         // GitHub 로그인인 경우, access token 저장
         if ("github".equals(registrationId) && githubUsername != null) {
-            System.out.println("[DEBUG] GitHub 기존 회원 토큰 저장 시도 - memberNo: " + member.getNo() + ", githubUsername: " + githubUsername);
             try {
                 OAuth2AuthorizedClient authorizedClient = authorizedClientService.loadAuthorizedClient(
                         registrationId, oauthToken.getName());
-                System.out.println("[DEBUG] authorizedClient: " + (authorizedClient != null ? "있음" : "NULL"));
-                if (authorizedClient != null) {
-                    System.out.println("[DEBUG] accessToken: " + (authorizedClient.getAccessToken() != null ? "있음" : "NULL"));
-                }
                 if (authorizedClient != null && authorizedClient.getAccessToken() != null) {
                     String githubAccessToken = authorizedClient.getAccessToken().getTokenValue();
                     member.setGithubUsername(githubUsername);
                     member.setGithubAccessToken(githubAccessToken);
-                    int result = memberDao.updateGitHubConnection(member);
-                    System.out.println("[DEBUG] updateGitHubConnection 결과: " + result);
-                    System.out.println("GitHub access token 저장 완료: " + githubUsername);
-                } else {
-                    System.out.println("[DEBUG] authorizedClient 또는 accessToken이 NULL - 저장 스킵");
+                    memberDao.updateGitHubConnection(member);
+                    log.info("GitHub access token saved for user: {}", githubUsername);
                 }
             } catch (Exception e) {
-                System.err.println("[DEBUG] GitHub access token 저장 실패: " + e.getMessage());
-                e.printStackTrace();
+                log.warn("Failed to save GitHub access token: {}", e.getMessage());
             }
-        } else {
-            System.out.println("[DEBUG] GitHub 토큰 저장 조건 불충족 - registrationId: " + registrationId + ", githubUsername: " + githubUsername);
         }
 
         String accessToken = jwtTokenProvider.generateToken(member.getUserid(), member.getNo(), member.getName());

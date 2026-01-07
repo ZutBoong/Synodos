@@ -4,14 +4,24 @@ import java.sql.Date;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.apache.ibatis.type.Alias;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
 @Alias("task")
 public class Task {
 	private int taskId;
+
+	@Positive(message = "컬럼 ID는 양수여야 합니다")
 	private int columnId;
+
+	@NotBlank(message = "제목은 필수입니다")
+	@Size(max = 200, message = "제목은 200자를 초과할 수 없습니다")
 	private String title;
+
+	@Size(max = 5000, message = "설명은 5000자를 초과할 수 없습니다")
 	private String description;
 	private int position;
 	private Date createdAt;

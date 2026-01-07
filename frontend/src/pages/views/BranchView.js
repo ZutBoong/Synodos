@@ -474,7 +474,11 @@ function BranchView({ team, loginMember, filters }) {
                 const prNumber = response.data.number || response.data.pr?.number;
                 const prUrl = response.data.htmlUrl || response.data.pr?.htmlUrl;
                 const taskInfo = taskId ? ` (Task #${taskId} 연결됨)` : '';
-                alert(`PR #${prNumber}이(가) 생성되었습니다.${taskInfo}`);
+                const requestedReviewers = response.data.requestedReviewers || [];
+                const reviewerInfo = requestedReviewers.length > 0
+                    ? `\n검증자가 PR Reviewer로 추가됨: ${requestedReviewers.join(', ')}`
+                    : '';
+                alert(`PR #${prNumber}이(가) 생성되었습니다.${taskInfo}${reviewerInfo}`);
                 if (prUrl && window.confirm('GitHub에서 PR을 확인하시겠습니까?')) {
                     window.open(prUrl, '_blank');
                 }
@@ -607,7 +611,11 @@ function BranchView({ team, loginMember, filters }) {
                 const prNumber = response.data.number || response.data.pr?.number;
                 const prUrl = response.data.htmlUrl || response.data.pr?.htmlUrl;
                 const taskInfo = taskId ? ` (Task #${taskId} 연결됨)` : '';
-                alert(`PR #${prNumber}이(가) 생성되었습니다.${taskInfo}\n\n브랜치: ${branchName}`);
+                const requestedReviewers = response.data.requestedReviewers || [];
+                const reviewerInfo = requestedReviewers.length > 0
+                    ? `\n검증자가 PR Reviewer로 추가됨: ${requestedReviewers.join(', ')}`
+                    : '';
+                alert(`PR #${prNumber}이(가) 생성되었습니다.${taskInfo}${reviewerInfo}\n\n브랜치: ${branchName}`);
 
                 // 브랜치 목록 새로고침
                 const branchList = await getBranches(team.teamId, loginMember?.no);

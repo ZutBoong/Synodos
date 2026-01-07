@@ -1,8 +1,10 @@
 package com.example.demo.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +13,9 @@ import org.springframework.web.bind.annotation.*;
 import com.example.demo.dao.MemberDao;
 import com.example.demo.dao.TaskGitHubIssueDao;
 import com.example.demo.dao.TaskGitHubPRDao;
+import com.example.demo.dao.TaskVerifierDao;
 import com.example.demo.model.Member;
+import com.example.demo.model.TaskVerifier;
 import com.example.demo.model.Team;
 import com.example.demo.model.TaskCommit;
 import com.example.demo.model.TaskGitHubIssue;
@@ -56,6 +60,9 @@ public class GitHubController {
 
     @Autowired
     private TaskGitHubPRDao taskGitHubPRDao;
+
+    @Autowired
+    private TaskVerifierDao taskVerifierDao;
 
     /**
      * 팀 저장소의 브랜치 목록을 조회합니다.
@@ -832,10 +839,16 @@ public class GitHubController {
             prMapping.setBaseBranch(baseBranch);
             taskGitHubPRDao.insert(prMapping);
 
+            // Task Verifier를 PR Reviewer로 추가
+            List<String> requestedReviewers = syncVerifiersToReviewers(
+                taskId, pr.getNumber(), repoInfo.owner, repoInfo.repo, check.accessToken
+            );
+
             Map<String, Object> result = new HashMap<>();
             result.put("success", true);
             result.put("pr", pr);
             result.put("issueNumber", issueNumber);
+            result.put("requestedReviewers", requestedReviewers);
             result.put("message", "PR이 생성되었습니다: #" + pr.getNumber());
             return ResponseEntity.ok(result);
 
@@ -1396,5 +1409,94 @@ public class GitHubController {
             return GitHubConnectionCheck.failure("GitHub 계정을 연결해주세요. 마이페이지 > 소셜 계정 연동에서 GitHub를 연결할 수 있습니다.");
         }
         return GitHubConnectionCheck.success(accessToken);
+    }
+
+    /**
+     * Task의 Verifier들을 PR Reviewer로 동기화합니다.
+     * @param taskId 태스크 ID
+     * @param prNumber PR 번호
+     * @param owner 저장소 소유자
+     * @param repo 저장소 이름
+     * @param accessToken GitHub 액세스 토큰
+     * @return 요청된 리뷰어 목록
+     */
+    private List<String> syncVerifiersToReviewers(int taskId, int prNumber, String owner, String repo, String accessToken) {
+        try {
+            // Task의 Verifier 목록 조회
+            List<TaskVerifier> verifiers = taskVerifierDao.listByTask(taskId);
+            if (verifiers == null || verifiers.isEmpty()) {
+                log.debug("No verifiers found for task #{}", taskId);
+                return new ArrayList<>();
+            }
+
+            // Verifier의 memberNo → GitHub username 변환
+            List<String> githubUsernames = new ArrayList<>();
+            for (TaskVerifier verifier : verifiers) {
+                Member member = memberDao.findByNo(verifier.getMemberNo());
+                if (member != null && member.getGithubUsername() != null && !member.getGithubUsername().isEmpty()) {
+                    githubUsernames.add(member.getGithubUsername());
+                }
+            }
+
+            if (githubUsernames.isEmpty()) {
+                log.debug("No GitHub usernames found for task #{} verifiers", taskId);
+                return new ArrayList<>();
+            }
+
+            // GitHub PR에 Reviewer 요청
+            List<String> requestedReviewers = gitHubService.requestReviewers(
+                accessToken, owner, repo, prNumber, githubUsernames
+            );
+
+            log.info("Synced {} verifiers to PR #{} as reviewers: {}",
+                     requestedReviewers.size(), prNumber, requestedReviewers);
+            return requestedReviewers;
+
+        } catch (Exception e) {
+            log.warn("Failed to sync verifiers to reviewers for task #{}: {}", taskId, e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * GitHub Reviewer를 Task의 Verifier로 동기화합니다.
+     * @param taskId 태스크 ID
+     * @param teamId 팀 ID
+     * @param reviewerUsernames GitHub 리뷰어 username 목록
+     */
+    public void syncReviewersToVerifiers(int taskId, int teamId, List<String> reviewerUsernames) {
+        try {
+            if (reviewerUsernames == null || reviewerUsernames.isEmpty()) {
+                return;
+            }
+
+            // 현재 Verifier 목록
+            List<TaskVerifier> currentVerifiers = taskVerifierDao.listByTask(taskId);
+
+            for (String username : reviewerUsernames) {
+                // GitHub username으로 멤버 조회
+                Member member = memberDao.findByGithubUsername(username);
+                if (member == null) {
+                    log.debug("No member found for GitHub username: {}", username);
+                    continue;
+                }
+
+                // 이미 Verifier인지 확인
+                boolean alreadyVerifier = currentVerifiers.stream()
+                    .anyMatch(v -> v.getMemberNo() == member.getNo());
+
+                if (!alreadyVerifier) {
+                    // 새 Verifier 추가
+                    TaskVerifier newVerifier = new TaskVerifier();
+                    newVerifier.setTaskId(taskId);
+                    newVerifier.setMemberNo(member.getNo());
+                    taskVerifierDao.insert(newVerifier);
+                    log.info("Added verifier {} to task #{} from GitHub reviewer",
+                             member.getName(), taskId);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to sync reviewers to verifiers for task #{}: {}", taskId, e.getMessage());
+        }
     }
 }
