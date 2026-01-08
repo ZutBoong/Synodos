@@ -8,7 +8,6 @@ import com.example.demo.model.Task;
 import com.example.demo.service.TaskWorkflowService;
 
 @RestController
-@CrossOrigin("*")
 @RequestMapping("/api/task/workflow")
 public class TaskWorkflowController {
 
@@ -25,10 +24,8 @@ public class TaskWorkflowController {
 			@RequestParam("memberNo") int memberNo) {
 		try {
 			Task task = workflowService.acceptTask(taskId, memberNo);
-			System.out.println("태스크 수락 완료: taskId=" + taskId + ", memberNo=" + memberNo);
 			return ResponseEntity.ok(task);
 		} catch (IllegalArgumentException | IllegalStateException e) {
-			System.out.println("태스크 수락 실패: " + e.getMessage());
 			return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
 		}
 	}
@@ -43,10 +40,8 @@ public class TaskWorkflowController {
 			@RequestParam("memberNo") int memberNo) {
 		try {
 			Task task = workflowService.completeTask(taskId, memberNo);
-			System.out.println("태스크 완료 처리: taskId=" + taskId + ", memberNo=" + memberNo);
 			return ResponseEntity.ok(task);
 		} catch (IllegalArgumentException | IllegalStateException e) {
-			System.out.println("태스크 완료 처리 실패: " + e.getMessage());
 			return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
 		}
 	}
@@ -61,10 +56,8 @@ public class TaskWorkflowController {
 			@RequestParam("memberNo") int memberNo) {
 		try {
 			Task task = workflowService.approveTask(taskId, memberNo);
-			System.out.println("태스크 승인 완료: taskId=" + taskId + ", memberNo=" + memberNo);
 			return ResponseEntity.ok(task);
 		} catch (IllegalArgumentException | IllegalStateException e) {
-			System.out.println("태스크 승인 실패: " + e.getMessage());
 			return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
 		}
 	}
@@ -85,10 +78,8 @@ public class TaskWorkflowController {
 				return ResponseEntity.badRequest().body(Map.of("error", "반려 사유를 입력해주세요"));
 			}
 			Task task = workflowService.rejectTask(taskId, memberNo, reason);
-			System.out.println("태스크 반려 완료: taskId=" + taskId + ", memberNo=" + memberNo + ", reason=" + reason);
 			return ResponseEntity.ok(task);
 		} catch (IllegalArgumentException | IllegalStateException e) {
-			System.out.println("태스크 반려 실패: " + e.getMessage());
 			return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
 		}
 	}
@@ -109,10 +100,8 @@ public class TaskWorkflowController {
 				return ResponseEntity.badRequest().body(Map.of("error", "거부 사유를 입력해주세요"));
 			}
 			Task task = workflowService.declineTask(taskId, memberNo, reason);
-			System.out.println("태스크 거부 완료: taskId=" + taskId + ", memberNo=" + memberNo + ", reason=" + reason);
 			return ResponseEntity.ok(task);
 		} catch (IllegalArgumentException | IllegalStateException e) {
-			System.out.println("태스크 거부 실패: " + e.getMessage());
 			return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
 		}
 	}
@@ -127,10 +116,24 @@ public class TaskWorkflowController {
 			@RequestParam("memberNo") int memberNo) {
 		try {
 			Task task = workflowService.restartTask(taskId, memberNo);
-			System.out.println("태스크 재작업 시작: taskId=" + taskId + ", memberNo=" + memberNo);
 			return ResponseEntity.ok(task);
 		} catch (IllegalArgumentException | IllegalStateException e) {
-			System.out.println("태스크 재작업 시작 실패: " + e.getMessage());
+			return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+		}
+	}
+
+	/**
+	 * 태스크 강제 완료 (팀 리더 또는 태스크 생성자만 가능)
+	 * POST /api/task/workflow/{taskId}/force-complete?memberNo=123
+	 */
+	@PostMapping("/{taskId}/force-complete")
+	public ResponseEntity<?> forceCompleteTask(
+			@PathVariable("taskId") int taskId,
+			@RequestParam("memberNo") int memberNo) {
+		try {
+			Task task = workflowService.forceCompleteTask(taskId, memberNo);
+			return ResponseEntity.ok(task);
+		} catch (IllegalArgumentException | IllegalStateException e) {
 			return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
 		}
 	}

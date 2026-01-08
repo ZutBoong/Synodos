@@ -78,7 +78,6 @@ public class BoardNotificationService {
 			System.currentTimeMillis()
 		);
 		String destination = "/topic/team/" + teamId;
-		System.out.println("WebSocket broadcast to " + destination + ": " + eventType);
 		messagingTemplate.convertAndSend(destination, event);
 	}
 }

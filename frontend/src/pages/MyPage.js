@@ -108,7 +108,7 @@ function MyPage() {
                 setPrimaryProvider(socialRes.primaryProvider);
             }
         } catch (error) {
-            console.error('프로필 로딩 실패:', error);
+            // Error handled silently
         } finally {
             setLoading(false);
         }
@@ -148,12 +148,9 @@ function MyPage() {
             setUploadingImage(true);
             setImageMessage({ type: '', text: '' });
 
-            console.log('이미지 업로드 시작 - memberNo:', member.no);
             const result = await uploadProfileImage(member.no, file);
-            console.log('이미지 업로드 응답:', result);
 
             if (result.success) {
-                console.log('업로드 성공 - 새 member:', result.member);
                 setMember(result.member);
                 setProfileImageKey(Date.now()); // 이미지 캐시 무효화
                 setImageMessage({ type: 'success', text: '프로필 이미지가 업로드되었습니다.' });
@@ -165,11 +162,9 @@ function MyPage() {
                     profileImage: result.member.profileImage
                 }));
             } else {
-                console.log('업로드 실패:', result.message);
                 setImageMessage({ type: 'error', text: result.message });
             }
         } catch (error) {
-            console.error('이미지 업로드 에러:', error);
             setImageMessage({ type: 'error', text: '이미지 업로드에 실패했습니다.' });
         } finally {
             setUploadingImage(false);
@@ -227,10 +222,8 @@ function MyPage() {
                 name: profileForm.name,
                 phone: profileForm.phone || ''
             };
-            console.log('프로필 업데이트 요청:', requestData);
 
             const result = await updateProfile(requestData);
-            console.log('프로필 업데이트 응답:', result);
 
             if (result.success) {
                 setProfileMessage({ type: 'success', text: result.message });
@@ -248,7 +241,6 @@ function MyPage() {
                 setProfileMessage({ type: 'error', text: result.message || '회원 정보 수정에 실패했습니다.' });
             }
         } catch (error) {
-            console.error('프로필 업데이트 에러:', error);
             setProfileMessage({ type: 'error', text: error.response?.data?.message || '회원 정보 수정에 실패했습니다.' });
         }
     };
@@ -458,7 +450,6 @@ function MyPage() {
                 // GitHub OAuth 페이지로 이동
                 window.location.href = data.url;
             } catch (error) {
-                console.error('GitHub 연동 시작 실패:', error);
                 alert('GitHub 연동을 시작할 수 없습니다.');
             }
             return;

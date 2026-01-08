@@ -26,7 +26,6 @@ function ChatView({ team, teamMembers, loginMember }) {
             setMessages(messagesArray);
             setHasMore(messagesArray.length >= 100);
         } catch (error) {
-            console.error('Failed to load messages:', error);
             setMessages([]);
         } finally {
             setLoading(false);
@@ -48,7 +47,7 @@ function ChatView({ team, teamMembers, loginMember }) {
                 setMessages(prev => [...olderMessages, ...prev]);
             }
         } catch (error) {
-            console.error('Failed to load more messages:', error);
+            // Error handled silently
         } finally {
             setLoadingMore(false);
         }
@@ -75,17 +74,14 @@ function ChatView({ team, teamMembers, loginMember }) {
         if (!stompClient || !stompClient.connected) return;
 
         const destination = `/topic/team/${teamId}/chat`;
-        console.log('ChatView: Subscribing to', destination);
 
         subscriptionRef.current = stompClient.subscribe(destination, (message) => {
             const chatMessage = JSON.parse(message.body);
-            console.log('ChatView: Received message', chatMessage);
             setMessages(prev => [...prev, chatMessage]);
         });
 
         return () => {
             if (subscriptionRef.current) {
-                console.log('ChatView: Unsubscribing');
                 subscriptionRef.current.unsubscribe();
                 subscriptionRef.current = null;
             }
@@ -115,7 +111,6 @@ function ChatView({ team, teamMembers, loginMember }) {
             await sendMessage(teamId, loginMember.no, newMessage.trim());
             setNewMessage('');
         } catch (error) {
-            console.error('Failed to send message:', error);
             alert('메시지 전송에 실패했습니다.');
         }
     };

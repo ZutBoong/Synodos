@@ -73,7 +73,7 @@ public class DeadlineSchedulerService {
                 }
 
                 String dueDate = task.getDueDate() != null
-                    ? task.getDueDate().toLocalDate().format(DATE_FORMATTER)
+                    ? task.getDueDate().format(DATE_FORMATTER)
                     : "미정";
                 int teamId = task.getTeamId() != null ? task.getTeamId() : 0;
 
@@ -123,7 +123,7 @@ public class DeadlineSchedulerService {
                 }
 
                 String dueDate = task.getDueDate() != null
-                    ? task.getDueDate().toLocalDate().format(DATE_FORMATTER)
+                    ? task.getDueDate().format(DATE_FORMATTER)
                     : "미정";
                 int teamId = task.getTeamId() != null ? task.getTeamId() : 0;
 

@@ -202,6 +202,35 @@
     color: #e74c3c;
 }
 
+/* 클릭 가능한 알림 */
+.notification-item.clickable {
+    cursor: pointer;
+}
+
+.notification-item.clickable:hover {
+    background-color: #eef6ff;
+}
+
+.notification-item.clickable.unread:hover {
+    background-color: #d9ebff;
+}
+
+/* 이동 아이콘 */
+.navigate-icon {
+    color: #3498db;
+    font-size: 16px;
+    font-weight: bold;
+    margin-right: 8px;
+    opacity: 0.6;
+    transition: opacity 0.2s, transform 0.2s;
+    flex-shrink: 0;
+}
+
+.notification-item.clickable:hover .navigate-icon {
+    opacity: 1;
+    transform: translateX(2px);
+}
+
 /* 반응형 */
 @media (max-width: 480px) {
     .notification-dropdown {

@@ -52,9 +52,13 @@ public class TaskController {
 		return result;
 	}
 
-	// 태스크 수정
+	// 태스크 수정 (columnId는 업데이트 쿼리에서 사용하지 않으므로 @Valid 제거)
 	@PutMapping("taskupdate")
-	public Integer taskupdate(@Valid @RequestBody Task task) {
+	public Integer taskupdate(@RequestBody Task task) {
+		// 제목은 필수 (수동 검증)
+		if (task.getTitle() == null || task.getTitle().isBlank()) {
+			throw new IllegalArgumentException("제목은 필수입니다");
+		}
 		return service.update(task);
 	}
 
@@ -124,10 +128,7 @@ public class TaskController {
 			@PathVariable("taskId") int taskId,
 			@RequestBody Task task) {
 		task.setTaskId(taskId);
-		System.out.println("task dates update: " + task);
 		int result = service.updateDates(task);
-		if (result == 1)
-			System.out.println("태스크 날짜 변경 성공");
 		return result;
 	}
 }

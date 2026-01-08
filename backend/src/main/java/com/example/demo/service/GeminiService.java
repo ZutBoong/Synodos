@@ -142,6 +142,60 @@ public class GeminiService {
         (해결된 전체 코드)
         """;
 
+    // ==================== 단계별 Git 충돌 해결 (새로운 방식) ====================
+
+    private static final String STEP_BASED_CONFLICT_PROMPT = """
+        당신은 시니어 개발자입니다. Git 머지 충돌을 단계별로 해결해야 합니다.
+
+        ## 분석 방법
+        1. 두 버전의 코드를 비교하여 충돌 지점을 찾으세요
+        2. 각 충돌 지점을 독립적인 "결정 포인트"로 분리하세요
+        3. 각 결정 포인트마다 2-4개의 선택지를 제시하세요
+        4. 각 선택지가 코드에 미치는 영향을 명확히 설명하세요
+
+        ## 결정 포인트 분류 기준 (AI가 판단)
+        - import/의존성 변경
+        - 함수/메소드 시그니처 변경
+        - 로직 변경
+        - 변수/상수 변경
+        - 설정/구성 변경
+        - 기타 (AI가 적절히 판단)
+
+        ## 응답 형식 (반드시 JSON으로 응답하세요)
+        ```json
+        {
+          "summary": "이 충돌에 대한 전체 요약 (1-2문장)",
+          "totalSteps": 숫자,
+          "steps": [
+            {
+              "stepNumber": 1,
+              "category": "분류 (예: import, 함수 로직, 변수 등)",
+              "title": "이 단계의 제목",
+              "description": "이 결정이 필요한 이유 설명",
+              "baseSnippet": "Base 브랜치의 해당 코드 부분",
+              "headSnippet": "Head 브랜치의 해당 코드 부분",
+              "choices": [
+                {
+                  "id": "A",
+                  "label": "선택지 라벨 (짧게)",
+                  "description": "이 선택의 상세 설명",
+                  "code": "이 선택 시 적용될 코드",
+                  "impact": "이 선택이 미치는 영향 (기능적 변화)"
+                }
+              ]
+            }
+          ]
+        }
+        ```
+
+        ## 중요 규칙
+        - 반드시 유효한 JSON으로 응답하세요
+        - 단계는 코드 순서대로 배치하세요
+        - 각 선택지의 code는 해당 부분만 포함하세요 (전체 파일 X)
+        - impact는 사용자가 이해하기 쉽게 한국어로 작성하세요
+        - 충돌이 단순하면 1단계만, 복잡하면 여러 단계로 나누세요
+        """;
+
     /**
      * Git 충돌을 AI로 해결합니다.
      */
@@ -360,6 +414,293 @@ public class GeminiService {
         private boolean success;
         private String analysis;                            // 충돌 분석 내용
         private java.util.List<ResolutionOption> options;   // 해결 옵션 목록
+        private String error;                               // 에러 메시지
+    }
+
+    // ==================== 단계별 충돌 해결 메소드 및 모델 ====================
+
+    /**
+     * Git 충돌을 단계별로 분석합니다.
+     */
+    public StepBasedResolutionResult resolveConflictStepBased(String filename, String baseRef, String headRef,
+                                                               String baseContent, String headContent) {
+        if (apiKey == null || apiKey.isEmpty()) {
+            log.warn("OpenAI API key is not configured");
+            StepBasedResolutionResult result = new StepBasedResolutionResult();
+            result.setSuccess(false);
+            result.setError("OpenAI API 키가 설정되지 않았습니다.");
+            return result;
+        }
+
+        // 코드 크기 제한
+        String limitedBaseContent = baseContent;
+        String limitedHeadContent = headContent;
+        if (baseContent != null && baseContent.length() > 10000) {
+            limitedBaseContent = baseContent.substring(0, 10000) + "\n... (truncated)";
+        }
+        if (headContent != null && headContent.length() > 10000) {
+            limitedHeadContent = headContent.substring(0, 10000) + "\n... (truncated)";
+        }
+
+        String userPrompt = String.format("""
+            ## 상황
+            - 파일: %s
+            - Base 브랜치 (%s): 머지 대상 브랜치
+            - Head 브랜치 (%s): PR 소스 브랜치
+
+            ## Base 브랜치 버전
+            ```
+            %s
+            ```
+
+            ## Head 브랜치 버전
+            ```
+            %s
+            ```
+
+            두 버전을 분석하고 단계별 선택지를 JSON으로 제시해주세요.
+            """,
+            filename, baseRef, headRef,
+            limitedBaseContent != null ? limitedBaseContent : "(파일 없음 - 새 파일)",
+            limitedHeadContent != null ? limitedHeadContent : "(파일 없음 - 삭제됨)");
+
+        try {
+            log.info("Calling OpenAI API for step-based conflict resolution: {}", filename);
+            String aiResponse = callOpenAI(STEP_BASED_CONFLICT_PROMPT, userPrompt, 0.2, 8192);
+
+            if (aiResponse != null) {
+                return parseStepBasedResolution(aiResponse, baseContent, headContent);
+            }
+
+            StepBasedResolutionResult result = new StepBasedResolutionResult();
+            result.setSuccess(false);
+            result.setError("AI 응답을 파싱할 수 없습니다.");
+            return result;
+
+        } catch (Exception e) {
+            log.error("Failed to resolve conflict with OpenAI: {}", e.getMessage());
+            StepBasedResolutionResult result = new StepBasedResolutionResult();
+            result.setSuccess(false);
+            result.setError("AI 충돌 해결 실패: " + e.getMessage());
+            return result;
+        }
+    }
+
+    /**
+     * 단계별 AI 응답을 파싱합니다.
+     */
+    private StepBasedResolutionResult parseStepBasedResolution(String aiResponse, String baseContent, String headContent) {
+        StepBasedResolutionResult result = new StepBasedResolutionResult();
+
+        try {
+            // JSON 블록 추출
+            String jsonContent = aiResponse;
+            if (aiResponse.contains("```json")) {
+                int start = aiResponse.indexOf("```json") + 7;
+                int end = aiResponse.indexOf("```", start);
+                if (end > start) {
+                    jsonContent = aiResponse.substring(start, end).trim();
+                }
+            } else if (aiResponse.contains("```")) {
+                int start = aiResponse.indexOf("```") + 3;
+                int end = aiResponse.indexOf("```", start);
+                if (end > start) {
+                    jsonContent = aiResponse.substring(start, end).trim();
+                }
+            }
+
+            JsonNode root = objectMapper.readTree(jsonContent);
+
+            result.setSummary(root.path("summary").asText("충돌 분석 결과"));
+            result.setTotalSteps(root.path("totalSteps").asInt(1));
+            result.setBaseContent(baseContent);
+            result.setHeadContent(headContent);
+
+            java.util.List<ConflictStep> steps = new java.util.ArrayList<>();
+            JsonNode stepsNode = root.path("steps");
+
+            if (stepsNode.isArray()) {
+                for (JsonNode stepNode : stepsNode) {
+                    ConflictStep step = new ConflictStep();
+                    step.setStepNumber(stepNode.path("stepNumber").asInt());
+                    step.setCategory(stepNode.path("category").asText("기타"));
+                    step.setTitle(stepNode.path("title").asText());
+                    step.setDescription(stepNode.path("description").asText());
+                    step.setBaseSnippet(stepNode.path("baseSnippet").asText());
+                    step.setHeadSnippet(stepNode.path("headSnippet").asText());
+
+                    java.util.List<StepChoice> choices = new java.util.ArrayList<>();
+                    JsonNode choicesNode = stepNode.path("choices");
+
+                    if (choicesNode.isArray()) {
+                        for (JsonNode choiceNode : choicesNode) {
+                            StepChoice choice = new StepChoice();
+                            choice.setId(choiceNode.path("id").asText());
+                            choice.setLabel(choiceNode.path("label").asText());
+                            choice.setDescription(choiceNode.path("description").asText());
+                            choice.setCode(choiceNode.path("code").asText());
+                            choice.setImpact(choiceNode.path("impact").asText());
+                            choices.add(choice);
+                        }
+                    }
+
+                    step.setChoices(choices);
+                    steps.add(step);
+                }
+            }
+
+            result.setSteps(steps);
+            result.setSuccess(!steps.isEmpty());
+
+            if (!result.isSuccess()) {
+                result.setError("단계별 선택지를 추출할 수 없습니다.");
+            }
+
+        } catch (Exception e) {
+            log.error("Failed to parse step-based resolution: {}", e.getMessage());
+            result.setSuccess(false);
+            result.setError("AI 응답 파싱 실패: " + e.getMessage());
+        }
+
+        return result;
+    }
+
+    /**
+     * 사용자 선택을 기반으로 최종 코드를 생성합니다.
+     */
+    public FinalCodeResult generateFinalCode(String filename, String baseContent, String headContent,
+                                              java.util.List<ConflictStep> steps,
+                                              java.util.Map<Integer, String> selections) {
+        if (apiKey == null || apiKey.isEmpty()) {
+            FinalCodeResult result = new FinalCodeResult();
+            result.setSuccess(false);
+            result.setError("OpenAI API 키가 설정되지 않았습니다.");
+            return result;
+        }
+
+        // 선택 정보를 문자열로 구성
+        StringBuilder selectionsInfo = new StringBuilder();
+        for (ConflictStep step : steps) {
+            String selectedId = selections.get(step.getStepNumber());
+            if (selectedId != null) {
+                for (StepChoice choice : step.getChoices()) {
+                    if (choice.getId().equals(selectedId)) {
+                        selectionsInfo.append(String.format(
+                            "- 단계 %d (%s): '%s' 선택 → 코드: %s\n",
+                            step.getStepNumber(), step.getTitle(), choice.getLabel(), choice.getCode()
+                        ));
+                        break;
+                    }
+                }
+            }
+        }
+
+        String systemPrompt = """
+            당신은 시니어 개발자입니다. 사용자의 선택을 기반으로 최종 머지된 코드를 생성해야 합니다.
+
+            ## 규칙
+            1. 사용자가 각 단계에서 선택한 코드를 올바른 위치에 적용하세요
+            2. 전체 파일의 완전한 코드를 출력하세요
+            3. 코드만 출력하세요 (설명 없이)
+            4. 코드 블록 마커(```) 없이 순수 코드만 출력하세요
+            """;
+
+        String userPrompt = String.format("""
+            ## 파일: %s
+
+            ## Base 브랜치 원본
+            ```
+            %s
+            ```
+
+            ## Head 브랜치 원본
+            ```
+            %s
+            ```
+
+            ## 사용자 선택
+            %s
+
+            위 선택을 반영하여 최종 머지된 전체 코드를 생성해주세요.
+            """,
+            filename,
+            baseContent != null ? baseContent : "(없음)",
+            headContent != null ? headContent : "(없음)",
+            selectionsInfo.toString());
+
+        try {
+            String finalCode = callOpenAI(systemPrompt, userPrompt, 0.1, 8192);
+
+            FinalCodeResult result = new FinalCodeResult();
+            if (finalCode != null) {
+                // 코드 블록 마커 제거
+                finalCode = cleanCodeBlock(finalCode);
+                result.setSuccess(true);
+                result.setCode(finalCode);
+            } else {
+                result.setSuccess(false);
+                result.setError("최종 코드 생성 실패");
+            }
+            return result;
+
+        } catch (Exception e) {
+            log.error("Failed to generate final code: {}", e.getMessage());
+            FinalCodeResult result = new FinalCodeResult();
+            result.setSuccess(false);
+            result.setError("최종 코드 생성 실패: " + e.getMessage());
+            return result;
+        }
+    }
+
+    // ==================== 단계별 충돌 해결 모델 클래스 ====================
+
+    /**
+     * 단계별 충돌 해결 결과
+     */
+    @lombok.Data
+    public static class StepBasedResolutionResult {
+        private boolean success;
+        private String summary;                             // 전체 요약
+        private int totalSteps;                             // 총 단계 수
+        private java.util.List<ConflictStep> steps;         // 단계 목록
+        private String baseContent;                         // Base 브랜치 전체 코드
+        private String headContent;                         // Head 브랜치 전체 코드
+        private String error;                               // 에러 메시지
+    }
+
+    /**
+     * 충돌 해결 단계
+     */
+    @lombok.Data
+    public static class ConflictStep {
+        private int stepNumber;                             // 단계 번호
+        private String category;                            // 분류 (import, 함수 로직 등)
+        private String title;                               // 단계 제목
+        private String description;                         // 설명
+        private String baseSnippet;                         // Base 브랜치 코드 조각
+        private String headSnippet;                         // Head 브랜치 코드 조각
+        private java.util.List<StepChoice> choices;         // 선택지 목록
+    }
+
+    /**
+     * 단계별 선택지
+     */
+    @lombok.Data
+    public static class StepChoice {
+        private String id;                                  // 선택지 ID (A, B, C 등)
+        private String label;                               // 짧은 라벨
+        private String description;                         // 상세 설명
+        private String code;                                // 이 선택 시 적용될 코드
+        private String impact;                              // 이 선택이 미치는 영향
+    }
+
+    /**
+     * 최종 코드 생성 결과
+     */
+    @lombok.Data
+    public static class FinalCodeResult {
+        private boolean success;
+        private String code;                                // 최종 머지된 코드
         private String error;                               // 에러 메시지
     }
 }

@@ -21,4 +21,8 @@ public interface TaskAssigneeDao {
     boolean allAssigneesCompleted(int taskId);
     int resetAcceptance(int taskId);
     int resetCompletion(int taskId);
+
+    // 강제 완료용 메서드
+    int forceAcceptAll(int taskId);
+    int forceCompleteAll(int taskId);
 }

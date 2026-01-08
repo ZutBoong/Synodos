@@ -10,7 +10,6 @@ import com.example.demo.model.TeamMember;
 import com.example.demo.service.TeamService;
 
 @RestController
-@CrossOrigin("*")
 @RequestMapping("/api/team")
 public class TeamController {
 
@@ -20,7 +19,6 @@ public class TeamController {
 	// 팀 생성 (GitHub 저장소 연동 지원)
 	@PostMapping("/create")
 	public Map<String, Object> createTeam(@RequestBody Map<String, Object> request) {
-		System.out.println("팀 생성 요청: " + request);
 		Map<String, Object> result = new HashMap<>();
 
 		try {
@@ -85,7 +83,6 @@ public class TeamController {
 	public Map<String, Object> joinTeam(@RequestBody Map<String, Object> request) {
 		String teamCode = (String) request.get("teamCode");
 		int memberNo = (int) request.get("memberNo");
-		System.out.println("팀 가입 요청 - 코드: " + teamCode + ", 회원: " + memberNo);
 
 		Map<String, Object> result = new HashMap<>();
 
@@ -122,28 +119,24 @@ public class TeamController {
 	// 내 팀 목록
 	@GetMapping("/my-teams/{memberNo}")
 	public List<Team> getMyTeams(@PathVariable int memberNo) {
-		System.out.println("내 팀 목록 조회: " + memberNo);
 		return service.findMyTeams(memberNo);
 	}
 
 	// 팀 정보 조회
 	@GetMapping("/{teamId}")
 	public Team getTeam(@PathVariable int teamId) {
-		System.out.println("팀 정보 조회: " + teamId);
 		return service.findById(teamId);
 	}
 
 	// 팀 멤버 목록
 	@GetMapping("/{teamId}/members")
 	public List<TeamMember> getMembers(@PathVariable int teamId) {
-		System.out.println("팀 멤버 목록: " + teamId);
 		return service.findMembers(teamId);
 	}
 
 	// 팀 탈퇴
 	@DeleteMapping("/{teamId}/leave/{memberNo}")
 	public Map<String, Object> leaveTeam(@PathVariable int teamId, @PathVariable int memberNo) {
-		System.out.println("팀 탈퇴: teamId=" + teamId + ", memberNo=" + memberNo);
 		Map<String, Object> result = new HashMap<>();
 
 		TeamMember member = new TeamMember();
@@ -164,7 +157,6 @@ public class TeamController {
 	// 팀 삭제 (팀장만)
 	@DeleteMapping("/{teamId}")
 	public Map<String, Object> deleteTeam(@PathVariable int teamId) {
-		System.out.println("팀 삭제: " + teamId);
 		Map<String, Object> result = new HashMap<>();
 
 		int deleteResult = service.deleteTeam(teamId);
@@ -183,7 +175,6 @@ public class TeamController {
 	public Map<String, Object> inviteMember(@PathVariable int teamId, @RequestBody Map<String, Object> request) {
 		int memberNo = (int) request.get("memberNo");
 		int leaderNo = (int) request.get("leaderNo");
-		System.out.println("팀원 초대: teamId=" + teamId + ", memberNo=" + memberNo + ", leaderNo=" + leaderNo);
 
 		Map<String, Object> result = new HashMap<>();
 
@@ -230,7 +221,6 @@ public class TeamController {
 	@DeleteMapping("/{teamId}/kick/{memberNo}")
 	public Map<String, Object> kickMember(@PathVariable int teamId, @PathVariable int memberNo,
 			@RequestParam int leaderNo) {
-		System.out.println("팀원 강퇴: teamId=" + teamId + ", memberNo=" + memberNo + ", leaderNo=" + leaderNo);
 		Map<String, Object> result = new HashMap<>();
 
 		// 팀장 권한 확인
@@ -272,7 +262,6 @@ public class TeamController {
 	@PutMapping("/{teamId}/description")
 	public Map<String, Object> updateDescription(@PathVariable int teamId, @RequestBody Map<String, String> request) {
 		String description = request.get("description");
-		System.out.println("팀 설명 수정: teamId=" + teamId);
 		Map<String, Object> result = new HashMap<>();
 
 		int updateResult = service.updateDescription(teamId, description);
@@ -290,7 +279,6 @@ public class TeamController {
 	@PostMapping("/{teamId}/regenerate-code")
 	public Map<String, Object> regenerateTeamCode(@PathVariable int teamId, @RequestBody Map<String, Integer> request) {
 		int leaderNo = request.get("leaderNo");
-		System.out.println("팀 코드 재생성: teamId=" + teamId + ", leaderNo=" + leaderNo);
 		Map<String, Object> result = new HashMap<>();
 
 		// 팀장 권한 확인
@@ -317,7 +305,6 @@ public class TeamController {
 	// 팀 정보 수정 (팀장만)
 	@PutMapping("/{teamId}")
 	public Map<String, Object> updateTeam(@PathVariable int teamId, @RequestBody Team team) {
-		System.out.println("팀 정보 수정: teamId=" + teamId);
 		Map<String, Object> result = new HashMap<>();
 
 		team.setTeamId(teamId);
@@ -337,7 +324,6 @@ public class TeamController {
 	public Map<String, Object> transferLeadership(@PathVariable int teamId, @RequestBody Map<String, Integer> request) {
 		int currentLeaderNo = request.get("currentLeaderNo");
 		int newLeaderNo = request.get("newLeaderNo");
-		System.out.println("팀장 위임: teamId=" + teamId + ", currentLeader=" + currentLeaderNo + ", newLeader=" + newLeaderNo);
 
 		return service.transferLeadership(teamId, currentLeaderNo, newLeaderNo);
 	}

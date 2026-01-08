@@ -40,6 +40,8 @@ public class EmailService {
 	 * @param type REGISTER, PASSWORD_RESET, PASSWORD_CHANGE, EMAIL_CHANGE
 	 */
 	public void sendVerificationEmail(String to, String code, String type) {
+		log.info("sendVerificationEmail 호출 - to: {}, type: {}, environment: {}", to, type, environment);
+
 		String subject;
 		String body;
 
@@ -71,6 +73,7 @@ public class EmailService {
 			log.info("========================================");
 		} else {
 			// 프로덕션 환경: SMTP로 발송
+			log.info("SMTP 발송 시도 - sender: {}", sender);
 			sendEmailViaSMTP(to, subject, body);
 		}
 	}
@@ -80,6 +83,7 @@ public class EmailService {
 	 */
 	private void sendEmailViaSMTP(String to, String subject, String body) {
 		try {
+			log.info("SMTP 메일 생성 시작 - from: {}, to: {}", sender, to);
 			MimeMessage message = mailSender.createMimeMessage();
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
@@ -88,10 +92,14 @@ public class EmailService {
 			helper.setSubject(subject);
 			helper.setText(body, true); // true = HTML
 
+			log.info("SMTP 메일 전송 시작...");
 			mailSender.send(message);
 			log.info("Email sent successfully to: {}", to);
 		} catch (MessagingException e) {
-			log.error("Failed to send email to {}: {}", to, e.getMessage());
+			log.error("MessagingException - Failed to send email to {}: {}", to, e.getMessage(), e);
+			throw new RuntimeException("이메일 발송에 실패했습니다.", e);
+		} catch (Exception e) {
+			log.error("Exception - Failed to send email to {}: {}", to, e.getMessage(), e);
 			throw new RuntimeException("이메일 발송에 실패했습니다.", e);
 		}
 	}

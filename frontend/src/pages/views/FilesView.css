@@ -53,7 +53,7 @@
 .files-empty {
     padding: 80px 20px;
     text-align: center;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .empty-icon {
@@ -108,7 +108,7 @@
 .file-name {
     font-weight: 600;
     font-size: 14px;
-    color: #1e293b;
+    color: #ffffff;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -119,12 +119,12 @@
     gap: 14px;
     font-size: 14px;
     font-weight: 500;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .file-uploader {
     font-size: 15px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .file-actions {

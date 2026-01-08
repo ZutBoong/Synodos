@@ -85,9 +85,7 @@ function Sidebar({ isOpen, onToggle, currentTeam, onSelectTeam, loginMember }) {
 
         const loadTeams = async () => {
             try {
-                console.log('팀 목록 로드 시작:', loginMember.no);
                 const data = await getMyTeams(loginMember.no);
-                console.log('팀 목록 응답:', data);
                 const teamsArray = Array.isArray(data) ? data : [];
                 setTeams(teamsArray);
 
@@ -98,7 +96,6 @@ function Sidebar({ isOpen, onToggle, currentTeam, onSelectTeam, loginMember }) {
                     const parsedTeam = JSON.parse(storedTeam);
                     const teamExists = teamsArray.some(t => t.teamId === parsedTeam.teamId);
                     if (!teamExists) {
-                        console.log('퇴출된 팀 정보 제거:', parsedTeam.teamId);
                         localStorage.removeItem('currentTeam');
                         // 현재 해당 팀 페이지에 있다면 홈으로 이동
                         if (location.pathname.startsWith(`/team/${parsedTeam.teamId}`)) {
@@ -114,7 +111,6 @@ function Sidebar({ isOpen, onToggle, currentTeam, onSelectTeam, loginMember }) {
                     onSelectTeam(teamsArray[0]);
                 }
             } catch (error) {
-                console.error('팀 목록 조회 실패:', error);
                 setTeams([]);
             }
         };
@@ -156,7 +152,7 @@ function Sidebar({ isOpen, onToggle, currentTeam, onSelectTeam, loginMember }) {
                     onSelectTeam(updatedTeams[0] || null);
                 }
             } catch (error) {
-                console.error('팀 삭제 실패:', error);
+                // Error handled silently
             }
         } else {
             if (!window.confirm('정말 팀에서 탈퇴하시겠습니까?')) return;
@@ -170,7 +166,7 @@ function Sidebar({ isOpen, onToggle, currentTeam, onSelectTeam, loginMember }) {
                     onSelectTeam(updatedTeams[0] || null);
                 }
             } catch (error) {
-                console.error('팀 탈퇴 실패:', error);
+                // Error handled silently
             }
         }
     };

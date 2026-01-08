@@ -1,9 +1,10 @@
 package com.example.demo.model;
 
-import java.sql.Date;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.apache.ibatis.type.Alias;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
@@ -24,14 +25,18 @@ public class Task {
 	@Size(max = 5000, message = "설명은 5000자를 초과할 수 없습니다")
 	private String description;
 	private int position;
-	private Date createdAt;
+	private LocalDateTime createdAt;
 
 	// Issue Tracker 확장 필드
 	private Integer assigneeNo;      // 담당자 (FK to Member.no, nullable) - 레거시 유지
 	private String assigneeName;     // 담당자 이름 (JOIN으로 조회)
 	private String priority;         // CRITICAL, HIGH, MEDIUM, LOW
-	private Date startDate;          // 시작일 (타임라인용)
-	private Date dueDate;            // 마감일
+
+	@JsonFormat(pattern = "yyyy-MM-dd")
+	private LocalDate startDate;     // 시작일 (타임라인용)
+
+	@JsonFormat(pattern = "yyyy-MM-dd")
+	private LocalDate dueDate;       // 마감일
 
 	// 워크플로우 필드
 	private String workflowStatus;   // WAITING, IN_PROGRESS, REVIEW, DONE, REJECTED

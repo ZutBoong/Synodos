@@ -22,7 +22,7 @@
     padding: 0 24px 20px;
     font-size: 15px;
     font-weight: 700;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.6);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -326,13 +326,13 @@
 .sv-toggle-label {
     font-size: 14px;
     font-weight: 600;
-    color: #1e293b;
+    color: #ffffff;
     margin-bottom: 4px;
 }
 
 .sv-toggle-desc {
     font-size: 15px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .sv-toggle-switch {
@@ -538,7 +538,7 @@
 .sv-github-repo a {
     font-size: 15px;
     font-weight: 600;
-    color: #1e293b;
+    color: #ffffff;
     text-decoration: none;
 }
 
@@ -550,7 +550,7 @@
 .sv-github-empty {
     text-align: center;
     padding: 24px;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .sv-github-empty p {
@@ -647,13 +647,13 @@
 }
 
 .sv-mapping-arrow {
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .sv-mapping-column {
     flex: 1;
     font-size: 14px;
-    color: #1e293b;
+    color: #ffffff;
 }
 
 .sv-mapping-delete {

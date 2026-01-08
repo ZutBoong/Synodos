@@ -54,21 +54,82 @@ public class TeamService {
 		return dao.insertMember(member);
 	}
 
-	// 팀 멤버 추가 + 알림 발송
+	// 팀 멤버 추가 + 알림 발송 + GitHub Collaborator 등록
 	public int addMemberWithNotification(TeamMember member, int inviterNo) {
 		int result = dao.insertMember(member);
 		if (result > 0) {
 			Team team = dao.findById(member.getTeamId());
 			if (team != null) {
+				// 알림 발송
 				notificationService.notifyTeamInvite(
 					member.getMemberNo(),
 					inviterNo,
 					team.getTeamId(),
 					team.getTeamName()
 				);
+
+				// GitHub Collaborator 자동 등록 시도
+				tryAddGitHubCollaborator(team, member.getMemberNo());
 			}
 		}
 		return result;
+	}
+
+	/**
+	 * 팀에 GitHub 저장소가 연결되어 있고, 멤버가 GitHub 계정을 연동했으면
+	 * 자동으로 GitHub Collaborator로 등록합니다.
+	 */
+	private void tryAddGitHubCollaborator(Team team, int memberNo) {
+		try {
+			// 1. 팀에 GitHub 저장소가 연결되어 있는지 확인
+			String repoUrl = team.getGithubRepoUrl();
+			if (repoUrl == null || repoUrl.trim().isEmpty()) {
+				log.debug("Team {} has no GitHub repo connected, skipping collaborator addition", team.getTeamId());
+				return;
+			}
+
+			// 2. 저장소 URL 파싱
+			GitHubService.RepoInfo repoInfo = gitHubService.parseRepoUrl(repoUrl);
+			if (repoInfo == null) {
+				log.warn("Invalid GitHub repo URL for team {}: {}", team.getTeamId(), repoUrl);
+				return;
+			}
+
+			// 3. 새 멤버의 GitHub username 확인
+			Member newMember = memberDao.findByNo(memberNo);
+			if (newMember == null || newMember.getGithubUsername() == null || newMember.getGithubUsername().trim().isEmpty()) {
+				log.debug("Member {} has no GitHub username linked, skipping collaborator addition", memberNo);
+				return;
+			}
+
+			// 4. 팀 리더의 GitHub access token 확인
+			Member leader = memberDao.findByNo(team.getLeaderNo());
+			if (leader == null || leader.getGithubAccessToken() == null || leader.getGithubAccessToken().trim().isEmpty()) {
+				log.debug("Team leader {} has no GitHub access token, skipping collaborator addition", team.getLeaderNo());
+				return;
+			}
+
+			// 5. GitHub Collaborator로 추가 (push 권한)
+			String githubUsername = newMember.getGithubUsername();
+			GitHubService.CollaboratorResult collaboratorResult = gitHubService.addCollaborator(
+				leader.getGithubAccessToken(),
+				repoInfo.owner,
+				repoInfo.repo,
+				githubUsername,
+				"push"  // 기본 push 권한 부여
+			);
+
+			if (collaboratorResult.isSuccess()) {
+				log.info("Successfully added {} as GitHub collaborator to {}/{}: {}",
+					githubUsername, repoInfo.owner, repoInfo.repo, collaboratorResult.getMessage());
+			} else {
+				log.warn("Failed to add {} as GitHub collaborator to {}/{}: {}",
+					githubUsername, repoInfo.owner, repoInfo.repo, collaboratorResult.getMessage());
+			}
+		} catch (Exception e) {
+			// Collaborator 추가 실패는 팀 가입을 막지 않음
+			log.error("Error while adding GitHub collaborator for member {}: {}", memberNo, e.getMessage());
+		}
 	}
 
 	// 팀 코드로 팀 조회
@@ -299,17 +360,21 @@ public class TeamService {
 		newLeader.setRole("LEADER");
 		dao.updateMemberRole(newLeader);
 
-		// 8. 새 팀장에게 알림 발송
-		notificationService.sendNotification(
-			newLeaderNo,
-			currentLeaderNo,
-			"TEAM_LEADER",
-			"팀장 위임",
-			team.getTeamName() + " 팀의 팀장으로 지정되었습니다.",
-			teamId,
-			0,
-			0
-		);
+		// 8. 새 팀장에게 알림 발송 (실패해도 위임은 성공으로 처리)
+		try {
+			notificationService.sendNotification(
+				newLeaderNo,
+				currentLeaderNo,
+				"TEAM_LEADER",
+				"팀장 위임",
+				team.getTeamName() + " 팀의 팀장으로 지정되었습니다.",
+				teamId,
+				0,
+				0
+			);
+		} catch (Exception e) {
+			log.warn("팀장 위임 알림 발송 실패 (위임은 성공): {}", e.getMessage());
+		}
 
 		result.put("success", true);
 		result.put("message", "팀장이 성공적으로 위임되었습니다.");

@@ -101,4 +101,18 @@
         WHERE task_id = #{taskId}
     </update>
 
+    <!-- 모든 담당자 강제 수락 (강제 완료용) -->
+    <update id="forceAcceptAll" parameterType="int">
+        UPDATE task_assignee
+        SET accepted = true, accepted_at = CURRENT_TIMESTAMP
+        WHERE task_id = #{taskId}
+    </update>
+
+    <!-- 모든 담당자 강제 완료 (강제 완료용) -->
+    <update id="forceCompleteAll" parameterType="int">
+        UPDATE task_assignee
+        SET completed = true, completed_at = CURRENT_TIMESTAMP
+        WHERE task_id = #{taskId}
+    </update>
+
 </mapper>

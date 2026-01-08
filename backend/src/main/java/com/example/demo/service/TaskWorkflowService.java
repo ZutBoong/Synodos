@@ -7,8 +7,10 @@ import com.example.demo.dao.TaskDao;
 import com.example.demo.dao.TaskAssigneeDao;
 import com.example.demo.dao.TaskVerifierDao;
 import com.example.demo.dao.SynodosColumnDao;
+import com.example.demo.dao.TeamDao;
 import com.example.demo.model.Task;
 import com.example.demo.model.SynodosColumn;
+import com.example.demo.model.Team;
 
 @Service
 public class TaskWorkflowService {
@@ -32,6 +34,9 @@ public class TaskWorkflowService {
 
 	@Autowired
 	private SynodosColumnDao columnDao;
+
+	@Autowired
+	private TeamDao teamDao;
 
 	@Autowired
 	private BoardNotificationService notificationService;
@@ -234,6 +239,60 @@ public class TaskWorkflowService {
 	}
 
 	/**
+	 * 태스크 강제 완료 (팀 리더 또는 태스크 생성자만 가능)
+	 * - 현재 상태와 관계없이 DONE으로 변경
+	 * - 모든 담당자를 수락/완료 처리
+	 * - 모든 검증자를 승인 처리
+	 */
+	@Transactional
+	public Task forceCompleteTask(int taskId, int memberNo) {
+		Task task = taskDao.content(taskId);
+		if (task == null) {
+			throw new IllegalArgumentException("태스크를 찾을 수 없습니다: " + taskId);
+		}
+
+		// 이미 완료된 태스크는 처리하지 않음
+		if (STATUS_DONE.equals(task.getWorkflowStatus())) {
+			throw new IllegalStateException("이미 완료된 태스크입니다.");
+		}
+
+		// 권한 확인: 팀 리더 또는 태스크 생성자만 강제 완료 가능
+		SynodosColumn column = columnDao.content(task.getColumnId());
+		if (column == null) {
+			throw new IllegalArgumentException("태스크의 컬럼을 찾을 수 없습니다.");
+		}
+
+		Team team = teamDao.findById(column.getTeamId());
+		if (team == null) {
+			throw new IllegalArgumentException("팀을 찾을 수 없습니다.");
+		}
+
+		boolean isLeader = team.getLeaderNo() == memberNo;
+		boolean isCreator = task.getCreatedBy() != null && task.getCreatedBy() == memberNo;
+
+		if (!isLeader && !isCreator) {
+			throw new IllegalStateException("팀 리더 또는 태스크 생성자만 강제 완료할 수 있습니다.");
+		}
+
+		// 모든 담당자 수락 및 완료 처리
+		assigneeDao.forceAcceptAll(taskId);
+		assigneeDao.forceCompleteAll(taskId);
+
+		// 모든 검증자 승인 처리
+		verifierDao.forceApproveAll(taskId);
+
+		// 태스크 상태를 DONE으로 변경
+		task.setWorkflowStatus(STATUS_DONE);
+		taskDao.updateWorkflowStatus(task);
+
+		// 담당자들에게 강제 완료 알림
+		notifyAssigneesForForceComplete(task, memberNo);
+
+		notifyAndReturn(task);
+		return taskDao.content(taskId);
+	}
+
+	/**
 	 * 워크플로우 상태 재계산
 	 * - 담당자/검증자 변경 후 상태 동기화에 사용
 	 */
@@ -368,6 +427,27 @@ public class TaskWorkflowService {
 				task.getTitle(),
 				column.getTeamId()
 			);
+		}
+	}
+
+	// 담당자들에게 강제 완료 알림
+	private void notifyAssigneesForForceComplete(Task task, int senderNo) {
+		SynodosColumn column = columnDao.content(task.getColumnId());
+		if (column != null) {
+			assigneeDao.listByTask(task.getTaskId()).forEach(a -> {
+				if (a.getMemberNo() != senderNo) {
+					persistentNotificationService.sendNotification(
+						a.getMemberNo(),
+						senderNo,
+						"TASK_FORCE_COMPLETE",
+						"태스크 강제 완료",
+						task.getTitle() + " 태스크가 강제 완료 처리되었습니다.",
+						column.getTeamId(),
+						task.getTaskId(),
+						0
+					);
+				}
+			});
 		}
 	}
 }

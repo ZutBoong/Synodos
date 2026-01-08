@@ -37,7 +37,6 @@ public class NotificationService {
             }
         }
         String destination = "/topic/user/" + notification.getRecipientNo() + "/notifications";
-        System.out.println("WebSocket notification to " + destination + ": " + notification.getTitle());
         messagingTemplate.convertAndSend(destination, notification);
     }
 

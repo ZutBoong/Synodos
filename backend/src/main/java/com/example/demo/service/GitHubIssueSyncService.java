@@ -506,7 +506,7 @@ public class GitHubIssueSyncService {
         // Milestone에서 마감일 추출
         if (issue.getMilestone() != null && issue.getMilestone().getDueOn() != null) {
             try {
-                task.setDueDate(java.sql.Date.valueOf(issue.getMilestone().getDueOn().substring(0, 10)));
+                task.setDueDate(java.time.LocalDate.parse(issue.getMilestone().getDueOn().substring(0, 10)));
             } catch (Exception e) {
                 log.warn("Failed to parse milestone due date: {}", issue.getMilestone().getDueOn());
             }
@@ -744,11 +744,11 @@ public class GitHubIssueSyncService {
         if (task == null) return;
 
         GitHubIssuePayload.Milestone milestone = payload.getIssue().getMilestone();
-        java.sql.Date newDueDate = null;
+        java.time.LocalDate newDueDate = null;
 
         if (milestone != null && milestone.getDueOn() != null) {
             try {
-                newDueDate = java.sql.Date.valueOf(milestone.getDueOn().substring(0, 10));
+                newDueDate = java.time.LocalDate.parse(milestone.getDueOn().substring(0, 10));
             } catch (Exception e) {
                 log.warn("Failed to parse milestone due date: {}", milestone.getDueOn());
             }
@@ -1227,6 +1227,16 @@ public class GitHubIssueSyncService {
                 // Label에서 우선순위 추출 (없으면 null)
                 String priority = labelService.extractPriorityFromLabels(issue.getLabels());
                 task.setPriority(priority);
+
+                // Milestone에서 마감일 추출
+                if (issue.getMilestoneDueOn() != null && !issue.getMilestoneDueOn().isEmpty()) {
+                    try {
+                        task.setDueDate(java.time.LocalDate.parse(issue.getMilestoneDueOn().substring(0, 10)));
+                        log.debug("Set due date from milestone: {}", task.getDueDate());
+                    } catch (Exception e) {
+                        log.warn("Failed to parse milestone due date: {}", issue.getMilestoneDueOn());
+                    }
+                }
 
                 taskDao.insert(task);
 
