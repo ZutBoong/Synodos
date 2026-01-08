@@ -2139,4 +2139,143 @@ public class GitHubService {
             return false;
         }
     }
+
+    // ==================== Collaborator 관리 API ====================
+
+    /**
+     * 저장소에 Collaborator를 추가합니다.
+     * @param accessToken GitHub 액세스 토큰 (저장소 admin 권한 필요)
+     * @param owner 저장소 소유자
+     * @param repo 저장소 이름
+     * @param username 추가할 GitHub 사용자명
+     * @param permission 권한 레벨 (pull, push, admin, maintain, triage) - 기본값: push
+     * @return 추가 결과
+     */
+    public CollaboratorResult addCollaborator(String accessToken, String owner, String repo,
+                                               String username, String permission) {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/collaborators/%s",
+                                      owner, repo, username);
+        log.info("Adding collaborator {} to {}/{} with permission {}", username, owner, repo, permission);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            headers.set("Content-Type", "application/json");
+
+            Map<String, String> body = new java.util.HashMap<>();
+            body.put("permission", permission != null ? permission : "push");
+
+            String jsonBody = objectMapper.writeValueAsString(body);
+            HttpEntity<String> entity = new HttpEntity<>(jsonBody, headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl, HttpMethod.PUT, entity, String.class
+            );
+
+            CollaboratorResult result = new CollaboratorResult();
+            result.setSuccess(true);
+
+            // 201: 초대 전송됨, 204: 이미 collaborator임
+            if (response.getStatusCode().value() == 201) {
+                result.setMessage(username + "님에게 저장소 초대가 전송되었습니다.");
+                result.setInvitationSent(true);
+            } else if (response.getStatusCode().value() == 204) {
+                result.setMessage(username + "님은 이미 collaborator입니다.");
+                result.setInvitationSent(false);
+            }
+
+            log.info("Collaborator added successfully: {}", username);
+            return result;
+        } catch (Exception e) {
+            log.error("Failed to add collaborator: {}", e.getMessage());
+
+            CollaboratorResult result = new CollaboratorResult();
+            result.setSuccess(false);
+
+            String errorMsg = e.getMessage() != null ? e.getMessage() : "";
+            if (errorMsg.contains("404")) {
+                result.setMessage("GitHub 사용자를 찾을 수 없습니다: " + username);
+            } else if (errorMsg.contains("403")) {
+                result.setMessage("저장소에 collaborator를 추가할 권한이 없습니다.");
+            } else if (errorMsg.contains("422")) {
+                result.setMessage("유효하지 않은 요청입니다.");
+            } else {
+                result.setMessage("Collaborator 추가 실패: " + errorMsg);
+            }
+
+            return result;
+        }
+    }
+
+    /**
+     * 저장소에서 Collaborator를 제거합니다.
+     * @param accessToken GitHub 액세스 토큰
+     * @param owner 저장소 소유자
+     * @param repo 저장소 이름
+     * @param username 제거할 GitHub 사용자명
+     * @return 제거 결과
+     */
+    public CollaboratorResult removeCollaborator(String accessToken, String owner, String repo, String username) {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/collaborators/%s",
+                                      owner, repo, username);
+        log.info("Removing collaborator {} from {}/{}", username, owner, repo);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            restTemplate.exchange(apiUrl, HttpMethod.DELETE, entity, String.class);
+
+            CollaboratorResult result = new CollaboratorResult();
+            result.setSuccess(true);
+            result.setMessage(username + "님이 collaborator에서 제거되었습니다.");
+
+            log.info("Collaborator removed successfully: {}", username);
+            return result;
+        } catch (Exception e) {
+            log.error("Failed to remove collaborator: {}", e.getMessage());
+
+            CollaboratorResult result = new CollaboratorResult();
+            result.setSuccess(false);
+            result.setMessage("Collaborator 제거 실패: " + e.getMessage());
+            return result;
+        }
+    }
+
+    /**
+     * 사용자가 저장소의 Collaborator인지 확인합니다.
+     * @param accessToken GitHub 액세스 토큰
+     * @param owner 저장소 소유자
+     * @param repo 저장소 이름
+     * @param username 확인할 GitHub 사용자명
+     * @return collaborator 여부
+     */
+    public boolean isCollaborator(String accessToken, String owner, String repo, String username) {
+        String apiUrl = String.format("https://api.github.com/repos/%s/%s/collaborators/%s",
+                                      owner, repo, username);
+
+        try {
+            HttpHeaders headers = createAuthHeaders(accessToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                apiUrl, HttpMethod.GET, entity, String.class
+            );
+
+            // 204 = collaborator, 404 = not collaborator
+            return response.getStatusCode().value() == 204;
+        } catch (Exception e) {
+            // 404는 collaborator가 아님을 의미
+            return false;
+        }
+    }
+
+    /**
+     * Collaborator 추가/제거 결과
+     */
+    @lombok.Data
+    public static class CollaboratorResult {
+        private boolean success;
+        private String message;
+        private boolean invitationSent;  // 초대가 전송되었는지 (true면 수락 대기 중)
+    }
 }
