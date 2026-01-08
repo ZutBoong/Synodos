@@ -152,6 +152,23 @@
     backdrop-filter: blur(5px);
 }
 
+.action-btn.force-complete-btn {
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.action-btn.force-complete-btn:hover {
+    color: #059669;
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.2);
+    backdrop-filter: blur(5px);
+}
+
+.action-btn.force-complete-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .action-btn.urgent-btn.active {
     color: #f87171;
     border-color: #ef4444;

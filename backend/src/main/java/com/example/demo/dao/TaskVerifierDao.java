@@ -19,4 +19,7 @@ public interface TaskVerifierDao {
     int rejectTask(@Param("taskId") int taskId, @Param("memberNo") int memberNo, @Param("reason") String reason);
     boolean allVerifiersApproved(int taskId);
     int resetApproval(int taskId);
+
+    // 강제 완료용 메서드
+    int forceApproveAll(int taskId);
 }

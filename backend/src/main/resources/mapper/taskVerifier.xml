@@ -82,4 +82,11 @@
         WHERE task_id = #{taskId}
     </update>
 
+    <!-- 모든 검증자 강제 승인 (강제 완료용) -->
+    <update id="forceApproveAll" parameterType="int">
+        UPDATE task_verifier
+        SET approved = true, approved_at = CURRENT_TIMESTAMP, rejection_reason = NULL
+        WHERE task_id = #{taskId}
+    </update>
+
 </mapper>

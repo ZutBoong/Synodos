@@ -134,4 +134,22 @@ public class TaskWorkflowController {
 			return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
 		}
 	}
+
+	/**
+	 * 태스크 강제 완료 (팀 리더 또는 태스크 생성자만 가능)
+	 * POST /api/task/workflow/{taskId}/force-complete?memberNo=123
+	 */
+	@PostMapping("/{taskId}/force-complete")
+	public ResponseEntity<?> forceCompleteTask(
+			@PathVariable("taskId") int taskId,
+			@RequestParam("memberNo") int memberNo) {
+		try {
+			Task task = workflowService.forceCompleteTask(taskId, memberNo);
+			System.out.println("태스크 강제 완료: taskId=" + taskId + ", memberNo=" + memberNo);
+			return ResponseEntity.ok(task);
+		} catch (IllegalArgumentException | IllegalStateException e) {
+			System.out.println("태스크 강제 완료 실패: " + e.getMessage());
+			return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+		}
+	}
 }

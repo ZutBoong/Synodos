@@ -156,6 +156,12 @@ export const restartTask = async (taskId, memberNo) => {
     return response.data;
 };
 
+// 태스크 강제 완료 (팀 리더 또는 태스크 생성자만 가능)
+export const forceCompleteTask = async (taskId, memberNo) => {
+    const response = await axiosInstance.post(`${API_PATH}/task/workflow/${taskId}/force-complete?memberNo=${memberNo}`);
+    return response.data;
+};
+
 // ========== Task Verifiers (복수 검증자) API (NEW) ==========
 
 // 태스크별 검증자 목록 조회

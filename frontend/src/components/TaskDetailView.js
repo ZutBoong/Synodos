@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { taskupdate, updateTaskAssignees, updateTaskVerifiers, archiveTask, unarchiveTask, toggleTaskFavorite, checkTaskFavorite } from '../api/boardApi';
+import { taskupdate, updateTaskAssignees, updateTaskVerifiers, archiveTask, unarchiveTask, toggleTaskFavorite, checkTaskFavorite, forceCompleteTask } from '../api/boardApi';
 import { getTeamMembers, getTeam } from '../api/teamApi';
 import { uploadFile, getFilesByTask, deleteFile, formatFileSize, getFileIcon } from '../api/fileApi';
 import { createTaskBranch, createTaskPR, getTaskPRs, getBranches, getDefaultBranch, mergePR, getPRDetail, aiResolveConflictStepBased, generateFinalCode, applyConflictResolution } from '../api/githubApi';
@@ -26,8 +26,10 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
     const [isFavorite, setIsFavorite] = useState(false);
     const [isArchived, setIsArchived] = useState(false);
     const [hasGithubRepo, setHasGithubRepo] = useState(false);
+    const [isTeamLeader, setIsTeamLeader] = useState(false);
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [forceCompleting, setForceCompleting] = useState(false);
 
     // 편집용 폼 상태
     const [form, setForm] = useState({
@@ -239,6 +241,8 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
             const team = await getTeam(teamId);
             const hasRepo = !!team?.githubRepoUrl;
             setHasGithubRepo(hasRepo);
+            // 팀 리더 여부 확인
+            setIsTeamLeader(team?.leaderNo === loginMember?.no);
             if (hasRepo) {
                 fetchBranches();
                 fetchTaskPRs();
@@ -719,6 +723,27 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
         }
     };
 
+    // 강제 완료 핸들러
+    const handleForceComplete = async () => {
+        if (!loginMember || !task?.taskId) return;
+        if (!window.confirm('이 태스크를 강제 완료하시겠습니까?\n모든 담당자와 검증자의 승인 상태가 완료 처리됩니다.')) return;
+
+        setForceCompleting(true);
+        try {
+            await forceCompleteTask(task.taskId, loginMember.no);
+            alert('태스크가 강제 완료되었습니다.');
+            if (onUpdate) onUpdate();
+        } catch (error) {
+            console.error('강제 완료 실패:', error);
+            alert(error.response?.data?.error || '강제 완료에 실패했습니다.');
+        } finally {
+            setForceCompleting(false);
+        }
+    };
+
+    // 강제 완료 가능 여부 (팀 리더 또는 태스크 생성자이고, DONE 상태가 아닐 때)
+    const canForceComplete = (isTeamLeader || task?.createdBy === loginMember?.no) && task?.workflowStatus !== 'DONE';
+
     const handleFileDownload = (fileId, originalName) => {
         const downloadUrl = `/api/file/download/${fileId}`;
         const link = document.createElement('a');
@@ -880,6 +905,20 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                         >
                             <i className={isArchived ? 'fa-solid fa-bookmark' : 'fa-regular fa-bookmark'}></i>
                         </button>
+                        {canForceComplete && (
+                            <button
+                                className="action-btn force-complete-btn"
+                                onClick={handleForceComplete}
+                                disabled={forceCompleting}
+                                title="강제 완료"
+                            >
+                                {forceCompleting ? (
+                                    <i className="fa-solid fa-spinner fa-spin"></i>
+                                ) : (
+                                    <i className="fa-solid fa-forward-fast"></i>
+                                )}
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
