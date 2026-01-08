@@ -1413,13 +1413,13 @@ function BranchView({ team, loginMember, filters }) {
         // 실제 노드 위치 기반으로 bounds 계산
         const bounds = (() => {
             if (nodes.length === 0) {
-                return { width: containerSize.width, height: containerSize.height };
+                return { width: containerSize.width || 800, height: containerSize.height || 400 };
             }
             const maxX = Math.max(...nodes.map(n => n.x)) + 150;
             const maxY = Math.max(...nodes.map(n => n.y)) + 100;
             return {
-                width: Math.max(maxX, containerSize.width),
-                height: Math.max(maxY, containerSize.height)
+                width: Math.max(maxX, containerSize.width || 800),
+                height: Math.max(maxY, containerSize.height || 400)
             };
         })();
 
@@ -1754,7 +1754,7 @@ function BranchView({ team, loginMember, filters }) {
                                                             y={timelineY - 10}
                                                             textAnchor="middle"
                                                             fill={marker.hasMultiple ? '#667eea' : '#64748b'}
-                                                            fontSize={marker.isExpanded ? "9" : "10"}
+                                                            fontSize={marker.isExpanded ? "11" : "12"}
                                                             fontWeight="500"
                                                             style={{ cursor: marker.hasMultiple ? 'pointer' : 'default' }}
                                                             onClick={(e) => {
@@ -1812,6 +1812,9 @@ function BranchView({ team, loginMember, filters }) {
                                                     y={y + 4}
                                                     className="branch-label-text"
                                                     fill={color}
+                                                    stroke="white"
+                                                    strokeWidth={3}
+                                                    paintOrder="stroke"
                                                     style={{ cursor: 'pointer', fontWeight: isExpanded ? 700 : 600 }}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
@@ -1857,7 +1860,7 @@ function BranchView({ team, loginMember, filters }) {
                                                     x2={edge.toX}
                                                     y2={edge.toY}
                                                     stroke={edgeColor}
-                                                    strokeWidth={3}
+                                                    strokeWidth={4}
                                                     strokeDasharray={dashArray}
                                                     filter={fromNode?.isEmptyBranch ? undefined : `url(#glow-${colorIndex})`}
                                                 />
@@ -1872,7 +1875,7 @@ function BranchView({ team, loginMember, filters }) {
                                                         x2={edge.toX}
                                                         y2={edge.toY}
                                                         stroke={edgeColor}
-                                                        strokeWidth={3}
+                                                        strokeWidth={4}
                                                         strokeOpacity={0.7}
                                                         strokeDasharray={dashArray}
                                                     />
@@ -1890,7 +1893,7 @@ function BranchView({ team, loginMember, filters }) {
                                                     <path
                                                         d={pathD}
                                                         stroke={edgeColor}
-                                                        strokeWidth={3}
+                                                        strokeWidth={4}
                                                         fill="none"
                                                         strokeOpacity={0.7}
                                                         strokeDasharray={dashArray}
@@ -1941,7 +1944,7 @@ function BranchView({ team, loginMember, filters }) {
                                                             r={GRAPH_CONFIG.nodeRadius + 8}
                                                             fill="none"
                                                             stroke="#238636"
-                                                            strokeWidth={3}
+                                                            strokeWidth={4}
                                                             opacity={0.9}
                                                         />
                                                         {/* PR 배지 */}
@@ -1959,7 +1962,7 @@ function BranchView({ team, loginMember, filters }) {
                                                         r={GRAPH_CONFIG.nodeRadius + 10}
                                                         fill="none"
                                                         stroke="#22c55e"
-                                                        strokeWidth={3}
+                                                        strokeWidth={4}
                                                         strokeDasharray="5 3"
                                                         opacity={0.8}
                                                     />
@@ -1972,7 +1975,7 @@ function BranchView({ team, loginMember, filters }) {
                                                         r={GRAPH_CONFIG.nodeRadius + 6}
                                                         fill="none"
                                                         stroke={node.color}
-                                                        strokeWidth={3}
+                                                        strokeWidth={4}
                                                         opacity={0.5}
                                                     />
                                                 )}
@@ -1983,7 +1986,7 @@ function BranchView({ team, loginMember, filters }) {
                                                     r={GRAPH_CONFIG.nodeRadius}
                                                     fill={isDragging ? '#94a3b8' : node.color}
                                                     stroke="white"
-                                                    strokeWidth={3}
+                                                    strokeWidth={4}
                                                     filter={`url(#glow-${Math.abs(node.row) % GRAPH_CONFIG.branchColors.length})`}
                                                     className="node-circle"
                                                     opacity={isDragging ? 0.5 : 1}
@@ -2014,7 +2017,7 @@ function BranchView({ team, loginMember, filters }) {
                                                 r={GRAPH_CONFIG.nodeRadius}
                                                 fill={dragState.node.color}
                                                 stroke="white"
-                                                strokeWidth={3}
+                                                strokeWidth={4}
                                                 opacity={0.8}
                                             />
                                             <text

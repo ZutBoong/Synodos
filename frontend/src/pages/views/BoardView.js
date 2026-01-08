@@ -705,7 +705,7 @@ function BoardView({
                                                         className="add-task-btn"
                                                         onClick={() => setCreateTaskModalColumnId(column.columnId)}
                                                     >
-                                                        + 새 작업 추가
+                                                        + 새 태스크 추가
                                                     </button>
                                                 </div>
                                             </div>

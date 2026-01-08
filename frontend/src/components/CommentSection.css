@@ -41,17 +41,17 @@
 }
 
 .comment-list::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
+    background: rgba(203, 213, 225, 0.5);
     border-radius: 3px;
 }
 
 .comment-list::-webkit-scrollbar-thumb:hover {
-    background: #cbd5e1;
+    background: rgba(148, 163, 184, 0.7);
 }
 
 .no-comments {
     text-align: center;
-    color: rgba(255, 255, 255, 0.6);
+    color: #94a3b8;
     padding: 24px;
     font-size: 13px;
     background: rgba(255, 255, 255, 0.15);
@@ -100,19 +100,19 @@
 .author-name {
     font-weight: 600;
     font-size: 13px;
-    color: white;
+    color: #1e293b;
 }
 
 .comment-time {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.6);
+    color: #64748b;
     margin-left: auto;
 }
 
 .comment-content p {
     margin: 0;
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.9);
+    color: #1e293b;
     line-height: 1.6;
     white-space: pre-wrap;
     word-break: break-word;
@@ -127,7 +127,7 @@
 .comment-actions button {
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.7);
+    color: #9ca3af;
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
@@ -136,7 +136,7 @@
 }
 
 .comment-actions button:hover {
-    color: rgba(196, 181, 253, 1);
+    color: #6b7280;
 }
 
 .comment-edit {
@@ -224,7 +224,11 @@
     backdrop-filter: blur(5px);
     transition: all 0.2s ease;
     font-family: inherit;
-    color: white;
+    color: #1e293b;
+}
+
+.comment-form textarea::placeholder {
+    color: #94a3b8;
 }
 
 .comment-form textarea:hover {
@@ -251,19 +255,21 @@
 }
 
 .comment-form .btn-primary {
-    background: rgba(196, 181, 253, 0.3);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     backdrop-filter: blur(5px);
-    border: 1px solid rgba(196, 181, 253, 0.4);
+    border: none;
     color: white;
-    box-shadow: 0 4px 12px rgba(196, 181, 253, 0.3);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .comment-form .btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+    filter: brightness(1.1);
 }
 
 .comment-form .btn-primary:disabled {
-    opacity: 0.6;
+    background: rgba(156, 163, 175, 0.4);
+    box-shadow: none;
     cursor: not-allowed;
 }

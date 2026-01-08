@@ -11,12 +11,12 @@ import './TaskDetailView.css';
 
 // 워크플로우 상태 표시
 const WORKFLOW_STATUS = {
-    WAITING: { label: '대기중', color: '#94a3b8', bg: '#f1f5f9' },
-    IN_PROGRESS: { label: '진행중', color: '#3b82f6', bg: '#dbeafe' },
-    REVIEW: { label: '검토중', color: '#f59e0b', bg: '#fef3c7' },
-    DONE: { label: '완료', color: '#10b981', bg: '#d1fae5' },
-    REJECTED: { label: '반려', color: '#ef4444', bg: '#fee2e2' },
-    DECLINED: { label: '거부됨', color: '#6b7280', bg: '#f3f4f6' }
+    WAITING: { label: 'Waiting', color: '#94a3b8', bg: '#f1f5f9' },
+    IN_PROGRESS: { label: 'In Progress', color: '#3b82f6', bg: '#dbeafe' },
+    REVIEW: { label: 'Review', color: '#f59e0b', bg: '#fef3c7' },
+    DONE: { label: 'Done', color: '#10b981', bg: '#d1fae5' },
+    REJECTED: { label: 'Rejected', color: '#ef4444', bg: '#fee2e2' },
+    DECLINED: { label: 'Declined', color: '#6b7280', bg: '#f3f4f6' }
 };
 
 

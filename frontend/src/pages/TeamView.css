@@ -248,6 +248,7 @@
     background: transparent;
 }
 
+/* 스크롤바 - 오버플로우 시에만 표시 */
 .team-view-content::-webkit-scrollbar {
     width: 8px;
 }
@@ -257,12 +258,16 @@
 }
 
 .team-view-content::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.3);
     border-radius: 4px;
 }
 
 .team-view-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.team-view-content::-webkit-scrollbar-corner {
+    background: transparent;
 }
 
 /* ===== 멤버 사이드바 ===== */

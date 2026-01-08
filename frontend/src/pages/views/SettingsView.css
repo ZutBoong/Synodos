@@ -83,6 +83,7 @@
 
 .sv-section {
     max-width: 720px;
+    margin: 0 auto;
     animation: svFadeIn 0.25s ease;
 }
 
@@ -499,20 +500,24 @@
 }
 
 .sv-danger-icon {
-    margin-bottom: 16px;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    margin-right: 10px;
     color: #dc2626;
 }
 
 .sv-danger-icon svg {
-    width: 48px;
-    height: 48px;
+    width: 24px;
+    height: 24px;
 }
 
 .sv-danger-title {
+    display: inline;
     font-size: 18px;
     font-weight: 700;
     color: #991b1b;
-    margin: 0 0 10px 0;
+    vertical-align: middle;
 }
 
 .sv-danger-desc {
@@ -585,6 +590,11 @@
     opacity: 0.7;
 }
 
+.sv-select option {
+    color: #1e293b;
+    background: #ffffff;
+}
+
 /* ===== 일괄 동기화 ===== */
 .sv-sync-buttons {
     display: flex;
@@ -647,13 +657,13 @@
 }
 
 .sv-mapping-arrow {
-    color: rgba(255, 255, 255, 0.5);
+    color: #1e293b;
 }
 
 .sv-mapping-column {
     flex: 1;
     font-size: 14px;
-    color: #ffffff;
+    color: #1e293b;
 }
 
 .sv-mapping-delete {
@@ -676,25 +686,6 @@
     transform: scale(1.1);
 }
 
-.sv-mapping-auto {
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-}
-
-.sv-mapping-auto .sv-mapping-prefix {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.sv-mapping-badge {
-    padding: 2px 8px;
-    background: #10b981;
-    border-radius: 4px;
-    font-size: 15px;
-    font-weight: 600;
-    color: white;
-    margin-left: auto;
-}
 
 .sv-mapping-add {
     display: flex;

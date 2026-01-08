@@ -215,31 +215,29 @@ function CreateTeam() {
                         <p className="section-description">초대할 팀원을 선택하세요. (나중에도 추가할 수 있습니다)</p>
 
                         {/* 검색 */}
-                        <div className="member-search-wrapper">
-                            <div className="member-search">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="11" cy="11" r="8" />
-                                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                                </svg>
-                                <input
-                                    type="text"
-                                    placeholder="이름 또는 아이디로 검색..."
-                                    value={searchQuery}
-                                    onChange={(e) => {
-                                        setSearchQuery(e.target.value);
-                                        setShowDropdown(e.target.value.trim().length > 0);
-                                    }}
-                                    onFocus={() => {
-                                        if (searchQuery.trim().length > 0) {
-                                            setShowDropdown(true);
-                                        }
-                                    }}
-                                    onBlur={() => {
-                                        // 약간의 지연을 주어 클릭 이벤트가 먼저 처리되도록 함
-                                        setTimeout(() => setShowDropdown(false), 200);
-                                    }}
-                                />
-                            </div>
+                        <div className="team-member-search">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                            <input
+                                type="text"
+                                placeholder="이름 또는 아이디로 검색..."
+                                value={searchQuery}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    setShowDropdown(e.target.value.trim().length > 0);
+                                }}
+                                onFocus={() => {
+                                    if (searchQuery.trim().length > 0) {
+                                        setShowDropdown(true);
+                                    }
+                                }}
+                                onBlur={() => {
+                                    // 약간의 지연을 주어 클릭 이벤트가 먼저 처리되도록 함
+                                    setTimeout(() => setShowDropdown(false), 200);
+                                }}
+                            />
 
                             {/* 드롭다운 회원 목록 */}
                             {showDropdown && searchQuery.trim().length > 0 && (
@@ -282,9 +280,6 @@ function CreateTeam() {
                         {/* 선택된 팀원 */}
                         {selectedMembers.length > 0 && (
                             <div className="selected-members">
-                                <div className="selected-members-header">
-                                    선택된 팀원 ({selectedMembers.length}명)
-                                </div>
                                 <div className="selected-members-list">
                                     {selectedMembers.map(member => (
                                         <div key={member.no} className="selected-member-tag">

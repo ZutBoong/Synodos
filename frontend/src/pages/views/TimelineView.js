@@ -432,9 +432,12 @@ function TimelineView({
         }
     };
 
-    // 컬럼 렌더링
+    // 컬럼 렌더링 (태스크 없는 칼럼은 숨김)
     const renderColumn = (column) => {
         const columnTasks = getTasksByColumn(column.columnId);
+
+        // 태스크가 없으면 렌더링하지 않음
+        if (columnTasks.length === 0) return null;
 
         return (
             <div key={column.columnId} className="timeline-section">
@@ -471,14 +474,6 @@ function TimelineView({
                             </div>
                         );
                     })}
-                    {columnTasks.length === 0 && (
-                        <div className="timeline-row empty">
-                            <div className="timeline-row-label">
-                                <span className="empty-text">태스크 없음</span>
-                            </div>
-                            <div className="timeline-row-bars" style={usePercentage ? {} : { width: `${viewRange * cellWidth}px` }}></div>
-                        </div>
-                    )}
                 </div>
             </div>
         );

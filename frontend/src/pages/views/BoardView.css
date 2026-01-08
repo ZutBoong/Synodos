@@ -15,54 +15,13 @@
     padding: 0;
 }
 
-/* 태스크 상세 패널 */
-.board-view .task-detail-panel {
-    background: white;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.board-view .task-detail-header {
-    display: flex;
-    align-items: center;
-    padding: 16px 24px;
-    border-bottom: 1px solid #e2e8f0;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    flex-shrink: 0;
-}
-
-.board-view .task-detail-header .back-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.board-view .task-detail-header .back-btn:hover {
-    background: #f1f5f9;
-    color: #1e293b;
-    border-color: #cbd5e1;
-}
-
-.board-view .task-detail-header .back-btn i {
-    font-size: 14px;
-}
-
 /* ===== 컬럼 래퍼 ===== */
 .board-view .columns-wrapper {
     position: relative;
     flex: 1;
     min-height: 0;
     display: flex;
+    flex-direction: column;
 }
 
 /* ===== 컬럼 컨테이너 ===== */
@@ -73,6 +32,7 @@
     flex: 1;
     padding: 0 50px 20px 50px;
     overflow-x: auto;
+    overflow-y: auto;
     min-height: 0;
     cursor: grab;
 
@@ -103,7 +63,7 @@
 /* ===== 컬럼 ===== */
 .board-view .column {
     background: rgba(255, 255, 255, 0.5);
-    backdrop-filter: blur(12px);
+    /* backdrop-filter: blur(12px); - DnD 방해 */
     border-radius: 20px;
     width: calc(25% - 15px);
     min-width: 300px;
@@ -130,7 +90,7 @@
     padding: 12px 16px;
     margin-bottom: 16px;
     background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(5px);
+    /* backdrop-filter: blur(5px); - DnD 방해 */
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.3);
     position: relative;
@@ -182,25 +142,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-.board-view .favorite-btn {
-    background: none;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-    padding: 4px;
-    color: #cbd5e1;
-    transition: all 0.15s ease;
-}
-
-.board-view .favorite-btn:hover {
-    transform: scale(1.2);
-    color: #f59e0b;
-}
-
-.board-view .favorite-btn.active {
-    color: #f59e0b;
 }
 
 /* 컬럼 메뉴 */
@@ -364,7 +305,7 @@
 /* ===== 태스크 카드 ===== */
 .board-view .task-card {
     background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(5px);
+    /* backdrop-filter: blur(5px); - DnD 방해 */
     border-radius: 16px;
     padding: 16px 16px 16px 20px;
     margin-bottom: 12px;
@@ -372,12 +313,13 @@
     display: flex;
     flex-direction: column;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     border: 1px solid rgba(255, 255, 255, 0.3);
     position: relative;
-    overflow: hidden;
+    /* overflow: hidden; - DnD 방해 */
 }
 
+/* 태스크 왼쪽 상태바 제거됨
 .board-view .task-card::before {
     content: '';
     position: absolute;
@@ -389,25 +331,25 @@
     opacity: 0.7;
     transition: all 0.2s ease;
 }
+*/
 
 .board-view .task-card:hover {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
     border-color: rgba(196, 181, 253, 0.4);
-    transform: translateY(-3px);
     background: rgba(255, 255, 255, 0.5);
 }
 
-.board-view .task-card:hover::before {
+/* .board-view .task-card:hover::before {
     opacity: 1;
-}
+} */
 
 .board-view .task-card.dragging {
-    transform: rotate(3deg) scale(1.05);
     box-shadow: 0 20px 50px rgba(139, 92, 246, 0.6);
     border: 2px solid rgba(196, 181, 253, 0.8);
     background: rgba(255, 255, 255, 0.7);
     z-index: 1000;
     opacity: 0.95;
+    transition: none !important;
 }
 
 .board-view .task-card.done {
@@ -416,10 +358,10 @@
     border-color: rgba(255, 255, 255, 0.3);
 }
 
-.board-view .task-card.done::before {
+/* .board-view .task-card.done::before {
     background: linear-gradient(180deg, #6ee7b7 0%, #34d399 100%);
     opacity: 0.7;
-}
+} */
 
 .board-view .task-card.done .task-card-title {
     text-decoration: line-through;
@@ -596,48 +538,39 @@
     right: 8px;
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 4px;
 }
 
-.board-view .task-card-actions .task-favorite-btn {
-    background: none;
-    border: none;
-    font-size: 16px;
+.board-view .task-card-actions .task-favorite-btn,
+.board-view .task-card-actions .archive-btn {
+    background: rgba(237, 233, 254, 0.6);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(156, 163, 175, 0.5);
+    font-size: 14px;
     cursor: pointer;
-    padding: 2px 6px;
-    color: #cbd5e1;
-    transition: color 0.15s, transform 0.15s;
-    border-radius: 6px;
+    padding: 6px 8px;
+    color: #6366f1;
+    transition: all 0.15s ease;
+    border-radius: 10px;
 }
 
-.board-view .task-card-actions .task-favorite-btn:hover {
-    transform: scale(1.1);
-    color: #f5a623;
-    background: rgba(245, 166, 35, 0.1);
+.board-view .task-card-actions .task-favorite-btn:hover,
+.board-view .task-card-actions .archive-btn:hover {
+    background: rgba(196, 181, 253, 0.3);
+    border-color: rgba(107, 114, 128, 0.6);
+    color: #4f46e5;
 }
 
 .board-view .task-card-actions .task-favorite-btn.active {
-    color: #f5a623;
-}
-
-.board-view .task-card-actions .archive-btn {
-    background: none;
-    border: none;
-    font-size: 16px;
-    cursor: pointer;
-    padding: 2px 6px;
-    color: #cbd5e1;
-    transition: all 0.15s ease;
-    border-radius: 6px;
-}
-
-.board-view .task-card-actions .archive-btn:hover {
-    background: #f5f3ff;
-    color: #8b5cf6;
+    color: #fbbf24;
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.2);
 }
 
 .board-view .task-card-actions .archive-btn.active {
-    color: #8b5cf6;
+    color: #60a5fa;
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.2);
 }
 
 /* ===== 태스크 추가 ===== */
@@ -762,7 +695,7 @@
 }
 
 .board-view .add-column input::placeholder {
-    color: rgba(255, 255, 255, 0.9);
+    color: #9ca3af;
     font-weight: 500;
 }
 
@@ -851,7 +784,7 @@
 }
 
 .board-view .add-column-inline input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: #9ca3af;
 }
 
 .board-view .add-column-inline button {

@@ -30,8 +30,8 @@ function ListView({
     const [addingColumnTask, setAddingColumnTask] = useState(null);
     const [createTaskModalColumnId, setCreateTaskModalColumnId] = useState(null);
     const [newColumnTitle, setNewColumnTitle] = useState('');
-    const [columnTitleError, setColumnTitleError] = useState(''); // 칼럼 이름 에러 메시지
-    const [columnMenuOpen, setColumnMenuOpen] = useState(null); // 컬럼 메뉴 상태
+    const [columnTitleError, setColumnTitleError] = useState('');
+    const [columnMenuOpen, setColumnMenuOpen] = useState(null);
 
     // URL의 selectedTaskId로부터 실제 task 객체 찾기
     const selectedTask = selectedTaskId ? propTasks?.find(t => t.taskId === selectedTaskId) : null;
@@ -48,7 +48,6 @@ function ListView({
 
     useEffect(() => {
         setColumns(propColumns || []);
-        // 기본적으로 모든 칼럼 펼침
         const expanded = {};
         (propColumns || []).forEach(c => {
             expanded[c.columnId] = true;
@@ -82,7 +81,6 @@ function ListView({
             const columnsData = await columnlistByTeam(team.teamId);
             const columnsArray = Array.isArray(columnsData) ? columnsData : [];
             setColumns(columnsArray);
-            // 새로 추가된 칼럼은 기본적으로 펼침
             const newColumn = columnsArray.find(c => c.title === newColumnTitle.trim());
             if (newColumn) {
                 setExpandedColumns(prev => ({ ...prev, [newColumn.columnId]: true }));
@@ -107,9 +105,9 @@ function ListView({
         }
     };
 
-    // 검색어 매칭 확인 (강조 표시용)
+    // 검색어 매칭 확인
     const isSearchMatch = (task) => {
-        if (!filters?.searchQuery) return true; // 검색어 없으면 모두 매칭
+        if (!filters?.searchQuery) return true;
         const query = filters.searchQuery.toLowerCase();
         const matchTitle = task.title?.toLowerCase().includes(query);
         const matchDesc = task.description?.toLowerCase().includes(query);
@@ -119,24 +117,21 @@ function ListView({
         return matchTitle || matchDesc || matchAssignee;
     };
 
-    // 필터 적용 (검색어는 강조만, 필터링은 다른 조건만)
+    // 필터 적용
     const applyFilters = (taskList) => {
         if (!filters) return taskList;
 
         return taskList.filter(task => {
-            // 상태 필터
             if (filters.statuses?.length > 0) {
                 if (!filters.statuses.includes(task.workflowStatus)) return false;
             }
 
-            // 담당자 필터
             if (filters.assigneeNo) {
                 const hasAssignee = task.assignees?.some(a => a.memberNo === filters.assigneeNo)
                     || task.assigneeNo === filters.assigneeNo;
                 if (!hasAssignee) return false;
             }
 
-            // 마감일 필터
             if (filters.dueDateFilter) {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
@@ -170,24 +165,20 @@ function ListView({
         });
     };
 
-    // 칼럼별 태스크 가져오기 (Done 맨 아래, 긴급 우선, 마감일 빠른 순)
+    // 칼럼별 태스크 가져오기
     const getTasksByColumn = (columnId) => {
         const columnTasks = tasks.filter(t => t.columnId === columnId);
         const filteredTasks = applyFilters(columnTasks);
 
-        // 정렬: 1) Done은 맨 아래, 2) 긴급(URGENT) 우선, 3) 마감일 빠른 순
         return filteredTasks.sort((a, b) => {
-            // Done 상태는 맨 아래
             const aDone = a.workflowStatus === 'DONE' ? 1 : 0;
             const bDone = b.workflowStatus === 'DONE' ? 1 : 0;
             if (aDone !== bDone) return aDone - bDone;
 
-            // 긴급 우선
             const aUrgent = a.priority === 'URGENT' ? 0 : 1;
             const bUrgent = b.priority === 'URGENT' ? 0 : 1;
             if (aUrgent !== bUrgent) return aUrgent - bUrgent;
 
-            // 마감일 빠른 순 (마감일 없는 것은 뒤로)
             const aDate = a.dueDate ? new Date(a.dueDate) : null;
             const bDate = b.dueDate ? new Date(b.dueDate) : null;
 
@@ -198,10 +189,9 @@ function ListView({
         });
     };
 
-    // 태스크 추가 (모달에서)
+    // 태스크 추가
     const handleCreateTask = async (taskData) => {
         try {
-            // 기본 태스크 생성
             await taskwrite({
                 columnId: taskData.columnId,
                 title: taskData.title,
@@ -212,12 +202,10 @@ function ListView({
                 assigneeNo: taskData.assignees?.length > 0 ? taskData.assignees[0] : null
             });
 
-            // 태스크 목록 새로 가져오기
             const tasksData = await tasklistByTeam(team.teamId);
             const tasksArray = Array.isArray(tasksData) ? tasksData : [];
             setTasks(tasksArray);
 
-            // 생성된 태스크 찾기
             const newTask = tasksArray.reduce((latest, task) => {
                 if (task.columnId === taskData.columnId) {
                     if (!latest || task.taskId > latest.taskId) {
@@ -228,19 +216,16 @@ function ListView({
             }, null);
 
             if (newTask) {
-                // 담당자 저장 (복수)
                 if (taskData.assignees?.length > 0) {
                     const { updateTaskAssignees } = await import('../../api/boardApi');
                     await updateTaskAssignees(newTask.taskId, taskData.assignees, loginMember?.no);
                 }
 
-                // 검증자 저장 (복수)
                 if (taskData.verifiers?.length > 0) {
                     const { updateTaskVerifiers } = await import('../../api/boardApi');
                     await updateTaskVerifiers(newTask.taskId, taskData.verifiers, loginMember?.no);
                 }
 
-                // 최종 업데이트된 태스크 목록 가져오기
                 const finalTasksData = await tasklistByTeam(team.teamId);
                 setTasks(Array.isArray(finalTasksData) ? finalTasksData : []);
             }
@@ -252,12 +237,10 @@ function ListView({
         }
     };
 
-    // 태스크 완료 여부 확인 (워크플로우 상태 기반)
     const isTaskDone = (task) => {
         return task.workflowStatus === 'DONE';
     };
 
-    // 태스크 삭제
     const handleDeleteTask = async (taskId) => {
         if (!window.confirm('이 태스크를 삭제하시겠습니까?')) return;
 
@@ -277,7 +260,6 @@ function ListView({
         if (!destination) return;
         if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
-        // 컬럼 드래그
         if (type === 'column') {
             const newColumns = Array.from(columns);
             const [removed] = newColumns.splice(source.index, 1);
@@ -301,7 +283,6 @@ function ListView({
             return;
         }
 
-        // 태스크 드래그
         if (type === 'task') {
             const taskId = parseInt(draggableId.replace('task-', ''));
             const destColumnId = parseInt(destination.droppableId.replace('column-', ''));
@@ -312,11 +293,9 @@ function ListView({
 
             movedTask.columnId = destColumnId;
 
-            // 대상 컬럼의 태스크들 (필터링 전)
             const destColumnTasks = newTasks.filter(t => t.columnId === destColumnId);
             destColumnTasks.splice(destination.index, 0, movedTask);
 
-            // position 재계산
             destColumnTasks.forEach((t, idx) => {
                 t.position = idx + 1;
             });
@@ -383,7 +362,6 @@ function ListView({
         );
     };
 
-    // 마감일 포맷
     const formatDueDate = (dueDate) => {
         if (!dueDate) return '-';
         const date = new Date(dueDate);
@@ -397,7 +375,7 @@ function ListView({
         );
     };
 
-    // 칼럼 렌더링
+    // 칼럼 렌더링 - table 구조 사용
     const renderColumn = (column, index) => {
         const columnTasks = getTasksByColumn(column.columnId);
         const isExpanded = expandedColumns[column.columnId];
@@ -425,7 +403,6 @@ function ListView({
                             <span className="column-name" onClick={() => toggleColumn(column.columnId)}>{column.title}</span>
                             <span className="task-count">{columnTasks.length}</span>
 
-                            {/* 컬럼 메뉴 버튼 */}
                             <div className="column-menu-wrapper">
                                 <button
                                     className="column-menu-btn"
@@ -454,110 +431,93 @@ function ListView({
                             </div>
                         </div>
 
-                        {/* Droppable은 항상 렌더링하여 드롭 가능하게 유지 */}
-                        <Droppable droppableId={`column-${column.columnId}`} type="task">
-                            {(taskProvided, taskSnapshot) => (
-                                <div
-                                    ref={taskProvided.innerRef}
-                                    {...taskProvided.droppableProps}
-                                    className={`column-droppable ${taskSnapshot.isDraggingOver ? 'dragging-over' : ''} ${!isExpanded ? 'collapsed' : ''}`}
-                                >
-                                    {isExpanded ? (
-                                        <div className="column-content">
-                                            <table className="task-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th className="col-drag"></th>
-                                                        <th className="col-check"></th>
-                                                        <th className="col-title">제목</th>
-                                                        <th className="col-assignee">담당자</th>
-                                                        <th className="col-due">마감일</th>
-                                                        <th className="col-status">상태</th>
-                                                        <th className="col-priority">긴급</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {columnTasks.map((task, taskIndex) => {
-                                                        const matchesSearch = isSearchMatch(task);
-                                                        const hasSearchQuery = !!filters?.searchQuery;
-                                                        return (
-                                                        <Draggable
-                                                            key={`task-${task.taskId}`}
-                                                            draggableId={`task-${task.taskId}`}
-                                                            index={taskIndex}
-                                                        >
-                                                            {(taskDragProvided, taskDragSnapshot) => (
-                                                                <tr
-                                                                    ref={taskDragProvided.innerRef}
-                                                                    {...taskDragProvided.draggableProps}
-                                                                    data-task-id={task.taskId}
-                                                                    className={`${isTaskDone(task) ? 'completed' : ''} ${taskDragSnapshot.isDragging ? 'dragging' : ''} ${hasSearchQuery ? (matchesSearch ? 'search-match' : 'search-dim') : ''}`}
-                                                                >
-                                                                    <td className="col-drag" {...taskDragProvided.dragHandleProps}>
-                                                                        <span className="drag-handle">⋮⋮</span>
-                                                                    </td>
-                                                                    <td className="col-check">
-                                                                        <span className={`status-indicator ${isTaskDone(task) ? 'done' : ''}`}>
-                                                                            {isTaskDone(task) ? '✓' : '○'}
-                                                                        </span>
-                                                                    </td>
-                                                                    <td className="col-title">
-                                                                        <span
-                                                                            className="task-title-link"
-                                                                            onClick={() => setSelectedTask(task)}
-                                                                        >
-                                                                            {task.title}
-                                                                        </span>
-                                                                    </td>
-                                                                    <td className="col-assignee">{renderAssigneeAvatars(task)}</td>
-                                                                    <td className="col-due">{formatDueDate(task.dueDate)}</td>
-                                                                    <td className="col-status">
-                                                                        <span
-                                                                            className="status-badge"
-                                                                            style={{ backgroundColor: WORKFLOW_STATUSES[task.workflowStatus]?.color || '#94a3b8' }}
-                                                                        >
-                                                                            {WORKFLOW_STATUSES[task.workflowStatus]?.label || '대기'}
-                                                                        </span>
-                                                                    </td>
-                                                                    <td className="col-priority">
-                                                                        {task.priority === 'URGENT' && (
-                                                                            <span className="urgent-badge">
-                                                                                <i className="fa-solid fa-triangle-exclamation"></i>
-                                                                            </span>
-                                                                        )}
-                                                                    </td>
-                                                                </tr>
-                                                            )}
-                                                        </Draggable>
-                                                    )})}
-                                                </tbody>
-                                            </table>
+                        {isExpanded && (
+                            <div className="column-content">
+                                {/* 헤더 (드래그 영역 밖) */}
+                                <div className="task-list-header">
+                                    <div className="col-drag"></div>
+                                    <div className="col-check"></div>
+                                    <div className="col-title">제목</div>
+                                    <div className="col-assignee">담당자</div>
+                                    <div className="col-due">마감일</div>
+                                    <div className="col-status">상태</div>
+                                    <div className="col-priority">긴급</div>
+                                </div>
 
-                                            {/* 빈 컬럼 드롭 영역 */}
-                                            {columnTasks.length === 0 && (
-                                                <div className="empty-column-dropzone">
-                                                    여기에 태스크를 드롭하세요
-                                                </div>
-                                            )}
-
-                                            {/* 태스크 추가 */}
-                                            <button
-                                                className="add-task-btn"
-                                                onClick={() => setCreateTaskModalColumnId(column.columnId)}
-                                            >
-                                                + 새 작업 추가
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        /* 접힌 상태에서도 드롭 가능한 영역 */
-                                        <div className="collapsed-dropzone">
-                                            {taskSnapshot.isDraggingOver && <span>여기에 드롭</span>}
+                                {/* 태스크 목록 (Droppable) */}
+                                <Droppable droppableId={`column-${column.columnId}`} type="task">
+                                    {(taskProvided, taskSnapshot) => (
+                                        <div
+                                            ref={taskProvided.innerRef}
+                                            {...taskProvided.droppableProps}
+                                            className={`task-list-body ${taskSnapshot.isDraggingOver ? 'dragging-over' : ''}`}
+                                        >
+                                            {columnTasks.map((task, taskIndex) => {
+                                                const matchesSearch = isSearchMatch(task);
+                                                const hasSearchQuery = !!filters?.searchQuery;
+                                                return (
+                                                    <Draggable
+                                                        key={`task-${task.taskId}`}
+                                                        draggableId={`task-${task.taskId}`}
+                                                        index={taskIndex}
+                                                    >
+                                                        {(taskDragProvided, taskDragSnapshot) => (
+                                                            <div
+                                                                ref={taskDragProvided.innerRef}
+                                                                {...taskDragProvided.draggableProps}
+                                                                className={`task-item ${isTaskDone(task) ? 'completed' : ''} ${taskDragSnapshot.isDragging ? 'dragging' : ''} ${hasSearchQuery ? (matchesSearch ? 'search-match' : 'search-dim') : ''}`}
+                                                            >
+                                                                <div className="col-drag" {...taskDragProvided.dragHandleProps}>
+                                                                    <span className="drag-handle">⋮⋮</span>
+                                                                </div>
+                                                                <div className="col-check">
+                                                                    <span className={`status-indicator ${isTaskDone(task) ? 'done' : ''}`}>
+                                                                        {isTaskDone(task) ? '✓' : '○'}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="col-title">
+                                                                    <span
+                                                                        className="task-title-link"
+                                                                        onClick={() => setSelectedTask(task)}
+                                                                    >
+                                                                        {task.title}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="col-assignee">{renderAssigneeAvatars(task)}</div>
+                                                                <div className="col-due">{formatDueDate(task.dueDate)}</div>
+                                                                <div className="col-status">
+                                                                    <span
+                                                                        className="status-badge"
+                                                                        style={{ backgroundColor: WORKFLOW_STATUSES[task.workflowStatus]?.color || '#94a3b8' }}
+                                                                    >
+                                                                        {WORKFLOW_STATUSES[task.workflowStatus]?.label || '대기'}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="col-priority">
+                                                                    {task.priority === 'URGENT' && (
+                                                                        <span className="urgent-badge">
+                                                                            <i className="fa-solid fa-triangle-exclamation"></i>
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </Draggable>
+                                                );
+                                            })}
+                                            {taskProvided.placeholder}
                                         </div>
                                     )}
-                                    {taskProvided.placeholder}
-                                </div>
-                            )}
-                        </Droppable>
+                                </Droppable>
+
+                                <button
+                                    className="add-task-btn"
+                                    onClick={() => setCreateTaskModalColumnId(column.columnId)}
+                                >
+                                    + 새 태스크 추가
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
             </Draggable>
@@ -571,7 +531,6 @@ function ListView({
                     className={`list-view ${selectedTask ? 'task-detail-open' : ''}`}
                     onClick={() => columnMenuOpen && setColumnMenuOpen(null)}
                 >
-                {/* 태스크 상세 패널 (전체화면) */}
                 {selectedTask ? (
                     <TaskDetailView
                         task={selectedTask}
@@ -585,7 +544,6 @@ function ListView({
                     />
                 ) : (
                     <>
-                        {/* 칼럼이 없을 경우 - 안내 메시지와 추가 UI를 함께 표시 */}
                         {columns.length === 0 ? (
                             <div className="empty-state">
                                 <div className="empty-state-icon">
@@ -622,7 +580,6 @@ function ListView({
                             </div>
                         ) : (
                             <>
-                                {/* 칼럼들 */}
                                 <Droppable droppableId="columns" type="column">
                                     {(provided, snapshot) => (
                                         <div
@@ -636,7 +593,6 @@ function ListView({
                                     )}
                                 </Droppable>
 
-                                {/* 칼럼 추가 UI */}
                                 <div className="add-column-section">
                                     <div className="column-input-wrapper">
                                         <input
@@ -663,7 +619,6 @@ function ListView({
                     </>
                 )}
 
-                {/* 태스크 생성 모달 */}
                 {createTaskModalColumnId && (
                     <TaskCreateModal
                         columnId={createTaskModalColumnId}

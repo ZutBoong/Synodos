@@ -160,6 +160,7 @@ function ChatView({ team, teamMembers, loginMember }) {
 
     return (
         <ShaderBackground>
+            <div className="chat-view-wrapper">
             <div className="chat-view">
             <div className="chat-view-header">
                 <div className="chat-view-title">
@@ -241,6 +242,7 @@ function ChatView({ team, teamMembers, loginMember }) {
                     <i className="fa-solid fa-paper-plane"></i>
                 </button>
             </form>
+            </div>
             </div>
         </ShaderBackground>
     );

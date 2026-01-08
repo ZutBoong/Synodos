@@ -1,66 +1,24 @@
 .list-view {
     padding: 24px;
-    min-height: calc(100vh - 140px);
+    height: 100%;
+    box-sizing: border-box;
     color: #e0e7ff;
+    overflow-y: auto;
 }
 
 /* 태스크 상세 패널 모드 */
 .list-view.task-detail-open {
     padding: 0;
-    min-height: calc(100vh - 140px);
-}
-
-/* 태스크 상세 패널 */
-.list-view .task-detail-panel {
-    background: white;
-    height: 100%;
-    min-height: calc(100vh - 140px);
-    display: flex;
-    flex-direction: column;
-}
-
-.list-view .task-detail-header {
-    display: flex;
-    align-items: center;
-    padding: 16px 24px;
-    border-bottom: 1px solid #e2e8f0;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    flex-shrink: 0;
-}
-
-.list-view .task-detail-header .back-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.list-view .task-detail-header .back-btn:hover {
-    background: #f1f5f9;
-    color: #1e293b;
-    border-color: #cbd5e1;
-}
-
-.list-view .task-detail-header .back-btn i {
-    font-size: 14px;
 }
 
 /* 칼럼 */
 .list-column {
     background: rgba(255, 255, 255, 0.18);
-    backdrop-filter: blur(12px);
+    /* backdrop-filter: blur(12px); - DnD 방해 가능성 */
     border-radius: 20px;
     margin-bottom: 20px;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-    overflow: hidden;
+    /* overflow: hidden; - DnD 방해 가능성 */
     border: 1px solid rgba(255, 255, 255, 0.15);
     transition: all 0.3s ease;
 }
@@ -76,7 +34,7 @@
     gap: 12px;
     padding: 18px 24px;
     background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(5px);
+    /* backdrop-filter: blur(5px); - DnD 방해 가능성 */
     cursor: pointer;
     user-select: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -239,26 +197,6 @@
     text-align: center;
 }
 
-/* 컬럼 Droppable 영역 */
-.column-droppable {
-    min-height: 20px;
-}
-
-.column-droppable.dragging-over {
-    background: rgba(237, 233, 254, 0.6);
-    border: 2px dashed rgba(196, 181, 253, 0.7);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-}
-
-.column-droppable.collapsed {
-    min-height: 0;
-}
-
-.column-droppable.collapsed.dragging-over {
-    min-height: 50px;
-}
-
 /* 접힌 상태의 드롭 영역 */
 .collapsed-dropzone {
     display: flex;
@@ -268,7 +206,7 @@
     transition: all 0.2s ease;
 }
 
-.column-droppable.collapsed.dragging-over .collapsed-dropzone {
+.collapsed-dropzone.dragging-over {
     min-height: 50px;
     background: rgba(237, 233, 254, 0.7);
     border: 2px dashed rgba(196, 181, 253, 0.7);
@@ -283,7 +221,12 @@
     font-weight: 500;
 }
 
-/* 빈 컬럼 드롭 영역 */
+/* task-table-body에 최소 높이 설정 (빈 컬럼에서 드롭 가능하게) */
+.task-table-body {
+    min-height: 60px;
+}
+
+/* 빈 컬럼 드롭 영역 (시각적 힌트) */
 .empty-column-dropzone {
     display: flex;
     align-items: center;
@@ -297,15 +240,7 @@
     margin: 16px;
     background: rgba(255, 255, 255, 0.1);
     transition: all 0.2s ease;
-}
-
-.column-droppable.dragging-over .empty-column-dropzone {
-    border-color: rgba(196, 181, 253, 0.8);
-    border-width: 3px;
-    background: rgba(237, 233, 254, 0.7);
-    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
-    color: #ffffff;
-    font-weight: 700;
+    pointer-events: none;
 }
 
 /* 칼럼 콘텐츠 */
@@ -313,112 +248,92 @@
     padding: 0;
 }
 
-/* 테이블 */
-.task-table {
-    width: 100%;
-    border-collapse: collapse;
+/* 태스크 리스트 (div 기반 - DnD 호환) */
+.task-list-header,
+.task-item {
+    display: flex;
+    align-items: center;
 }
 
-.task-table th,
-.task-table td {
-    padding: 14px 20px;
-    text-align: left;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.task-table th:last-child,
-.task-table td:last-child {
-    border-right: none;
-}
-
-.task-table th {
-    font-size: 16px;
+.task-list-header {
+    background: rgba(255, 255, 255, 0.15);
+    font-size: 13px;
     font-weight: 700;
     color: #ffffff;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    background: rgba(255, 255, 255, 0.15);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.task-table tbody tr {
-    transition: all 0.15s ease;
+.task-list-header > div,
+.task-item > div {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.task-table tbody tr:hover {
+.task-list-body {
+    min-height: 20px;
+}
+
+.task-item {
+    background: transparent;
+    transition: background 0.15s ease;
+}
+
+.task-item:hover {
     background: rgba(237, 233, 254, 0.4);
 }
 
-/* 드래그 중인 행 */
-.task-table tbody tr.dragging {
-    background: rgba(255, 255, 255, 0.9);
+/* 드래그 중인 태스크 */
+.task-item.dragging {
+    background: rgba(255, 255, 255, 0.95) !important;
     box-shadow: 0 12px 40px rgba(139, 92, 246, 0.5);
     border-radius: 8px;
     border: 2px solid rgba(196, 181, 253, 0.7);
-    transform: rotate(1deg) scale(1.02);
-    z-index: 1000;
-    opacity: 0.95;
 }
 
-.task-table tbody tr.dragging .drag-handle {
-    opacity: 1;
+.task-item.dragging .drag-handle {
     color: #4f46e5;
     background: rgba(255, 255, 255, 1);
     border-color: rgba(139, 92, 246, 0.8);
-    box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
+}
+
+.task-item.dragging .task-title-link {
+    color: #1e293b;
 }
 
 /* 드래그 오버 상태 */
-.task-table tbody.dragging-over {
-    background: rgba(237, 233, 254, 0.5);
-    border: 2px dashed rgba(196, 181, 253, 0.6);
+.task-list-body.dragging-over {
+    background: rgba(237, 233, 254, 0.3);
     border-radius: 8px;
 }
 
-.task-table tbody tr.completed {
+.task-item.completed {
     opacity: 0.5;
 }
 
-.task-table tbody tr.completed .task-title-link {
+.task-item.completed .task-title-link {
     text-decoration: line-through;
     color: rgba(255, 255, 255, 0.5);
 }
 
 /* 검색 결과 강조/흐림 */
-.task-table tbody tr.search-match {
-    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+.task-item.search-match {
+    background: linear-gradient(135deg, rgba(238, 242, 255, 0.9) 0%, rgba(224, 231, 255, 0.9) 100%);
     box-shadow: inset 3px 0 0 #667eea;
 }
 
-.task-table tbody tr.search-match .task-title-link {
+.task-item.search-match .task-title-link {
     color: #4338ca;
     font-weight: 600;
 }
 
-.task-table tbody tr.search-dim {
+.task-item.search-dim {
     opacity: 0.4;
 }
 
-.task-table tbody tr.search-dim:hover {
+.task-item.search-dim:hover {
     opacity: 0.7;
-}
-
-/* 검색 포커스 애니메이션 (네비게이션으로 이동 시) */
-.task-table tbody tr.search-focus {
-    animation: searchFocusPulseRow 1.5s ease;
-}
-
-@keyframes searchFocusPulseRow {
-    0% {
-        box-shadow: inset 0 0 0 0 rgba(102, 126, 234, 0.7);
-    }
-    30% {
-        box-shadow: inset 0 0 0 4px rgba(102, 126, 234, 0.4);
-    }
-    100% {
-        box-shadow: inset 3px 0 0 #667eea;
-    }
 }
 
 /* 컬럼 너비 */
@@ -446,7 +361,7 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.task-table tbody tr:hover .drag-handle {
+.task-item:hover .drag-handle {
     color: #333333;
 }
 
@@ -471,7 +386,8 @@
 }
 
 .col-title {
-    width: auto;
+    flex: 1;
+    min-width: 0;
 }
 
 .col-assignee {
@@ -636,7 +552,7 @@
     justify-content: center;
 }
 
-.task-table tbody tr:hover .row-delete-btn {
+.task-item:hover .row-delete-btn {
     opacity: 1;
 }
 
@@ -762,7 +678,7 @@
 }
 
 .add-column-section input::placeholder {
-    color: rgba(255, 255, 255, 0.7);
+    color: #9ca3af;
 }
 
 .add-column-section button {
@@ -852,7 +768,7 @@
 }
 
 .add-column-inline input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: #9ca3af;
 }
 
 .add-column-inline button {
@@ -906,8 +822,8 @@
         padding: 20px;
     }
 
-    .task-table th,
-    .task-table td {
+    .task-list-header > div,
+    .task-item > div {
         padding: 12px 14px;
     }
 
@@ -958,8 +874,8 @@
         padding: 3px 10px;
     }
 
-    .task-table th,
-    .task-table td {
+    .task-list-header > div,
+    .task-item > div {
         padding: 10px 8px;
     }
 

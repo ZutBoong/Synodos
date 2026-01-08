@@ -23,7 +23,7 @@ export default function ShaderBackground({ children }) {
     }, []);
 
     return (
-        <div ref={containerRef} className="relative min-h-screen">
+        <div ref={containerRef} className="relative h-full">
             {/* SVG Filters */}
             <svg className="absolute inset-0 w-0 h-0">
                 <defs>
@@ -53,7 +53,7 @@ export default function ShaderBackground({ children }) {
             </svg>
 
             {/* ✅ 배경은 스크롤과 무관하게 고정 */}
-            <div className="fixed inset-0 -z-10 pointer-events-none">
+            <div className="fixed inset-0 -z-10 pointer-events-none" style={{ backgroundColor: "#0b0714" }}>
                 <MeshGradient
                     className="absolute inset-0 w-full h-full"
                     colors={[
@@ -64,7 +64,6 @@ export default function ShaderBackground({ children }) {
                         "#60a5fa", // 살짝 푸른 블루 포인트
                     ]}
                     speed={0.25}
-                    backgroundColor="#0b0714"
                 />
                 <MeshGradient
                     className="absolute inset-0 w-full h-full opacity-50"
@@ -75,13 +74,12 @@ export default function ShaderBackground({ children }) {
                         "#0b0714",
                     ]}
                     speed={0.18}
-                    wireframe={true}
-                    backgroundColor="transparent"
+                    wireframe="true"
                 />
             </div>
 
             {/* Foreground */}
-            <div className="relative z-10">{children}</div>
+            <div className="relative z-10 h-full">{children}</div>
         </div>
     );
 }

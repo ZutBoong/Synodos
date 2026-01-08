@@ -433,13 +433,13 @@
 
 .teams-list::-webkit-scrollbar-thumb,
 .archives-list::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
+    background: rgba(203, 213, 225, 0.5);
     border-radius: 3px;
 }
 
 .teams-list::-webkit-scrollbar-thumb:hover,
 .archives-list::-webkit-scrollbar-thumb:hover {
-    background: #cbd5e1;
+    background: rgba(148, 163, 184, 0.7);
 }
 
 .teams-list .team-item {
@@ -769,12 +769,12 @@
 }
 
 .activity-modal-body::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
+    background: rgba(203, 213, 225, 0.5);
     border-radius: 3px;
 }
 
 .activity-modal-body::-webkit-scrollbar-thumb:hover {
-    background: #cbd5e1;
+    background: rgba(148, 163, 184, 0.7);
 }
 
 /* 반응형 - 캘린더 */

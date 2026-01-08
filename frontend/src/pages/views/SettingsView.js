@@ -7,7 +7,7 @@ import {
     listUserRepositories, connectRepository, disconnectRepository,
     getGitHubStatus, getWebhookConfig, bulkImportIssues, bulkExportTasks, getUnlinkedCounts
 } from '../../api/githubIssueApi';
-import { columnlistByTeam } from '../../api/boardApi';
+import { columnlistByTeam, columnupdate } from '../../api/boardApi';
 import { useNavigate } from 'react-router-dom';
 import ShaderBackground from '../../components/landing/shader-background';
 import './SettingsView.css';
@@ -168,6 +168,22 @@ function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewCo
         const newMappings = columnMappings.filter((_, i) => i !== index);
         setColumnMappings(newMappings);
         saveColumnMappings(newMappings);
+    };
+
+    const handleRemoveColumnPrefix = async (column) => {
+        setSaving(true);
+        try {
+            await columnupdate({ ...column, githubPrefix: null });
+            // 로컬 상태 업데이트
+            setColumns(prev => prev.map(c =>
+                c.columnId === column.columnId ? { ...c, githubPrefix: null } : c
+            ));
+            if (refreshData) refreshData();
+        } catch (error) {
+            alert('저장에 실패했습니다.');
+        } finally {
+            setSaving(false);
+        }
     };
 
     const saveColumnMappings = async (mappings) => {
@@ -764,26 +780,23 @@ function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewCo
                                         <p className="sv-hint" style={{ marginTop: 0, marginBottom: '16px' }}>
                                             Issue 제목이 특정 명령어로 시작하면 자동으로 해당 컬럼에 Task가 생성됩니다.<br />예: "[버그] 로그인 오류" → "버그" 컬럼
                                         </p>
-                                        {/* 컬럼 자체에 설정된 githubPrefix 표시 (자동 생성된 컬럼) */}
-                                        {columns.filter(col => col.githubPrefix).length > 0 && (
-                                            <div className="sv-mapping-list" style={{ marginBottom: '12px' }}>
+                                        {/* 모든 컬럼 매핑 (자동 생성 + 수동 매핑 통합) */}
+                                        {(columns.filter(col => col.githubPrefix).length > 0 || columnMappings.length > 0) && (
+                                            <div className="sv-mapping-list">
+                                                {/* 컬럼 자체에 설정된 githubPrefix (자동 생성된 컬럼) */}
                                                 {columns.filter(col => col.githubPrefix).map((col) => (
-                                                    <div key={`col-${col.columnId}`} className="sv-mapping-item sv-mapping-auto">
+                                                    <div key={`col-${col.columnId}`} className="sv-mapping-item">
                                                         <span className="sv-mapping-prefix">{col.githubPrefix}</span>
                                                         <span className="sv-mapping-arrow">→</span>
                                                         <span className="sv-mapping-column">{col.title}</span>
-                                                        <span className="sv-mapping-badge">자동</span>
+                                                        <button className="sv-mapping-delete" onClick={() => handleRemoveColumnPrefix(col)}>×</button>
                                                     </div>
                                                 ))}
-                                            </div>
-                                        )}
-                                        {/* 팀 레벨 수동 매핑 */}
-                                        {columnMappings.length > 0 && (
-                                            <div className="sv-mapping-list">
+                                                {/* 팀 레벨 수동 매핑 */}
                                                 {columnMappings.map((mapping, index) => {
                                                     const column = columns.find(c => c.columnId === mapping.columnId);
                                                     return (
-                                                        <div key={index} className="sv-mapping-item">
+                                                        <div key={`mapping-${index}`} className="sv-mapping-item">
                                                             <span className="sv-mapping-prefix">{mapping.prefix}</span>
                                                             <span className="sv-mapping-arrow">→</span>
                                                             <span className="sv-mapping-column">{column?.title || `컬럼 ID: ${mapping.columnId}`}</span>

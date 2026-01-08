@@ -123,10 +123,10 @@
     gap: 8px;
 }
 
-.action-btn {
+.task-detail-view .action-btn {
     background: rgba(237, 233, 254, 0.6);
     backdrop-filter: blur(5px);
-    border: 1px solid rgba(196, 181, 253, 0.4);
+    border: 1px solid rgba(156, 163, 175, 0.5);
     padding: 8px 10px;
     cursor: pointer;
     color: #6366f1;
@@ -134,50 +134,57 @@
     transition: all 0.15s ease;
 }
 
-.action-btn:hover {
+.task-detail-view .action-btn:hover {
     background: rgba(196, 181, 253, 0.3);
-    border-color: rgba(139, 92, 246, 0.5);
+    border-color: rgba(107, 114, 128, 0.6);
     color: #4f46e5;
 }
 
-.action-btn.favorite-btn.active {
+.task-detail-view .action-btn.favorite-btn.active {
     color: #fbbf24;
     border-color: #f59e0b;
     background: rgba(245, 158, 11, 0.2);
     backdrop-filter: blur(5px);
 }
 
-.action-btn.archive-btn.active {
+.task-detail-view .action-btn.archive-btn.active {
     color: #60a5fa;
     border-color: #3b82f6;
     background: rgba(59, 130, 246, 0.2);
     backdrop-filter: blur(5px);
 }
 
-.action-btn.force-complete-btn {
+.task-detail-view .action-btn.force-complete-btn {
     color: #10b981;
     border-color: rgba(16, 185, 129, 0.3);
 }
 
-.action-btn.force-complete-btn:hover {
+.task-detail-view .action-btn.force-complete-btn:hover {
     color: #059669;
     border-color: #10b981;
     background: rgba(16, 185, 129, 0.2);
     backdrop-filter: blur(5px);
 }
 
-.action-btn.force-complete-btn:disabled {
+.task-detail-view .action-btn.force-complete-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
 
-.action-btn.urgent-btn.active {
+.task-detail-view .action-btn.urgent-btn.active {
     color: #f87171;
     border-color: #ef4444;
     background: rgba(239, 68, 68, 0.2);
     backdrop-filter: blur(5px);
 }
 
+.task-detail-view .action-btn.urgent-btn:disabled {
+    color: #9ca3af;
+    border-color: #6b7280;
+    background: rgba(107, 114, 128, 0.2);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
 
 /* 스크롤 영역 */
 .task-detail-view-scroll {
@@ -1055,7 +1062,7 @@
 .pr-title {
     font-size: 13px;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.9);
+    color: #1e293b;
     text-decoration: none;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1063,7 +1070,7 @@
 }
 
 .pr-title:hover {
-    color: #c4b5fd;
+    color: #6366f1;
     text-decoration: underline;
 }
 
@@ -1094,23 +1101,23 @@
     align-items: center;
     gap: 6px;
     font-size: 11px;
-    color: rgba(255, 255, 255, 0.6);
+    color: #64748b;
 }
 
 .pr-meta i {
     font-size: 8px;
-    color: rgba(255, 255, 255, 0.5);
+    color: #94a3b8;
 }
 
 .pr-branch {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(100, 116, 139, 0.1);
     backdrop-filter: blur(5px);
     padding: 2px 6px;
     border-radius: 4px;
     font-family: 'Monaco', 'Consolas', monospace;
     font-size: 10px;
-    color: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #1e293b;
+    border: 1px solid rgba(100, 116, 139, 0.3);
 }
 
 .pr-status {
@@ -1122,23 +1129,23 @@
 }
 
 .pr-status.open {
-    background: rgba(16, 185, 129, 0.2);
+    background: rgba(16, 185, 129, 0.15);
     backdrop-filter: blur(5px);
-    color: #6ee7b7;
+    color: #059669;
     border: 1px solid rgba(16, 185, 129, 0.4);
 }
 
 .pr-status.closed {
-    background: rgba(239, 68, 68, 0.2);
+    background: rgba(239, 68, 68, 0.15);
     backdrop-filter: blur(5px);
-    color: #f87171;
+    color: #dc2626;
     border: 1px solid rgba(239, 68, 68, 0.4);
 }
 
 .pr-status.merged {
-    background: rgba(139, 92, 246, 0.2);
+    background: rgba(139, 92, 246, 0.15);
     backdrop-filter: blur(5px);
-    color: #c4b5fd;
+    color: #7c3aed;
     border: 1px solid rgba(139, 92, 246, 0.4);
 }
 

@@ -1,5 +1,8 @@
 .files-view {
     padding: 24px;
+    height: 100%;
+    box-sizing: border-box;
+    overflow-y: auto;
     color: #e0e7ff;
 }
 

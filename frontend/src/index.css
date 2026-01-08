@@ -31,24 +31,28 @@ button {
     font-family: inherit;
 }
 
-/* 스크롤바 스타일 */
+/* 스크롤바 스타일 - 콘텐츠 오버플로우시에만 표시 */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 4px;
+    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: rgba(203, 213, 225, 0.6);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: rgba(148, 163, 184, 0.8);
+}
+
+/* 스크롤바 코너 투명 */
+::-webkit-scrollbar-corner {
+    background: transparent;
 }
 
 /* 선택 하이라이트 */
