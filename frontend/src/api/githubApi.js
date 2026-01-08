@@ -315,3 +315,63 @@ export const applyConflictResolution = async (teamId, prNumber, filename, resolv
     );
     return response.data;
 };
+
+// ==================== 단계별 AI 충돌 해결 API (새로운 방식) ====================
+
+/**
+ * AI를 사용하여 충돌을 단계별로 분석합니다.
+ * @param {number} teamId - 팀 ID
+ * @param {number} prNumber - PR 번호
+ * @param {string} filename - 충돌 파일명
+ * @param {number} memberNo - 회원 번호 (선택, GitHub 토큰용)
+ * @returns {Promise<{
+ *   success: boolean,
+ *   summary: string,
+ *   totalSteps: number,
+ *   steps: Array<{
+ *     stepNumber: number,
+ *     category: string,
+ *     title: string,
+ *     description: string,
+ *     baseSnippet: string,
+ *     headSnippet: string,
+ *     choices: Array<{
+ *       id: string,
+ *       label: string,
+ *       description: string,
+ *       code: string,
+ *       impact: string
+ *     }>
+ *   }>,
+ *   baseContent: string,
+ *   headContent: string,
+ *   error: string
+ * }>}
+ */
+export const aiResolveConflictStepBased = async (teamId, prNumber, filename, memberNo = null) => {
+    const response = await axiosInstance.post(
+        `${API_PATH}/pr/${teamId}/${prNumber}/ai-resolve-steps`,
+        { filename, memberNo }
+    );
+    return response.data;
+};
+
+/**
+ * 사용자 선택을 기반으로 최종 코드를 생성합니다.
+ * @param {number} teamId - 팀 ID
+ * @param {number} prNumber - PR 번호
+ * @param {string} filename - 파일명
+ * @param {string} baseContent - Base 브랜치 원본 코드
+ * @param {string} headContent - Head 브랜치 원본 코드
+ * @param {Array} steps - 단계 목록
+ * @param {Object} selections - 각 단계별 선택 (stepNumber -> choiceId)
+ * @param {number} memberNo - 회원 번호 (선택, GitHub 토큰용)
+ * @returns {Promise<{success: boolean, code: string, error: string}>}
+ */
+export const generateFinalCode = async (teamId, prNumber, filename, baseContent, headContent, steps, selections, memberNo = null) => {
+    const response = await axiosInstance.post(
+        `${API_PATH}/pr/${teamId}/${prNumber}/generate-final-code`,
+        { filename, baseContent, headContent, steps, selections, memberNo }
+    );
+    return response.data;
+};

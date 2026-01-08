@@ -1349,6 +1349,175 @@ public class GitHubController {
         }
     }
 
+    // ==================== 단계별 AI 충돌 해결 API (새로운 방식) ====================
+
+    /**
+     * AI를 사용하여 충돌을 단계별로 분석합니다.
+     * POST /api/github/pr/{teamId}/{prNumber}/ai-resolve-steps
+     * Body: { "filename": "path/to/file.java", "memberNo": 123 }
+     */
+    @PostMapping("/pr/{teamId}/{prNumber}/ai-resolve-steps")
+    public ResponseEntity<?> aiResolveConflictStepBased(
+            @PathVariable int teamId,
+            @PathVariable int prNumber,
+            @RequestBody Map<String, Object> body) {
+        try {
+            String filename = (String) body.get("filename");
+            Integer memberNo = body.get("memberNo") != null ? ((Number) body.get("memberNo")).intValue() : null;
+
+            if (filename == null || filename.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("파일명이 필요합니다.");
+            }
+
+            Team team = teamService.findById(teamId);
+            if (team == null) {
+                return ResponseEntity.badRequest().body("팀을 찾을 수 없습니다.");
+            }
+
+            String repoUrl = team.getGithubRepoUrl();
+            if (repoUrl == null || repoUrl.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("GitHub 저장소가 설정되지 않았습니다.");
+            }
+
+            RepoInfo repoInfo = gitHubService.parseRepoUrl(repoUrl);
+            if (repoInfo == null) {
+                return ResponseEntity.badRequest().body("잘못된 GitHub 저장소 URL입니다.");
+            }
+
+            // 회원 토큰 우선, 없으면 팀장 토큰 사용 (읽기 작업이므로 폴백 허용)
+            String accessToken = memberNo != null && memberNo > 0 ? getMemberAccessToken(memberNo) : null;
+            if (accessToken == null) {
+                accessToken = getLeaderAccessToken(team);
+            }
+            if (accessToken == null) {
+                return ResponseEntity.badRequest().body("GitHub 액세스 토큰이 없습니다.");
+            }
+
+            // PR 정보 조회
+            GitHubPullRequest pr = gitHubService.getPullRequest(
+                accessToken, repoInfo.owner, repoInfo.repo, prNumber
+            );
+            if (pr == null) {
+                return ResponseEntity.badRequest().body("PR을 찾을 수 없습니다.");
+            }
+
+            // 양쪽 버전 조회
+            GitHubService.ConflictFileVersions versions = gitHubService.getConflictFileVersions(
+                accessToken, repoInfo.owner, repoInfo.repo,
+                filename, pr.getHeadRef(), pr.getBaseRef()
+            );
+
+            if (versions.getHeadContent() == null && versions.getBaseContent() == null) {
+                return ResponseEntity.badRequest().body("파일 내용을 조회할 수 없습니다.");
+            }
+
+            // AI로 단계별 충돌 분석
+            GeminiService.StepBasedResolutionResult result = geminiService.resolveConflictStepBased(
+                filename, pr.getBaseRef(), pr.getHeadRef(),
+                versions.getBaseContent(), versions.getHeadContent()
+            );
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", result.isSuccess());
+            response.put("summary", result.getSummary());
+            response.put("totalSteps", result.getTotalSteps());
+            response.put("steps", result.getSteps());
+            response.put("error", result.getError());
+            response.put("filename", filename);
+            response.put("headRef", pr.getHeadRef());
+            response.put("baseRef", pr.getBaseRef());
+            response.put("headSha", versions.getHeadSha());
+            response.put("baseSha", versions.getBaseSha());
+            response.put("baseContent", result.getBaseContent());
+            response.put("headContent", result.getHeadContent());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("Failed to AI resolve conflict (step-based): {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * 사용자 선택을 기반으로 최종 코드를 생성합니다.
+     * POST /api/github/pr/{teamId}/{prNumber}/generate-final-code
+     * Body: { "filename": "...", "baseContent": "...", "headContent": "...", "steps": [...], "selections": {1: "A", 2: "B"}, "memberNo": 123 }
+     */
+    @PostMapping("/pr/{teamId}/{prNumber}/generate-final-code")
+    public ResponseEntity<?> generateFinalCode(
+            @PathVariable int teamId,
+            @PathVariable int prNumber,
+            @RequestBody Map<String, Object> body) {
+        try {
+            String filename = (String) body.get("filename");
+            String baseContent = (String) body.get("baseContent");
+            String headContent = (String) body.get("headContent");
+
+            if (filename == null || filename.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("파일명이 필요합니다.");
+            }
+
+            // steps 파싱
+            @SuppressWarnings("unchecked")
+            java.util.List<Map<String, Object>> stepsRaw = (java.util.List<Map<String, Object>>) body.get("steps");
+            java.util.List<GeminiService.ConflictStep> steps = new java.util.ArrayList<>();
+
+            if (stepsRaw != null) {
+                for (Map<String, Object> stepMap : stepsRaw) {
+                    GeminiService.ConflictStep step = new GeminiService.ConflictStep();
+                    step.setStepNumber(((Number) stepMap.get("stepNumber")).intValue());
+                    step.setTitle((String) stepMap.get("title"));
+
+                    @SuppressWarnings("unchecked")
+                    java.util.List<Map<String, Object>> choicesRaw = (java.util.List<Map<String, Object>>) stepMap.get("choices");
+                    java.util.List<GeminiService.StepChoice> choices = new java.util.ArrayList<>();
+
+                    if (choicesRaw != null) {
+                        for (Map<String, Object> choiceMap : choicesRaw) {
+                            GeminiService.StepChoice choice = new GeminiService.StepChoice();
+                            choice.setId((String) choiceMap.get("id"));
+                            choice.setLabel((String) choiceMap.get("label"));
+                            choice.setCode((String) choiceMap.get("code"));
+                            choices.add(choice);
+                        }
+                    }
+                    step.setChoices(choices);
+                    steps.add(step);
+                }
+            }
+
+            // selections 파싱 (stepNumber -> choiceId)
+            @SuppressWarnings("unchecked")
+            Map<String, Object> selectionsRaw = (Map<String, Object>) body.get("selections");
+            java.util.Map<Integer, String> selections = new java.util.HashMap<>();
+
+            if (selectionsRaw != null) {
+                for (Map.Entry<String, Object> entry : selectionsRaw.entrySet()) {
+                    int stepNumber = Integer.parseInt(entry.getKey());
+                    String choiceId = (String) entry.getValue();
+                    selections.put(stepNumber, choiceId);
+                }
+            }
+
+            // AI로 최종 코드 생성
+            GeminiService.FinalCodeResult result = geminiService.generateFinalCode(
+                filename, baseContent, headContent, steps, selections
+            );
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", result.isSuccess());
+            response.put("code", result.getCode());
+            response.put("error", result.getError());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("Failed to generate final code: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     /**
      * 팀장의 GitHub 액세스 토큰을 조회합니다.
      * @deprecated 개별 회원 토큰 사용으로 변경됨. getMemberAccessToken 사용 권장.
