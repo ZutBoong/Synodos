@@ -3,6 +3,7 @@ import {
     getFilesByTeam, deleteFile,
     getDownloadUrl, formatFileSize, getFileIcon
 } from '../../api/fileApi';
+import ShaderBackground from '../../components/landing/shader-background';
 import './FilesView.css';
 
 function FilesView({ team, teamMembers, loginMember, filters }) {
@@ -77,7 +78,8 @@ function FilesView({ team, teamMembers, loginMember, filters }) {
     });
 
     return (
-        <div className="files-view">
+        <ShaderBackground>
+            <div className="files-view">
             {/* 파일 목록 */}
             <div className="files-section">
                 <div className="section-header">
@@ -136,7 +138,8 @@ function FilesView({ team, teamMembers, loginMember, filters }) {
                     </div>
                 )}
             </div>
-        </div>
+            </div>
+        </ShaderBackground>
     );
 }
 

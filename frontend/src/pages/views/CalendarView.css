@@ -36,18 +36,18 @@
     gap: 8px;
     padding: 10px 16px;
     background: white;
-    border: 1px solid #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 10px;
     font-size: 14px;
     font-weight: 500;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.7);
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .calendar-view .task-detail-header .back-btn:hover {
-    background: #f1f5f9;
-    color: #1e293b;
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
     border-color: #cbd5e1;
 }
 
@@ -123,7 +123,7 @@
 .view-toggle {
     display: flex;
     gap: 4px;
-    background: #f1f5f9;
+    background: rgba(255, 255, 255, 0.15);
     padding: 4px;
     border-radius: 12px;
 }
@@ -136,12 +136,12 @@
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.7);
     transition: all 0.2s ease;
 }
 
 .view-toggle button:hover {
-    color: #334155;
+    color: #e0e7ff;
     background: rgba(255, 255, 255, 0.5);
 }
 
@@ -157,7 +157,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.7);
     font-weight: 500;
 }
 
@@ -168,7 +168,7 @@
     flex-direction: column;
     overflow: hidden;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .calendar-weekdays {
@@ -183,7 +183,7 @@
     text-align: center;
     font-weight: 700;
     font-size: 14px;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.7);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -223,7 +223,7 @@
 }
 
 .calendar-day.other-month {
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .calendar-day.other-month .day-number {
@@ -253,7 +253,7 @@
 .day-number {
     font-size: 14px;
     font-weight: 600;
-    color: #1e293b;
+    color: #ffffff;
 }
 
 /* 주간 뷰 */
@@ -275,7 +275,7 @@
     border-radius: 6px;
     font-size: 14px;
     font-weight: 500;
-    color: #334155 !important;
+    color: #e0e7ff !important;
     cursor: pointer;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -329,7 +329,7 @@
 .more-tasks {
     font-size: 15px;
     font-weight: 600;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.7);
     padding: 4px 8px;
     text-align: center;
     cursor: pointer;
@@ -392,7 +392,7 @@
     margin: 0;
     font-size: 18px;
     font-weight: 700;
-    color: #1e293b;
+    color: #ffffff;
     flex: 1;
 }
 
@@ -409,19 +409,19 @@
     width: 36px;
     height: 36px;
     border: none;
-    background: #f1f5f9;
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.7);
     transition: all 0.2s ease;
 }
 
 .day-tasks-modal-header .modal-close-btn:hover {
     background: #e2e8f0;
-    color: #334155;
+    color: #e0e7ff;
 }
 
 .day-tasks-modal-body {
@@ -446,7 +446,7 @@
 }
 
 .day-tasks-modal .day-task-item:hover {
-    background: #f1f5f9;
+    background: rgba(255, 255, 255, 0.15);
     transform: translateX(4px);
 }
 
@@ -489,13 +489,13 @@
 .day-task-title {
     font-size: 14px;
     font-weight: 600;
-    color: #1e293b;
+    color: #ffffff;
 }
 
 .day-task-description {
     margin: 8px 0 0 0;
     font-size: 15px;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.7);
     line-height: 1.5;
     display: -webkit-box;
     -webkit-line-clamp: 2;

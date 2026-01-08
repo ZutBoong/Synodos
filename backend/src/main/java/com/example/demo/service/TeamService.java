@@ -299,17 +299,21 @@ public class TeamService {
 		newLeader.setRole("LEADER");
 		dao.updateMemberRole(newLeader);
 
-		// 8. 새 팀장에게 알림 발송
-		notificationService.sendNotification(
-			newLeaderNo,
-			currentLeaderNo,
-			"TEAM_LEADER",
-			"팀장 위임",
-			team.getTeamName() + " 팀의 팀장으로 지정되었습니다.",
-			teamId,
-			0,
-			0
-		);
+		// 8. 새 팀장에게 알림 발송 (실패해도 위임은 성공으로 처리)
+		try {
+			notificationService.sendNotification(
+				newLeaderNo,
+				currentLeaderNo,
+				"TEAM_LEADER",
+				"팀장 위임",
+				team.getTeamName() + " 팀의 팀장으로 지정되었습니다.",
+				teamId,
+				0,
+				0
+			);
+		} catch (Exception e) {
+			log.warn("팀장 위임 알림 발송 실패 (위임은 성공): {}", e.getMessage());
+		}
 
 		result.put("success", true);
 		result.put("message", "팀장이 성공적으로 위임되었습니다.");

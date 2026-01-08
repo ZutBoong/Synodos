@@ -64,7 +64,7 @@ export default function ShaderBackground({ children }) {
                         "#60a5fa", // 살짝 푸른 블루 포인트
                     ]}
                     speed={0.25}
-                    backgroundColor="#0b0714"
+                    style={{ backgroundColor: "#0b0714" }}
                 />
                 <MeshGradient
                     className="absolute inset-0 w-full h-full opacity-50"
@@ -75,8 +75,8 @@ export default function ShaderBackground({ children }) {
                         "#0b0714",
                     ]}
                     speed={0.18}
-                    wireframe={true}
-                    backgroundColor="transparent"
+                    wireframe="true"
+                    style={{ backgroundColor: "transparent" }}
                 />
             </div>
 

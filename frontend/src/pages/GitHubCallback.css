@@ -43,14 +43,14 @@
 
 .github-callback-card h2 {
     font-size: 24px;
-    color: #1f2937;
+    color: #ffffff;
     margin: 0 0 12px 0;
     font-weight: 600;
 }
 
 .github-callback-card p {
     font-size: 15px;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.6);
     margin: 0;
     line-height: 1.5;
 }

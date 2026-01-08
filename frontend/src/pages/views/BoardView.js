@@ -9,6 +9,7 @@ import { addTaskFavorite, removeTaskFavorite, checkTaskFavorite, getTaskFavorite
 import TaskDetailView from '../../components/TaskDetailView';
 import TaskCreateModal from '../../components/TaskCreateModal';
 import { WORKFLOW_STATUSES } from '../../constants/workflowStatuses';
+import ShaderBackground from '../../components/landing/shader-background';
 import './BoardView.css';
 
 
@@ -470,7 +471,8 @@ function BoardView({
     };
 
     return (
-        <div className={`board-view ${selectedTask ? 'task-detail-open' : ''}`}>
+        <ShaderBackground>
+            <div className={`board-view ${selectedTask ? 'task-detail-open' : ''}`}>
             {/* 태스크 상세 패널 (전체화면) */}
             {selectedTask ? (
                 <TaskDetailView
@@ -750,7 +752,8 @@ function BoardView({
                     onCreate={handleCreateTask}
                 />
             )}
-        </div>
+            </div>
+        </ShaderBackground>
     );
 }
 

@@ -510,7 +510,7 @@
 }
 
 .people-group > label i {
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .people-list {
@@ -572,7 +572,7 @@
 }
 
 .no-data {
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.5);
     font-size: 14px;
     font-style: italic;
 }
@@ -603,7 +603,7 @@
 }
 
 .member-search::placeholder {
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .member-dropdown {
@@ -647,7 +647,7 @@
 }
 
 .member-option .member-id {
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.5);
     font-size: 12px;
     margin-left: auto;
 }
@@ -664,10 +664,10 @@
     align-items: center;
     gap: 6px;
     padding: 4px 10px;
-    background: #f3f4f6;
+    background: rgba(255, 255, 255, 0.12);
     border-radius: 16px;
     font-size: 13px;
-    color: #374151;
+    color: #e0e7ff;
 }
 
 .selected-tag.verifier {
@@ -678,7 +678,7 @@
 .selected-tag button {
     background: none;
     border: none;
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.5);
     font-size: 14px;
     cursor: pointer;
     padding: 0;
@@ -720,7 +720,7 @@
 
 .description-content p {
     margin: 0 0 8px 0;
-    color: #374151;
+    color: #e0e7ff;
     font-size: 14px;
 }
 
@@ -738,23 +738,23 @@
     resize: vertical;
     min-height: 100px;
     font-family: inherit;
-    background: #f9fafb;
-    color: #374151;
+    background: rgba(255, 255, 255, 0.1);
+    color: #e0e7ff;
     transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 
 .description-textarea:hover {
-    background: #f3f4f6;
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .description-textarea:focus {
     outline: none;
-    background: #fff;
+    background: rgba(255, 255, 255, 0.1);
     box-shadow: 0 0 0 2px #3b82f6;
 }
 
 .description-textarea::placeholder {
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* 일반 섹션 */
@@ -768,12 +768,12 @@
     gap: 8px;
     font-size: 14px;
     font-weight: 600;
-    color: #374151;
+    color: #e0e7ff;
     margin-bottom: 12px;
 }
 
 .task-section > label i {
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .section-header-row {
@@ -789,12 +789,12 @@
     gap: 8px;
     font-size: 14px;
     font-weight: 600;
-    color: #374151;
+    color: #e0e7ff;
     margin-bottom: 0;
 }
 
 .section-header-row > label i {
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .upload-btn,
@@ -803,9 +803,9 @@
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
-    background: #f3f4f6;
-    color: #374151;
-    border: 1px solid #d1d5db;
+    background: rgba(255, 255, 255, 0.12);
+    color: #e0e7ff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 6px;
     font-size: 13px;
     cursor: pointer;
@@ -870,7 +870,7 @@
     align-items: center;
     justify-content: center;
     font-size: 18px;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .file-info {
@@ -889,7 +889,7 @@
 
 .file-meta {
     font-size: 12px;
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.5);
     margin-top: 2px;
 }
 
@@ -909,7 +909,7 @@
 
 /* 댓글 섹션 */
 .comments-section {
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     padding-top: 24px;
 }
 
@@ -963,14 +963,14 @@
     align-items: flex-start;
     gap: 12px;
     padding: 12px;
-    background: #f9fafb;
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 8px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid rgba(255, 255, 255, 0.15);
     transition: all 0.2s ease;
 }
 
 .pr-item:hover {
-    background: #f3f4f6;
+    background: rgba(255, 255, 255, 0.12);
     border-color: #d1d5db;
 }
 
@@ -1008,7 +1008,7 @@
 .pr-title {
     font-size: 13px;
     font-weight: 500;
-    color: #1f2937;
+    color: #ffffff;
     text-decoration: none;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1046,12 +1046,12 @@
     align-items: center;
     gap: 6px;
     font-size: 11px;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .pr-meta i {
     font-size: 8px;
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .pr-branch {
@@ -1155,12 +1155,12 @@
     align-items: center;
     gap: 8px;
     font-size: 12px;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .merge-pr-branches i {
     font-size: 10px;
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .submit-btn.merge {
@@ -1190,7 +1190,7 @@
     justify-content: center;
     gap: 8px;
     padding: 16px;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.6);
     font-size: 14px;
 }
 
@@ -1267,8 +1267,8 @@
 }
 
 .conflict-files {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 8px;
     padding: 12px;
     margin-bottom: 16px;
@@ -1280,12 +1280,12 @@
     gap: 8px;
     font-size: 12px;
     font-weight: 600;
-    color: #374151;
+    color: #e0e7ff;
     margin-bottom: 8px;
 }
 
 .conflict-files-header i {
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .conflict-file-list {
@@ -1307,7 +1307,7 @@
 }
 
 .conflict-file:hover {
-    background: #f3f4f6;
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .conflict-file .file-status {
@@ -1323,7 +1323,7 @@
 
 .conflict-file .file-name {
     flex: 1;
-    color: #374151;
+    color: #e0e7ff;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1340,7 +1340,7 @@
 
 .conflict-file-list .more-files {
     padding: 8px;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.6);
     font-size: 11px;
     font-style: italic;
 }
@@ -1361,7 +1361,7 @@
 }
 
 .pr-dialog {
-    background: white;
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     width: 500px;
     max-width: 90vw;
@@ -1388,14 +1388,14 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .pr-dialog-header h3 {
     margin: 0;
     font-size: 16px;
     font-weight: 600;
-    color: #1f2937;
+    color: #ffffff;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1410,13 +1410,13 @@
     border: none;
     padding: 6px;
     cursor: pointer;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.6);
     border-radius: 4px;
 }
 
 .pr-dialog-header .close-btn:hover {
-    background: #f3f4f6;
-    color: #374151;
+    background: rgba(255, 255, 255, 0.12);
+    color: #e0e7ff;
 }
 
 .pr-dialog-body {
@@ -1439,17 +1439,17 @@
     display: block;
     font-size: 12px;
     font-weight: 500;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.6);
     margin-bottom: 6px;
 }
 
 .branch-field select {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
     font-size: 13px;
-    background: white;
+    background: rgba(255, 255, 255, 0.1);
     cursor: pointer;
 }
 
@@ -1461,7 +1461,7 @@
 
 .branch-arrow {
     padding-bottom: 10px;
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .pr-form-field {
@@ -1472,7 +1472,7 @@
     display: block;
     font-size: 12px;
     font-weight: 500;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.6);
     margin-bottom: 6px;
 }
 
@@ -1480,7 +1480,7 @@
 .pr-form-field textarea {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #d1d5db;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
     font-size: 13px;
     resize: vertical;
@@ -1499,16 +1499,16 @@
     justify-content: flex-end;
     gap: 10px;
     padding: 16px 20px;
-    border-top: 1px solid #e5e7eb;
-    background: #f9fafb;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 0 0 12px 12px;
 }
 
 .pr-dialog-footer .cancel-btn {
     padding: 10px 20px;
-    border: 1px solid #d1d5db;
-    background: white;
-    color: #374151;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: #e0e7ff;
     border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
@@ -1517,7 +1517,7 @@
 }
 
 .pr-dialog-footer .cancel-btn:hover {
-    background: #f3f4f6;
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .pr-dialog-footer .submit-btn {
@@ -1721,8 +1721,8 @@
 .ai-analysis,
 .ai-explanation,
 .ai-code-preview {
-    background: white;
-    border: 1px solid #e5e7eb;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 8px;
     padding: 12px;
     margin-bottom: 12px;
@@ -1746,7 +1746,7 @@
 .ai-explanation p {
     margin: 0;
     font-size: 13px;
-    color: #374151;
+    color: #e0e7ff;
     line-height: 1.6;
 }
 
@@ -1779,9 +1779,9 @@
 
 .ai-actions .cancel-btn {
     padding: 10px 20px;
-    border: 1px solid #d1d5db;
-    background: white;
-    color: #374151;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: #e0e7ff;
     border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
@@ -1790,7 +1790,7 @@
 }
 
 .ai-actions .cancel-btn:hover {
-    background: #f3f4f6;
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .ai-actions .cancel-btn:disabled {
@@ -1826,8 +1826,8 @@
 
 /* AI 옵션 카드 */
 .ai-options {
-    background: white;
-    border: 1px solid #e5e7eb;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 8px;
     padding: 12px;
     margin-bottom: 12px;
@@ -1845,7 +1845,7 @@
     padding: 12px;
     border: 2px solid #e5e7eb;
     border-radius: 8px;
-    background: #f9fafb;
+    background: rgba(255, 255, 255, 0.1);
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -1878,7 +1878,7 @@
     border-radius: 50%;
     font-size: 12px;
     font-weight: 600;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .ai-option-card.selected .option-number {
@@ -1889,7 +1889,7 @@
 .ai-option-card .option-title {
     font-size: 14px;
     font-weight: 600;
-    color: #374151;
+    color: #e0e7ff;
     flex: 1;
 }
 
@@ -1905,7 +1905,7 @@
 .ai-option-card .option-description {
     margin: 0;
     font-size: 13px;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.6);
     line-height: 1.5;
     padding-left: 34px;
 }

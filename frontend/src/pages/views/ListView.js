@@ -4,6 +4,7 @@ import { taskwrite, taskupdate, taskdelete, taskposition, columnposition, taskli
 import TaskDetailView from '../../components/TaskDetailView';
 import TaskCreateModal from '../../components/TaskCreateModal';
 import { WORKFLOW_STATUSES } from '../../constants/workflowStatuses';
+import ShaderBackground from '../../components/landing/shader-background';
 import './ListView.css';
 
 
@@ -564,11 +565,12 @@ function ListView({
     };
 
     return (
-        <DragDropContext onDragEnd={onDragEnd}>
-            <div
-                className={`list-view ${selectedTask ? 'task-detail-open' : ''}`}
-                onClick={() => columnMenuOpen && setColumnMenuOpen(null)}
-            >
+        <ShaderBackground>
+            <DragDropContext onDragEnd={onDragEnd}>
+                <div
+                    className={`list-view ${selectedTask ? 'task-detail-open' : ''}`}
+                    onClick={() => columnMenuOpen && setColumnMenuOpen(null)}
+                >
                 {/* 태스크 상세 패널 (전체화면) */}
                 {selectedTask ? (
                     <TaskDetailView
@@ -671,8 +673,9 @@ function ListView({
                         onCreate={handleCreateTask}
                     />
                 )}
-            </div>
-        </DragDropContext>
+                </div>
+            </DragDropContext>
+        </ShaderBackground>
     );
 }
 

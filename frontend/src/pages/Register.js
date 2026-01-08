@@ -206,7 +206,7 @@ function Register() {
     const renderStep1 = () => (
         <form onSubmit={handleSendCode} className="space-y-4">
             <div className="space-y-2">
-                <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                <label className="block text-sm font-semibold text-white uppercase tracking-wider drop-shadow-md">
                     아이디
                 </label>
                 <div className="flex gap-2">
@@ -216,26 +216,26 @@ function Register() {
                         value={form.userid}
                         onChange={handleChange}
                         placeholder="아이디를 입력하세요"
-                        className="flex-1 px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-sm font-light focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
+                        className="flex-1 px-4 py-3 rounded-full bg-white/20 border border-white/30 text-white placeholder-white/80 text-base font-medium focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all duration-200"
                     />
                     <button 
                         type="button" 
-                        className="px-4 py-3 rounded-full bg-transparent border border-white/30 text-white text-xs font-light transition-all duration-200 hover:bg-white/10 hover:border-white/50 whitespace-nowrap"
+                        className="px-4 py-3 rounded-full bg-transparent border border-white/40 text-white text-sm font-medium transition-all duration-200 hover:bg-white/20 hover:border-white/60 whitespace-nowrap"
                         onClick={handleCheckUserid}
                     >
                         중복확인
                     </button>
                 </div>
                 {checks.userid === true && (
-                    <span className="text-xs text-green-200 px-2">사용 가능한 아이디입니다.</span>
+                    <span className="text-sm font-semibold text-green-100 px-2">사용 가능한 아이디입니다.</span>
                 )}
                 {errors.userid && (
-                    <span className="text-xs text-red-200 px-2">{errors.userid}</span>
+                    <span className="text-sm font-semibold text-red-100 px-2">{errors.userid}</span>
                 )}
             </div>
 
             <div className="space-y-2">
-                <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                <label className="block text-sm font-semibold text-white uppercase tracking-wider drop-shadow-md">
                     비밀번호
                 </label>
                 <input
@@ -244,7 +244,7 @@ function Register() {
                     value={form.password}
                     onChange={handleChange}
                     placeholder="비밀번호를 입력하세요"
-                    className="w-full px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-sm font-light focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
+                    className="w-full px-4 py-3 rounded-full bg-white/20 border border-white/30 text-white placeholder-white/80 text-base font-medium focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all duration-200"
                 />
                 {errors.password && (
                     <span className="text-xs text-red-200 px-2">{errors.password}</span>
@@ -252,7 +252,7 @@ function Register() {
             </div>
 
             <div className="space-y-2">
-                <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                <label className="block text-sm font-semibold text-white uppercase tracking-wider drop-shadow-md">
                     비밀번호 확인
                 </label>
                 <input
@@ -261,7 +261,7 @@ function Register() {
                     value={form.passwordConfirm}
                     onChange={handleChange}
                     placeholder="비밀번호를 다시 입력하세요"
-                    className="w-full px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-sm font-light focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
+                    className="w-full px-4 py-3 rounded-full bg-white/20 border border-white/30 text-white placeholder-white/80 text-base font-medium focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all duration-200"
                 />
                 {errors.passwordConfirm && (
                     <span className="text-xs text-red-200 px-2">{errors.passwordConfirm}</span>
@@ -269,7 +269,7 @@ function Register() {
             </div>
 
             <div className="space-y-2">
-                <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                <label className="block text-sm font-semibold text-white uppercase tracking-wider drop-shadow-md">
                     이름
                 </label>
                 <input
@@ -278,7 +278,7 @@ function Register() {
                     value={form.name}
                     onChange={handleChange}
                     placeholder="이름을 입력하세요"
-                    className="w-full px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-sm font-light focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
+                    className="w-full px-4 py-3 rounded-full bg-white/20 border border-white/30 text-white placeholder-white/80 text-base font-medium focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all duration-200"
                 />
                 {errors.name && (
                     <span className="text-xs text-red-200 px-2">{errors.name}</span>
@@ -286,7 +286,7 @@ function Register() {
             </div>
 
             <div className="space-y-2">
-                <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                <label className="block text-sm font-semibold text-white uppercase tracking-wider drop-shadow-md">
                     이메일
                 </label>
                 <div className="flex gap-2">
@@ -296,11 +296,11 @@ function Register() {
                         value={form.email}
                         onChange={handleChange}
                         placeholder="이메일을 입력하세요"
-                        className="flex-1 px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-sm font-light focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
+                        className="flex-1 px-4 py-3 rounded-full bg-white/20 border border-white/30 text-white placeholder-white/80 text-base font-medium focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all duration-200"
                     />
                     <button 
                         type="button" 
-                        className="px-4 py-3 rounded-full bg-transparent border border-white/30 text-white text-xs font-light transition-all duration-200 hover:bg-white/10 hover:border-white/50 whitespace-nowrap"
+                        className="px-4 py-3 rounded-full bg-transparent border border-white/40 text-white text-sm font-medium transition-all duration-200 hover:bg-white/20 hover:border-white/60 whitespace-nowrap"
                         onClick={handleCheckEmail}
                     >
                         중복확인
@@ -315,7 +315,7 @@ function Register() {
             </div>
 
             <div className="space-y-2">
-                <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                <label className="block text-sm font-semibold text-white uppercase tracking-wider drop-shadow-md">
                     전화번호 (선택)
                 </label>
                 <input
@@ -324,14 +324,14 @@ function Register() {
                     value={form.phone}
                     onChange={handleChange}
                     placeholder="전화번호를 입력하세요"
-                    className="w-full px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-sm font-light focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
+                    className="w-full px-4 py-3 rounded-full bg-white/20 border border-white/30 text-white placeholder-white/80 text-base font-medium focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all duration-200"
                 />
             </div>
 
             <div className="flex gap-4 pt-2">
                 <button 
                     type="submit" 
-                    className="flex-1 px-8 py-3 rounded-full bg-white text-black font-normal text-xs transition-all duration-200 hover:bg-white/90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-8 py-3 rounded-full bg-white text-black font-semibold text-base transition-all duration-200 hover:bg-white/90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={isSubmitting}
                 >
                     {isSubmitting ? '처리 중...' : '이메일 인증하기'}
@@ -350,9 +350,9 @@ function Register() {
     // Step 2: 이메일 인증 코드 입력
     const renderStep2 = () => (
         <form onSubmit={handleVerifyAndRegister} className="space-y-6">
-            <div className="px-4 py-4 rounded-full bg-white/5 border border-white/20 text-center space-y-2">
-                <p className="text-white/90 text-xs"><strong className="text-white">{form.email}</strong>로 인증 코드를 발송했습니다.</p>
-                <p className="text-white/90 text-xs">이메일에서 6자리 인증 코드를 확인해주세요.</p>
+            <div className="px-4 py-4 rounded-full bg-white/20 border border-white/30 text-center space-y-2">
+                <p className="text-white text-sm font-medium"><strong className="font-bold">{form.email}</strong>로 인증 코드를 발송했습니다.</p>
+                <p className="text-white text-sm font-medium">이메일에서 6자리 인증 코드를 확인해주세요.</p>
                 {codeExpiry > 0 && (
                     <p className="text-yellow-300 text-xs">남은 시간: <strong>{formatTime(codeExpiry)}</strong></p>
                 )}
@@ -362,7 +362,7 @@ function Register() {
             </div>
 
             <div className="space-y-2">
-                <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                <label className="block text-sm font-semibold text-white uppercase tracking-wider drop-shadow-md">
                     인증 코드
                 </label>
                 <input
@@ -371,24 +371,24 @@ function Register() {
                     onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="6자리 인증 코드 입력"
                     maxLength={6}
-                    className="w-full px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-center text-lg font-light tracking-widest focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
+                    className="w-full px-4 py-3 rounded-full bg-white/20 border border-white/30 text-white placeholder-white/80 text-center text-xl font-semibold tracking-widest focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all duration-200"
                 />
                 {verificationError && (
-                    <span className="text-xs text-red-200 px-2">{verificationError}</span>
+                    <span className="text-sm font-semibold text-red-100 px-2">{verificationError}</span>
                 )}
             </div>
 
             <div className="flex gap-4">
                 <button
                     type="submit"
-                    className="flex-1 px-8 py-3 rounded-full bg-white text-black font-normal text-xs transition-all duration-200 hover:bg-white/90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-8 py-3 rounded-full bg-white text-black font-semibold text-base transition-all duration-200 hover:bg-white/90 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={isSubmitting || codeExpiry === 0}
                 >
                     {isSubmitting ? '처리 중...' : '인증 확인 및 가입'}
                 </button>
                 <button
                     type="button"
-                    className="flex-1 px-8 py-3 rounded-full bg-transparent border border-white/30 text-white font-normal text-xs transition-all duration-200 hover:bg-white/10 hover:border-white/50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-8 py-3 rounded-full bg-transparent border border-white/40 text-white font-medium text-base transition-all duration-200 hover:bg-white/20 hover:border-white/60 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={handleResendCode}
                     disabled={countdown > 0}
                 >
@@ -399,7 +399,7 @@ function Register() {
             <div className="text-center">
                 <button 
                     type="button" 
-                    className="text-white/70 hover:text-white text-xs transition-colors"
+                    className="text-white font-medium hover:text-white/90 text-sm transition-colors"
                     onClick={() => setStep(1)}
                 >
                     ← 이전 단계로
@@ -415,8 +415,8 @@ function Register() {
                 ✓
             </div>
             <h3 className="text-xl font-light text-white">회원가입이 완료되었습니다!</h3>
-            <p className="text-white/90 text-sm">{form.name}님, 환영합니다.</p>
-            <p className="text-white/90 text-sm">이제 로그인하여 Synodos를 이용해보세요.</p>
+            <p className="text-white text-base font-medium">{form.name}님, 환영합니다.</p>
+            <p className="text-white text-base font-medium">이제 로그인하여 Synodos를 이용해보세요.</p>
             <button
                 type="button"
                 className="w-full px-8 py-3 rounded-full bg-white text-black font-normal text-xs transition-all duration-200 hover:bg-white/90 cursor-pointer"
@@ -431,7 +431,7 @@ function Register() {
         <ShaderBackground>
             <div className="min-h-screen flex items-center justify-center px-6 py-12">
                 <div 
-                    className="w-full max-w-md p-8 rounded-3xl bg-white/10 backdrop-blur-sm border border-white/20"
+                    className="w-full max-w-md p-8 rounded-3xl bg-white/35 backdrop-blur-sm border border-white/30"
                     style={{ filter: "url(#glass-effect)" }}
                 >
                     {/* SVG Filters */}
@@ -453,7 +453,7 @@ function Register() {
                     </svg>
 
                     {/* Title */}
-                    <h2 className="text-3xl font-light text-white mb-8 text-center">
+                    <h2 className="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
                         회원가입
                     </h2>
 

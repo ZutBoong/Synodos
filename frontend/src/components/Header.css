@@ -53,9 +53,9 @@
 }
 
 .common-header .logout-btn:hover {
-    background: #f5f5f5;
+    background: rgba(255, 255, 255, 0.1);
     border-color: #ccc;
-    color: #333;
+    color: #e0e7ff;
 }
 
 /* ===== 팀 코드 섹션 (Board용) ===== */
@@ -68,8 +68,8 @@
 .common-header .team-code-badge {
     font-size: 12px;
     font-family: monospace;
-    background: #f0f0f0;
-    color: #666;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
     padding: 4px 8px;
     border-radius: 4px;
     letter-spacing: 1px;
@@ -87,7 +87,7 @@
 
 .common-header .code-toggle-btn {
     background: #e0e0e0;
-    color: #666;
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .common-header .code-toggle-btn:hover {
@@ -120,12 +120,12 @@
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
-    color: #666;
+    color: rgba(255, 255, 255, 0.7);
     transition: all 0.15s ease;
 }
 
 .common-header .nav-btn:hover {
-    background: #f5f5f5;
+    background: rgba(255, 255, 255, 0.1);
     border-color: #ccc;
 }
 
@@ -146,7 +146,7 @@
 
 .common-header .team-name {
     font-size: 14px;
-    color: #666;
+    color: rgba(255, 255, 255, 0.7);
     font-weight: 500;
 }
 
@@ -154,7 +154,7 @@
 .common-header .view-toggle {
     display: flex;
     gap: 4px;
-    background: #f0f0f0;
+    background: rgba(255, 255, 255, 0.08);
     padding: 3px;
     border-radius: 6px;
 }
@@ -166,16 +166,16 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 13px;
-    color: #666;
+    color: rgba(255, 255, 255, 0.7);
     transition: all 0.15s ease;
 }
 
 .common-header .view-toggle button:hover {
-    color: #333;
+    color: #e0e7ff;
 }
 
 .common-header .view-toggle button.active {
-    background: white;
+    background: rgba(255, 255, 255, 0.1);
     color: #026aa7;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }

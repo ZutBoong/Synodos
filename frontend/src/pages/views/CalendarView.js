@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { tasklistByDateRange } from '../../api/boardApi';
 import TaskDetailView from '../../components/TaskDetailView';
+import ShaderBackground from '../../components/landing/shader-background';
 import './CalendarView.css';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -173,21 +174,22 @@ function CalendarView({ team, tasks: propTasks, teamMembers, loginMember, filter
     const calendarDays = generateCalendarDays();
 
     return (
-        <div className={`calendar-view ${selectedTask ? 'task-detail-open' : ''}`}>
-            {/* 태스크 상세 패널 (전체화면) */}
-            {selectedTask ? (
-                <TaskDetailView
-                    task={selectedTask}
-                    teamId={team?.teamId}
-                    loginMember={loginMember}
-                    onClose={() => setSelectedTask(null)}
-                    onUpdate={() => {
-                        fetchTasks();
-                    }}
-                    lastCommentEvent={lastCommentEvent}
-                />
-            ) : (
-            <>
+        <ShaderBackground>
+            <div className={`calendar-view ${selectedTask ? 'task-detail-open' : ''}`}>
+                {/* 태스크 상세 패널 (전체화면) */}
+                {selectedTask ? (
+                    <TaskDetailView
+                        task={selectedTask}
+                        teamId={team?.teamId}
+                        loginMember={loginMember}
+                        onClose={() => setSelectedTask(null)}
+                        onUpdate={() => {
+                            fetchTasks();
+                        }}
+                        lastCommentEvent={lastCommentEvent}
+                    />
+                ) : (
+                <>
             {/* 캘린더 헤더 */}
             <div className="calendar-header">
                 <div className="calendar-nav">
@@ -320,9 +322,10 @@ function CalendarView({ team, tasks: propTasks, teamMembers, loginMember, filter
                     </div>
                 </div>
             )}
-            </>
-            )}
-        </div>
+                </>
+                )}
+            </div>
+        </ShaderBackground>
     );
 }
 

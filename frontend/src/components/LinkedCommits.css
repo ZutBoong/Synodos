@@ -54,7 +54,7 @@
 
 .linked-commit-item .commit-message {
     font-size: 13px;
-    color: #333;
+    color: #e0e7ff;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

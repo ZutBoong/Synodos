@@ -34,18 +34,18 @@
     gap: 8px;
     padding: 10px 16px;
     background: white;
-    border: 1px solid #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 10px;
     font-size: 14px;
     font-weight: 500;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.7);
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .list-view .task-detail-header .back-btn:hover {
-    background: #f1f5f9;
-    color: #1e293b;
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
     border-color: #cbd5e1;
 }
 
@@ -94,7 +94,7 @@
     justify-content: center;
     width: 24px;
     height: 24px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
     cursor: grab;
     font-size: 14px;
     letter-spacing: -2px;
@@ -128,7 +128,7 @@
 
 .expand-icon {
     font-size: 14px;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.7);
     transition: transform 0.3s ease;
 }
 
@@ -139,7 +139,7 @@
 .column-name {
     font-weight: 700;
     font-size: 15px;
-    color: #1e293b;
+    color: #ffffff;
     flex: 1;
 }
 
@@ -169,13 +169,13 @@
     border-radius: 6px;
     cursor: pointer;
     font-size: 16px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
     transition: all 0.15s ease;
 }
 
 .column-menu-btn:hover {
     background: rgba(0, 0, 0, 0.05);
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .column-menu-dropdown {
@@ -186,7 +186,7 @@
     background: white;
     border-radius: 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    border: 1px solid #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
     min-width: 140px;
     z-index: 100;
     overflow: hidden;
@@ -202,13 +202,13 @@
     background: none;
     cursor: pointer;
     font-size: 15px;
-    color: #1e293b;
+    color: #ffffff;
     transition: all 0.15s ease;
     text-align: left;
 }
 
 .column-menu-item:hover {
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .column-menu-item.danger {
@@ -346,7 +346,7 @@
 
 .task-table tbody tr.completed .task-title-link {
     text-decoration: line-through;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* 검색 결과 강조/흐림 */
@@ -400,7 +400,7 @@
     width: 28px;
     height: 28px;
     border-radius: 6px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
     cursor: grab;
     font-size: 16px;
     letter-spacing: -2px;
@@ -408,7 +408,7 @@
 }
 
 .task-table tbody tr:hover .drag-handle {
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .drag-handle:hover {
@@ -497,13 +497,13 @@
 
 .assignee-avatar.more {
     background: #e2e8f0;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.7);
     font-size: 15px;
     font-weight: 600;
 }
 
 .no-assignee {
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* 상태 표시 아이콘 */
@@ -515,8 +515,8 @@
     height: 24px;
     border-radius: 50%;
     font-size: 14px;
-    color: #94a3b8;
-    background: #f1f5f9;
+    color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.15);
     transition: all 0.2s ease;
 }
 
@@ -528,7 +528,7 @@
 
 /* 태스크 제목 */
 .task-title-link {
-    color: #1e293b;
+    color: #ffffff;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -666,8 +666,8 @@
 }
 
 .add-task-inline button:last-child {
-    background: #f1f5f9;
-    color: #64748b;
+    background: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .add-task-inline button:last-child:hover {
@@ -696,7 +696,7 @@
     border: 2px solid #e2e8f0;
     border-radius: 10px;
     font-size: 14px;
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.1);
     transition: all 0.2s ease;
 }
 
@@ -708,7 +708,7 @@
 }
 
 .add-column-section input::placeholder {
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .add-column-section button {
@@ -737,30 +737,32 @@
     align-items: center;
     justify-content: center;
     padding: 80px 40px;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-    border: 2px dashed #e2e8f0;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(12px);
+    border-radius: 24px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    border: 2px dashed rgba(255, 255, 255, 0.2);
     text-align: center;
     min-height: 300px;
+    margin: 20px;
 }
 
 .empty-state-icon {
     margin-bottom: 20px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .empty-state h3 {
     margin: 0 0 8px 0;
     font-size: 20px;
     font-weight: 600;
-    color: #334155;
+    color: #ffffff;
 }
 
 .empty-state p {
     margin: 0 0 28px 0;
     font-size: 15px;
-    color: #94a3b8;
+    color: #e0e7ff;
 }
 
 .add-column-inline {
@@ -777,22 +779,23 @@
 .add-column-inline input {
     width: 100%;
     padding: 14px 18px;
-    border: 2px solid #e2e8f0;
+    border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
     font-size: 15px;
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
     transition: all 0.2s ease;
 }
 
 .add-column-inline input:focus {
     outline: none;
-    border-color: #667eea;
-    background: white;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    border-color: rgba(196, 181, 253, 0.6);
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 0 4px rgba(196, 181, 253, 0.1);
 }
 
 .add-column-inline input::placeholder {
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .add-column-inline button {

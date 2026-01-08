@@ -133,11 +133,14 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
         if (!task?.taskId || initialLoadRef.current) return;
 
         setSaving(true);
+        const senderNo = loginMember?.no || null;
+        let hasError = false;
+
+        // 태스크 기본 정보 저장 (제목, 설명, 우선순위, 날짜)
         try {
-            // 날짜만 전송 (시간 부분 제외, LocalDate 형식)
             const taskData = {
                 taskId: task.taskId,
-                columnId: task.columnId,
+                columnId: task.columnId || 1, // columnId가 없으면 기본값
                 title: updatedForm.title,
                 description: updatedForm.description,
                 priority: updatedForm.priority,
@@ -145,20 +148,35 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                 dueDate: updatedForm.dueDate || null,
                 assigneeNo: updatedAssignees.length > 0 ? updatedAssignees[0] : null
             };
-
             await taskupdate(taskData);
-
-            const senderNo = loginMember?.no || null;
-            await updateTaskAssignees(task.taskId, updatedAssignees, senderNo);
-            await updateTaskVerifiers(task.taskId, updatedVerifiers, senderNo);
-
-            // onUpdate는 패널 닫을 때만 호출 (자동저장 시에는 호출하지 않음)
         } catch (error) {
-            console.error('자동 저장 실패:', error);
-        } finally {
-            setSaving(false);
+            console.error('태스크 정보 저장 실패:', error);
+            hasError = true;
         }
-    }, [task?.taskId, loginMember?.no]);
+
+        // 담당자 업데이트 (태스크 저장과 독립적으로 실행)
+        try {
+            await updateTaskAssignees(task.taskId, updatedAssignees, senderNo);
+        } catch (error) {
+            console.error('담당자 저장 실패:', error);
+            hasError = true;
+        }
+
+        // 검증자 업데이트 (태스크 저장과 독립적으로 실행)
+        try {
+            await updateTaskVerifiers(task.taskId, updatedVerifiers, senderNo);
+        } catch (error) {
+            console.error('검증자 저장 실패:', error);
+            hasError = true;
+        }
+
+        if (hasError) {
+            // 에러가 있으면 사용자에게 알림 (너무 자주 뜨지 않도록 debounce 고려)
+            console.warn('일부 변경사항 저장에 실패했습니다.');
+        }
+
+        setSaving(false);
+    }, [task?.taskId, task?.columnId, loginMember?.no]);
 
     // 디바운스된 자동 저장
     const debouncedSave = useCallback((updatedForm, updatedAssignees, updatedVerifiers) => {

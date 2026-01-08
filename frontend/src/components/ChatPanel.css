@@ -30,14 +30,14 @@
   background: none;
   border: none;
   font-size: 24px;
-  color: #666;
+  color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
   padding: 0;
   line-height: 1;
 }
 
 .chat-close-btn:hover {
-  color: #333;
+  color: #e0e7ff;
 }
 
 .chat-messages {
@@ -154,7 +154,7 @@
 }
 
 .chat-input:disabled {
-  background: #f5f5f5;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .chat-send-btn {

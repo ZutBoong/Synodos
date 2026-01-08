@@ -109,7 +109,7 @@
 
 .branch-item.empty-branch {
     opacity: 0.6;
-    background: #f3f4f6;
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .branch-item.empty-branch:hover {
@@ -197,7 +197,7 @@
     height: 24px;
     border: none;
     background: transparent;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     border-radius: 4px;
     font-size: 14px;
@@ -208,7 +208,7 @@
 
 .action-btn:hover {
     background: #e2e8f0;
-    color: #475569;
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .action-btn.active {
@@ -309,7 +309,7 @@
 .toolbar-icon-btn:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.15);
     border-color: rgba(255, 255, 255, 0.4);
-    color: #475569;
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .toolbar-icon-btn:disabled {
@@ -496,7 +496,7 @@
     justify-content: center;
     border: none;
     background: transparent;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     padding: 4px;
     border-radius: 4px;
@@ -504,7 +504,7 @@
 }
 
 .close-btn:hover {
-    color: #475569;
+    color: rgba(255, 255, 255, 0.8);
     background: rgba(255, 255, 255, 0.15);
 }
 
@@ -546,7 +546,7 @@
 }
 
 .detail-sha .copy-btn:hover {
-    color: #475569;
+    color: rgba(255, 255, 255, 0.8);
     background: rgba(255, 255, 255, 0.15);
 }
 
@@ -609,7 +609,7 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.1);
-    color: #475569;
+    color: rgba(255, 255, 255, 0.8);
     font-size: 15px;
     cursor: pointer;
     transition: all 0.15s;
@@ -737,7 +737,7 @@
 
 .menu-branch-hint {
     font-size: 15px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
     margin-left: 4px;
 }
 
@@ -839,7 +839,7 @@
 }
 
 .dialog-info p {
-    color: #374151;
+    color: #e0e7ff;
     margin: 0 0 12px 0;
     font-size: 14px;
 }
@@ -881,7 +881,7 @@
 }
 
 .dialog-hint strong {
-    color: #475569;
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .dialog-note {
@@ -911,7 +911,7 @@
     display: block;
     font-size: 15px;
     font-weight: 500;
-    color: #475569;
+    color: rgba(255, 255, 255, 0.8);
     margin-bottom: 6px;
 }
 
@@ -1058,7 +1058,7 @@
 }
 
 .dialog-field textarea::placeholder {
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .dialog-footer {
@@ -1088,7 +1088,7 @@
 
 .dialog-btn.cancel:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.15);
-    color: #475569;
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .dialog-btn.primary {

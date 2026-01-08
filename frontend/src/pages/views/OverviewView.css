@@ -225,7 +225,7 @@
 .tasks-list .task-item.done .task-title,
 .tasks-list .task-item.done .task-description {
     text-decoration: line-through;
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .no-data {
