@@ -4,16 +4,16 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: rgba(20, 20, 30, 0.95);
+    background: rgba(243, 240, 255, 0.95);
     backdrop-filter: blur(20px);
-    color: white;
+    color: #1e293b;
 }
 
 /* 헤더 */
 .task-detail-view-header {
     flex-shrink: 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.15);
+    border-bottom: 1px solid rgba(196, 181, 253, 0.3);
+    background: rgba(237, 233, 254, 0.8);
     backdrop-filter: blur(10px);
 }
 
@@ -43,11 +43,11 @@
     padding: 0 !important;
     margin: 0 !important;
     margin-bottom: 0 !important;
-    background: rgba(255, 255, 255, 0.1) !important;
+    background: rgba(237, 233, 254, 0.6) !important;
     backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(196, 181, 253, 0.4) !important;
     border-radius: 12px;
-    color: rgba(255, 255, 255, 0.8) !important;
+    color: #6366f1 !important;
     cursor: pointer;
     transition: all 0.15s ease;
     flex-shrink: 0;
@@ -59,9 +59,9 @@
 }
 
 .task-detail-view .back-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    border-color: rgba(196, 181, 253, 0.4);
+    background: rgba(196, 181, 253, 0.3);
+    color: #4f46e5;
+    border-color: rgba(139, 92, 246, 0.5);
 }
 
 .task-detail-view .back-btn i {
@@ -73,7 +73,7 @@
     align-items: center;
     gap: 6px;
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.7);
+    color: #6366f1;
     margin-left: 8px;
 }
 
@@ -90,29 +90,29 @@
 .task-id-badge {
     font-size: 14px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.8);
-    background: rgba(255, 255, 255, 0.1);
+    color: #6366f1;
+    background: rgba(237, 233, 254, 0.8);
     backdrop-filter: blur(5px);
     padding: 4px 10px;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(196, 181, 253, 0.4);
 }
 
 .copy-btn {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(237, 233, 254, 0.6);
     backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(196, 181, 253, 0.4);
     padding: 6px 8px;
     cursor: pointer;
-    color: rgba(255, 255, 255, 0.8);
+    color: #6366f1;
     border-radius: 12px;
     transition: all 0.15s ease;
 }
 
 .copy-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    border-color: rgba(196, 181, 253, 0.4);
+    background: rgba(196, 181, 253, 0.3);
+    color: #4f46e5;
+    border-color: rgba(139, 92, 246, 0.5);
 }
 
 .header-right {
@@ -122,38 +122,41 @@
 }
 
 .action-btn {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(237, 233, 254, 0.6);
     backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(196, 181, 253, 0.4);
     padding: 8px 10px;
     cursor: pointer;
-    color: rgba(255, 255, 255, 0.8);
+    color: #6366f1;
     border-radius: 12px;
     transition: all 0.15s ease;
 }
 
 .action-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(196, 181, 253, 0.4);
-    color: white;
+    background: rgba(196, 181, 253, 0.3);
+    border-color: rgba(139, 92, 246, 0.5);
+    color: #4f46e5;
 }
 
 .action-btn.favorite-btn.active {
-    color: #f59e0b;
-    border-color: #fcd34d;
-    background: #fef3c7;
+    color: #fbbf24;
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.2);
+    backdrop-filter: blur(5px);
 }
 
 .action-btn.archive-btn.active {
-    color: #3b82f6;
-    border-color: #93c5fd;
-    background: #dbeafe;
+    color: #60a5fa;
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.2);
+    backdrop-filter: blur(5px);
 }
 
 .action-btn.urgent-btn.active {
-    color: #dc2626;
-    border-color: #fca5a5;
-    background: #fef2f2;
+    color: #f87171;
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.2);
+    backdrop-filter: blur(5px);
 }
 
 
@@ -169,6 +172,7 @@
     max-width: 900px;
     margin: 0 auto;
     padding: 24px;
+    color: #1e293b;
 }
 
 /* 제목 섹션 */
@@ -179,7 +183,7 @@
 .task-title {
     font-size: 24px;
     font-weight: 700;
-    color: white;
+    color: #1e293b;
     margin: 0 0 12px 0;
     line-height: 1.3;
     display: flex;
@@ -191,7 +195,7 @@
     width: 100%;
     font-size: 24px;
     font-weight: 700;
-    color: white;
+    color: #1e293b;
     padding: 4px 0;
     border: none;
     border-bottom: 2px solid transparent;
@@ -201,16 +205,16 @@
 }
 
 .title-input:hover {
-    border-bottom-color: rgba(255, 255, 255, 0.2);
+    border-bottom-color: rgba(196, 181, 253, 0.4);
 }
 
 .title-input:focus {
     outline: none;
-    border-bottom-color: rgba(196, 181, 253, 0.5);
+    border-bottom-color: rgba(139, 92, 246, 0.6);
 }
 
 .title-input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(100, 116, 139, 0.6);
 }
 
 .urgent-icon {
@@ -272,9 +276,9 @@
     display: flex;
     gap: 4px;
     padding: 4px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(237, 233, 254, 0.6);
     backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(196, 181, 253, 0.4);
     border-radius: 16px;
     margin-bottom: 20px;
 }
@@ -288,7 +292,7 @@
     padding: 12px 16px;
     border: none;
     background: transparent;
-    color: rgba(255, 255, 255, 0.7);
+    color: #6366f1;
     font-size: 14px;
     font-weight: 500;
     border-radius: 12px;
@@ -297,14 +301,14 @@
 }
 
 .tab-btn:hover {
-    color: white;
-    background: rgba(255, 255, 255, 0.1);
+    color: #4f46e5;
+    background: rgba(196, 181, 253, 0.2);
 }
 
 .tab-btn.active {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    background: rgba(196, 181, 253, 0.4);
+    color: #4f46e5;
+    box-shadow: 0 1px 3px rgba(139, 92, 246, 0.3);
 }
 
 .tab-btn i {
@@ -359,17 +363,17 @@
 
 .date-card {
     flex: 1;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(196, 181, 253, 0.3);
     border-radius: 16px;
     padding: 16px;
     transition: all 0.2s ease;
 }
 
 .date-card:hover {
-    border-color: rgba(196, 181, 253, 0.3);
-    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(139, 92, 246, 0.5);
+    background: rgba(255, 255, 255, 0.8);
 }
 
 .date-card-header {
@@ -377,14 +381,14 @@
     align-items: center;
     gap: 8px;
     margin-bottom: 12px;
-    color: rgba(255, 255, 255, 0.7);
+    color: #6366f1;
     font-size: 13px;
     font-weight: 500;
 }
 
 .date-card-header i {
     font-size: 14px;
-    color: rgba(255, 255, 255, 0.6);
+    color: #8b5cf6;
 }
 
 .date-card-inputs {
@@ -396,31 +400,31 @@
 .date-card-inputs input[type="time"] {
     flex: 1;
     padding: 10px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(196, 181, 253, 0.4);
     border-radius: 12px;
     font-size: 14px;
-    color: white;
-    background: rgba(255, 255, 255, 0.15);
+    color: #1e293b;
+    background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(5px);
     transition: all 0.15s ease;
 }
 
 .date-card-inputs input[type="date"]:hover,
 .date-card-inputs input[type="time"]:hover {
-    border-color: rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(139, 92, 246, 0.6);
+    background: rgba(255, 255, 255, 1);
 }
 
 .date-card-inputs input[type="date"]:focus,
 .date-card-inputs input[type="time"]:focus {
     outline: none;
-    border-color: rgba(196, 181, 253, 0.5);
-    box-shadow: 0 0 0 3px rgba(196, 181, 253, 0.2);
-    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(139, 92, 246, 0.8);
+    box-shadow: 0 0 0 3px rgba(196, 181, 253, 0.3);
+    background: rgba(255, 255, 255, 1);
 }
 
 .date-arrow {
-    color: rgba(255, 255, 255, 0.6);
+    color: #8b5cf6;
     font-size: 14px;
     flex-shrink: 0;
 }
@@ -433,7 +437,7 @@
 
 .meta-item label {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
+    color: #6366f1;
     font-weight: 500;
     display: flex;
     align-items: center;
@@ -446,7 +450,7 @@
 
 .meta-item span {
     font-size: 14px;
-    color: white;
+    color: #1e293b;
     font-weight: 500;
 }
 
@@ -463,18 +467,18 @@
     border-radius: 0;
     font-size: 14px;
     font-weight: 500;
-    color: white;
+    color: #1e293b;
     background: transparent;
     transition: border-color 0.15s ease;
 }
 
 .date-time-inputs input:hover {
-    border-bottom-color: rgba(255, 255, 255, 0.2);
+    border-bottom-color: rgba(196, 181, 253, 0.4);
 }
 
 .date-time-inputs input:focus {
     outline: none;
-    border-bottom-color: rgba(196, 181, 253, 0.5);
+    border-bottom-color: rgba(139, 92, 246, 0.6);
 }
 
 .date-time-inputs input[type="date"] {
@@ -503,14 +507,14 @@
 .people-group > label {
     font-size: 14px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
+    color: #6366f1;
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
 .people-group > label i {
-    color: rgba(255, 255, 255, 0.6);
+    color: #8b5cf6;
 }
 
 .people-list {
@@ -524,25 +528,25 @@
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(196, 181, 253, 0.4);
     border-radius: 20px;
     font-size: 13px;
 }
 
 .person-chip.verifier {
-    background: rgba(196, 181, 253, 0.2);
-    border-color: rgba(196, 181, 253, 0.3);
+    background: rgba(237, 233, 254, 0.9);
+    border-color: rgba(139, 92, 246, 0.5);
 }
 
 .person-name {
     font-weight: 500;
-    color: white;
+    color: #1e293b;
 }
 
 .person-id {
-    color: rgba(255, 255, 255, 0.6);
+    color: #64748b;
     font-size: 12px;
 }
 
@@ -572,7 +576,7 @@
 }
 
 .no-data {
-    color: rgba(255, 255, 255, 0.5);
+    color: #94a3b8;
     font-size: 14px;
     font-style: italic;
 }
@@ -584,26 +588,30 @@
 
 .member-search {
     width: 100%;
-    padding: 8px 0;
-    border: none;
-    border-bottom: 1px solid transparent;
-    border-radius: 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(196, 181, 253, 0.4);
+    border-radius: 12px;
     font-size: 14px;
-    background: transparent;
-    transition: border-color 0.15s ease;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(5px);
+    color: #1e293b;
+    transition: all 0.15s ease;
 }
 
 .member-search:hover {
-    border-bottom-color: #e5e7eb;
+    border-color: rgba(139, 92, 246, 0.6);
+    background: rgba(255, 255, 255, 1);
 }
 
 .member-search:focus {
     outline: none;
-    border-bottom-color: #3b82f6;
+    border-color: rgba(139, 92, 246, 0.8);
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 0 0 3px rgba(196, 181, 253, 0.3);
 }
 
 .member-search::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(100, 116, 139, 0.6);
 }
 
 .member-dropdown {
@@ -611,11 +619,11 @@
     top: 100%;
     left: 0;
     right: 0;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(15px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(196, 181, 253, 0.4);
     border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
     max-height: 200px;
     overflow-y: auto;
     z-index: 100;
@@ -647,7 +655,7 @@
 }
 
 .member-option .member-id {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.6);
     font-size: 12px;
     margin-left: auto;
 }
@@ -664,21 +672,24 @@
     align-items: center;
     gap: 6px;
     padding: 4px 10px;
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(196, 181, 253, 0.4);
     border-radius: 16px;
     font-size: 13px;
-    color: #e0e7ff;
+    color: #1e293b;
 }
 
 .selected-tag.verifier {
-    background: #e0e7ff;
-    color: #4338ca;
+    background: rgba(237, 233, 254, 0.9);
+    border-color: rgba(139, 92, 246, 0.5);
+    color: #6366f1;
 }
 
 .selected-tag button {
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.5);
+    color: #64748b;
     font-size: 14px;
     cursor: pointer;
     padding: 0;
@@ -700,27 +711,27 @@
     gap: 8px;
     font-size: 14px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
+    color: #6366f1;
     margin-bottom: 10px;
 }
 
 .task-description-section > label i {
-    color: rgba(255, 255, 255, 0.7);
+    color: #8b5cf6;
 }
 
 .description-content {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(5px);
     padding: 16px;
     border-radius: 16px;
     line-height: 1.7;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(196, 181, 253, 0.3);
+    color: #1e293b;
 }
 
 .description-content p {
     margin: 0 0 8px 0;
-    color: #e0e7ff;
+    color: #1e293b;
     font-size: 14px;
 }
 
@@ -731,30 +742,33 @@
 .description-textarea {
     width: 100%;
     padding: 12px;
-    border: none;
-    border-radius: 8px;
+    border: 1px solid rgba(196, 181, 253, 0.4);
+    border-radius: 12px;
     font-size: 14px;
     line-height: 1.7;
     resize: vertical;
     min-height: 100px;
     font-family: inherit;
-    background: rgba(255, 255, 255, 0.1);
-    color: #e0e7ff;
-    transition: background 0.15s ease, box-shadow 0.15s ease;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(5px);
+    color: #1e293b;
+    transition: all 0.15s ease;
 }
 
 .description-textarea:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 1);
+    border-color: rgba(139, 92, 246, 0.6);
 }
 
 .description-textarea:focus {
     outline: none;
-    background: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 0 2px #3b82f6;
+    background: rgba(255, 255, 255, 1);
+    border-color: rgba(139, 92, 246, 0.8);
+    box-shadow: 0 0 0 3px rgba(196, 181, 253, 0.3);
 }
 
 .description-textarea::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(100, 116, 139, 0.6);
 }
 
 /* 일반 섹션 */
@@ -768,12 +782,12 @@
     gap: 8px;
     font-size: 14px;
     font-weight: 600;
-    color: #e0e7ff;
+    color: #6366f1;
     margin-bottom: 12px;
 }
 
 .task-section > label i {
-    color: rgba(255, 255, 255, 0.6);
+    color: #8b5cf6;
 }
 
 .section-header-row {
@@ -789,12 +803,12 @@
     gap: 8px;
     font-size: 14px;
     font-weight: 600;
-    color: #e0e7ff;
+    color: #6366f1;
     margin-bottom: 0;
 }
 
 .section-header-row > label i {
-    color: rgba(255, 255, 255, 0.6);
+    color: #8b5cf6;
 }
 
 .upload-btn,
@@ -803,18 +817,22 @@
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
-    background: rgba(255, 255, 255, 0.12);
-    color: #e0e7ff;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 6px;
+    background: rgba(237, 233, 254, 0.8);
+    backdrop-filter: blur(5px);
+    color: #6366f1;
+    border: 1px solid rgba(196, 181, 253, 0.4);
+    border-radius: 8px;
     font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.15s ease;
 }
 
 .upload-btn:hover,
 .link-commit-btn:hover {
-    background: #e5e7eb;
+    background: rgba(196, 181, 253, 0.3);
+    border-color: rgba(139, 92, 246, 0.5);
+    color: #4f46e5;
 }
 
 .upload-btn:disabled {
@@ -824,17 +842,21 @@
 
 .delete-btn {
     padding: 8px 12px;
-    background: #fee2e2;
-    color: #dc2626;
-    border: none;
-    border-radius: 6px;
+    background: rgba(239, 68, 68, 0.2);
+    backdrop-filter: blur(5px);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
     cursor: pointer;
-    transition: background 0.15s ease;
+    transition: all 0.15s ease;
     margin-left: 8px;
+    font-weight: 500;
 }
 
 .delete-btn:hover {
-    background: #fecaca;
+    background: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #f87171;
 }
 
 /* 파일 리스트 */
@@ -849,28 +871,30 @@
     align-items: center;
     gap: 12px;
     padding: 12px;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(196, 181, 253, 0.3);
     border-radius: 16px;
     transition: all 0.15s ease;
 }
 
 .file-item:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(196, 181, 253, 0.3);
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(139, 92, 246, 0.5);
 }
 
 .file-icon {
     width: 40px;
     height: 40px;
-    background: #e5e7eb;
+    background: rgba(237, 233, 254, 0.8);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(196, 181, 253, 0.4);
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 18px;
-    color: rgba(255, 255, 255, 0.6);
+    color: #6366f1;
 }
 
 .file-info {
@@ -881,7 +905,7 @@
 .file-name {
     font-size: 14px;
     font-weight: 500;
-    color: white;
+    color: #1e293b;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -889,27 +913,30 @@
 
 .file-meta {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.5);
+    color: #64748b;
     margin-top: 2px;
 }
 
 .download-btn {
     padding: 8px 12px;
-    background: #3b82f6;
+    background: rgba(59, 130, 246, 0.3);
+    backdrop-filter: blur(5px);
     color: white;
-    border: none;
-    border-radius: 6px;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    border-radius: 8px;
     cursor: pointer;
-    transition: background 0.15s ease;
+    transition: all 0.15s ease;
+    font-weight: 500;
 }
 
 .download-btn:hover {
-    background: #2563eb;
+    background: rgba(59, 130, 246, 0.4);
+    border-color: rgba(59, 130, 246, 0.6);
 }
 
 /* 댓글 섹션 */
 .comments-section {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid #e5e7eb;
     padding-top: 24px;
 }
 
@@ -963,15 +990,16 @@
     align-items: flex-start;
     gap: 12px;
     padding: 12px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     transition: all 0.2s ease;
 }
 
 .pr-item:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: #d1d5db;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(196, 181, 253, 0.4);
 }
 
 .pr-icon {
@@ -1008,7 +1036,7 @@
 .pr-title {
     font-size: 13px;
     font-weight: 500;
-    color: #ffffff;
+    color: rgba(255, 255, 255, 0.9);
     text-decoration: none;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1016,7 +1044,7 @@
 }
 
 .pr-title:hover {
-    color: #8b5cf6;
+    color: #c4b5fd;
     text-decoration: underline;
 }
 
@@ -1032,9 +1060,10 @@
 }
 
 .pr-source-badge.github {
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-    color: #0369a1;
-    border: 1px solid #7dd3fc;
+    background: rgba(59, 130, 246, 0.2);
+    backdrop-filter: blur(5px);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.4);
 }
 
 .pr-source-badge.github i {
@@ -1055,11 +1084,14 @@
 }
 
 .pr-branch {
-    background: #e5e7eb;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
     padding: 2px 6px;
     border-radius: 4px;
     font-family: 'Monaco', 'Consolas', monospace;
     font-size: 10px;
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .pr-status {
@@ -1071,18 +1103,24 @@
 }
 
 .pr-status.open {
-    background: #dcfce7;
-    color: #16a34a;
+    background: rgba(16, 185, 129, 0.2);
+    backdrop-filter: blur(5px);
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.4);
 }
 
 .pr-status.closed {
-    background: #fee2e2;
-    color: #dc2626;
+    background: rgba(239, 68, 68, 0.2);
+    backdrop-filter: blur(5px);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
 }
 
 .pr-status.merged {
-    background: #ede9fe;
-    color: #7c3aed;
+    background: rgba(139, 92, 246, 0.2);
+    backdrop-filter: blur(5px);
+    color: #c4b5fd;
+    border: 1px solid rgba(139, 92, 246, 0.4);
 }
 
 /* PR Actions */
@@ -1129,11 +1167,12 @@
 }
 
 .merge-pr-info {
-    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+    background: rgba(196, 181, 253, 0.15);
+    backdrop-filter: blur(5px);
     padding: 16px;
-    border-radius: 8px;
+    border-radius: 12px;
     margin-bottom: 16px;
-    border: 1px solid #ddd6fe;
+    border: 1px solid rgba(196, 181, 253, 0.3);
 }
 
 .merge-pr-title {
@@ -1142,12 +1181,12 @@
     gap: 8px;
     font-size: 14px;
     font-weight: 600;
-    color: #5b21b6;
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 8px;
 }
 
 .merge-pr-title i {
-    color: #7c3aed;
+    color: #c4b5fd;
 }
 
 .merge-pr-branches {
@@ -1155,12 +1194,12 @@
     align-items: center;
     gap: 8px;
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .merge-pr-branches i {
     font-size: 10px;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .submit-btn.merge {
@@ -1190,7 +1229,7 @@
     justify-content: center;
     gap: 8px;
     padding: 16px;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.7);
     font-size: 14px;
 }
 
@@ -1206,9 +1245,10 @@
 }
 
 .merge-status.success {
-    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-    color: #059669;
-    border: 1px solid #a7f3d0;
+    background: rgba(16, 185, 129, 0.2);
+    backdrop-filter: blur(5px);
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.4);
 }
 
 .merge-status.success i {
@@ -1216,9 +1256,10 @@
 }
 
 .merge-status.pending {
-    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-    color: #d97706;
-    border: 1px solid #fcd34d;
+    background: rgba(245, 158, 11, 0.2);
+    backdrop-filter: blur(5px);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.4);
 }
 
 .merge-status.pending i {
@@ -1247,9 +1288,10 @@
 }
 
 .merge-status.conflict {
-    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-    color: #dc2626;
-    border: 1px solid #fca5a5;
+    background: rgba(239, 68, 68, 0.2);
+    backdrop-filter: blur(5px);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
 }
 
 .merge-status.conflict i {
@@ -1267,9 +1309,10 @@
 }
 
 .conflict-files {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
     padding: 12px;
     margin-bottom: 16px;
 }
@@ -1280,12 +1323,12 @@
     gap: 8px;
     font-size: 12px;
     font-weight: 600;
-    color: #e0e7ff;
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 8px;
 }
 
 .conflict-files-header i {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .conflict-file-list {
@@ -1307,7 +1350,7 @@
 }
 
 .conflict-file:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .conflict-file .file-status {
@@ -1323,7 +1366,7 @@
 
 .conflict-file .file-name {
     flex: 1;
-    color: #e0e7ff;
+    color: rgba(255, 255, 255, 0.9);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1340,7 +1383,7 @@
 
 .conflict-file-list .more-files {
     padding: 8px;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 11px;
     font-style: italic;
 }
@@ -1361,14 +1404,16 @@
 }
 
 .pr-dialog {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    background: rgba(243, 240, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
     width: 500px;
     max-width: 90vw;
     max-height: 80vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 20px 40px rgba(139, 92, 246, 0.3);
+    border: 1px solid rgba(196, 181, 253, 0.4);
     animation: prDialogSlideIn 0.2s ease-out;
 }
 
@@ -1388,14 +1433,16 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(196, 181, 253, 0.3);
+    background: rgba(237, 233, 254, 0.8);
+    backdrop-filter: blur(10px);
 }
 
 .pr-dialog-header h3 {
     margin: 0;
     font-size: 16px;
     font-weight: 600;
-    color: #ffffff;
+    color: #6366f1;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1406,17 +1453,20 @@
 }
 
 .pr-dialog-header .close-btn {
-    background: none;
-    border: none;
+    background: rgba(237, 233, 254, 0.6);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(196, 181, 253, 0.4);
     padding: 6px;
     cursor: pointer;
-    color: rgba(255, 255, 255, 0.6);
-    border-radius: 4px;
+    color: #6366f1;
+    border-radius: 8px;
+    transition: all 0.15s ease;
 }
 
 .pr-dialog-header .close-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
-    color: #e0e7ff;
+    background: rgba(196, 181, 253, 0.3);
+    color: #4f46e5;
+    border-color: rgba(139, 92, 246, 0.5);
 }
 
 .pr-dialog-body {
@@ -1439,29 +1489,31 @@
     display: block;
     font-size: 12px;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.7);
     margin-bottom: 6px;
 }
 
 .branch-field select {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(196, 181, 253, 0.4);
     border-radius: 8px;
     font-size: 13px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(5px);
+    color: #1e293b;
     cursor: pointer;
 }
 
 .branch-field select:focus {
     outline: none;
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    border-color: rgba(139, 92, 246, 0.8);
+    box-shadow: 0 0 0 3px rgba(196, 181, 253, 0.3);
 }
 
 .branch-arrow {
     padding-bottom: 10px;
-    color: rgba(255, 255, 255, 0.5);
+    color: #8b5cf6;
 }
 
 .pr-form-field {
@@ -1472,7 +1524,7 @@
     display: block;
     font-size: 12px;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.6);
+    color: #6366f1;
     margin-bottom: 6px;
 }
 
@@ -1480,18 +1532,27 @@
 .pr-form-field textarea {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(196, 181, 253, 0.4);
     border-radius: 8px;
     font-size: 13px;
     resize: vertical;
     box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(5px);
+    color: #1e293b;
 }
 
 .pr-form-field input:focus,
 .pr-form-field textarea:focus {
     outline: none;
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    border-color: rgba(196, 181, 253, 0.5);
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 0 3px rgba(196, 181, 253, 0.2);
+}
+
+.pr-form-field input::placeholder,
+.pr-form-field textarea::placeholder {
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .pr-dialog-footer {
@@ -1499,16 +1560,18 @@
     justify-content: flex-end;
     gap: 10px;
     padding: 16px 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 0 0 12px 12px;
+    border-top: 1px solid rgba(196, 181, 253, 0.3);
+    background: rgba(237, 233, 254, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 0 0 16px 16px;
 }
 
 .pr-dialog-footer .cancel-btn {
     padding: 10px 20px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.1);
-    color: #e0e7ff;
+    border: 1px solid rgba(196, 181, 253, 0.4);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(5px);
+    color: #6366f1;
     border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
@@ -1517,7 +1580,9 @@
 }
 
 .pr-dialog-footer .cancel-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(237, 233, 254, 0.9);
+    border-color: rgba(139, 92, 246, 0.5);
+    color: #4f46e5;
 }
 
 .pr-dialog-footer .submit-btn {
@@ -1580,8 +1645,9 @@
 /* AI 해결 패널 */
 .ai-resolution-panel {
     margin-top: 16px;
-    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
-    border: 1px solid #ddd6fe;
+    background: rgba(196, 181, 253, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(196, 181, 253, 0.3);
     border-radius: 12px;
     overflow: hidden;
     animation: slideDown 0.3s ease-out;
@@ -1671,12 +1737,12 @@
 .ai-loading span {
     font-size: 14px;
     font-weight: 500;
-    color: #5b21b6;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .ai-loading-hint {
     font-size: 12px;
-    color: #7c3aed;
+    color: rgba(255, 255, 255, 0.7);
     margin: 0;
     opacity: 0.8;
 }
@@ -1698,7 +1764,7 @@
 
 .ai-error > span {
     font-size: 13px;
-    color: #dc2626;
+    color: #f87171;
 }
 
 .ai-error .retry-btn {
@@ -1721,9 +1787,10 @@
 .ai-analysis,
 .ai-explanation,
 .ai-code-preview {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
     padding: 12px;
     margin-bottom: 12px;
 }
@@ -1734,19 +1801,19 @@
     gap: 8px;
     font-size: 12px;
     font-weight: 600;
-    color: #5b21b6;
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 8px;
 }
 
 .ai-section-title i {
-    color: #8b5cf6;
+    color: #c4b5fd;
 }
 
 .ai-analysis p,
 .ai-explanation p {
     margin: 0;
     font-size: 13px;
-    color: #e0e7ff;
+    color: rgba(255, 255, 255, 0.9);
     line-height: 1.6;
 }
 
@@ -1780,8 +1847,9 @@
 .ai-actions .cancel-btn {
     padding: 10px 20px;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.1);
-    color: #e0e7ff;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    color: rgba(255, 255, 255, 0.9);
     border-radius: 8px;
     font-size: 13px;
     font-weight: 500;
@@ -1790,7 +1858,9 @@
 }
 
 .ai-actions .cancel-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(196, 181, 253, 0.4);
+    color: white;
 }
 
 .ai-actions .cancel-btn:disabled {
@@ -1827,8 +1897,9 @@
 /* AI 옵션 카드 */
 .ai-options {
     background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
     padding: 12px;
     margin-bottom: 12px;
 }
@@ -1843,22 +1914,23 @@
     display: flex;
     flex-direction: column;
     padding: 12px;
-    border: 2px solid #e5e7eb;
+    border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .ai-option-card:hover {
-    border-color: #a78bfa;
-    background: #faf5ff;
+    border-color: rgba(196, 181, 253, 0.4);
+    background: rgba(196, 181, 253, 0.15);
 }
 
 .ai-option-card.selected {
-    border-color: #8b5cf6;
-    background: #f5f3ff;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    border-color: rgba(196, 181, 253, 0.6);
+    background: rgba(196, 181, 253, 0.2);
+    box-shadow: 0 0 0 3px rgba(196, 181, 253, 0.2);
 }
 
 .ai-option-card .option-header {
@@ -1874,38 +1946,39 @@
     justify-content: center;
     width: 24px;
     height: 24px;
-    background: #e5e7eb;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
     border-radius: 50%;
     font-size: 12px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .ai-option-card.selected .option-number {
-    background: #8b5cf6;
+    background: rgba(196, 181, 253, 0.4);
     color: white;
 }
 
 .ai-option-card .option-title {
     font-size: 14px;
     font-weight: 600;
-    color: #e0e7ff;
+    color: rgba(255, 255, 255, 0.9);
     flex: 1;
 }
 
 .ai-option-card.selected .option-title {
-    color: #5b21b6;
+    color: rgba(255, 255, 255, 0.95);
 }
 
 .ai-option-card .selected-check {
-    color: #8b5cf6;
+    color: #c4b5fd;
     font-size: 16px;
 }
 
 .ai-option-card .option-description {
     margin: 0;
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.7);
     line-height: 1.5;
     padding-left: 34px;
 }

@@ -17,8 +17,7 @@
 
 /* 태스크 상세 패널 */
 .board-view .task-detail-panel {
-    background: rgba(20, 20, 30, 0.95);
-    backdrop-filter: blur(20px);
+    background: white;
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -28,9 +27,8 @@
     display: flex;
     align-items: center;
     padding: 16px 24px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #e2e8f0;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
     flex-shrink: 0;
 }
 
@@ -39,20 +37,20 @@
     align-items: center;
     gap: 8px;
     padding: 10px 16px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: white;
+    border: 1px solid #e2e8f0;
     border-radius: 10px;
     font-size: 14px;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.8);
+    color: #64748b;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .board-view .task-detail-header .back-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    color: #ffffff;
-    border-color: rgba(196, 181, 253, 0.4);
+    background: #f1f5f9;
+    color: #1e293b;
+    border-color: #cbd5e1;
 }
 
 .board-view .task-detail-header .back-btn i {
@@ -285,7 +283,7 @@
     display: block;
     font-size: 15px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.6);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 6px;
@@ -294,18 +292,18 @@
 .board-view .column-menu-dropdown .github-prefix-item .prefix-value {
     display: block;
     padding: 8px 10px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
     border-radius: 6px;
     font-size: 15px;
-    color: rgba(255, 255, 255, 0.8);
+    color: #475569;
     cursor: pointer;
     transition: all 0.15s ease;
 }
 
 .board-view .column-menu-dropdown .github-prefix-item .prefix-value:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.25);
+    background: #f1f5f9;
+    border-color: #cbd5e1;
 }
 
 .board-view .column-menu-dropdown .github-prefix-item input {
@@ -314,7 +312,7 @@
     border: 1px solid #3b82f6;
     border-radius: 6px;
     font-size: 15px;
-    color: #ffffff;
+    color: #1e293b;
     outline: none;
     box-sizing: border-box;
 }
@@ -615,7 +613,7 @@
 }
 
 .board-view .task-card-actions .archive-btn:hover {
-    background: rgba(196, 181, 253, 0.15);
+    background: #f5f3ff;
     color: #8b5cf6;
 }
 
@@ -805,19 +803,18 @@
 .board-view .add-column-inline input {
     width: 100%;
     padding: 14px 18px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid #e2e8f0;
     border-radius: 12px;
     font-size: 15px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
+    background: #f8fafc;
     transition: all 0.2s ease;
 }
 
 .board-view .add-column-inline input:focus {
     outline: none;
-    border-color: rgba(196, 181, 253, 0.6);
-    background: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 0 0 4px rgba(196, 181, 253, 0.1);
+    border-color: #667eea;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
 }
 
 .board-view .add-column-inline input::placeholder {
@@ -890,7 +887,7 @@
 }
 
 .board-view .modal-content {
-    background: rgba(255, 255, 255, 0.1);
+    background: white;
     border-radius: 16px;
     width: 94%;
     max-width: 520px;
@@ -956,7 +953,7 @@
 
 .board-view .modal-description {
     margin: 0 0 20px 0;
-    color: rgba(255, 255, 255, 0.7);
+    color: #64748b;
     font-size: 14px;
     line-height: 1.6;
 }
@@ -971,19 +968,19 @@
 
 .board-view .modal-footer .cancel-btn {
     padding: 12px 24px;
-    background: rgba(255, 255, 255, 0.15);
+    background: #f1f5f9;
     border: none;
     border-radius: 10px;
     cursor: pointer;
     font-size: 14px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.7);
+    color: #64748b;
     transition: all 0.2s ease;
 }
 
 .board-view .modal-footer .cancel-btn:hover {
     background: #e2e8f0;
-    color: #e0e7ff;
+    color: #334155;
 }
 
 .board-view .modal-footer .save-btn {
@@ -1023,7 +1020,7 @@
 .board-view .archive-note-section label {
     font-weight: 600;
     font-size: 15px;
-    color: #e0e7ff;
+    color: #374151;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -1036,14 +1033,14 @@
     font-size: 14px;
     resize: vertical;
     font-family: inherit;
-    background: rgba(255, 255, 255, 0.1);
+    background: #f8fafc;
     transition: all 0.2s ease;
 }
 
 .board-view .archive-note-section textarea:focus {
     outline: none;
     border-color: #667eea;
-    background: rgba(255, 255, 255, 0.1);
+    background: white;
     box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
 }
 

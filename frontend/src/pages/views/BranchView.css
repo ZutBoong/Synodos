@@ -109,7 +109,7 @@
 
 .branch-item.empty-branch {
     opacity: 0.6;
-    background: rgba(255, 255, 255, 0.12);
+    background: #f3f4f6;
 }
 
 .branch-item.empty-branch:hover {
@@ -208,7 +208,7 @@
 
 .action-btn:hover {
     background: #e2e8f0;
-    color: rgba(255, 255, 255, 0.8);
+    color: #475569;
 }
 
 .action-btn.active {
@@ -309,7 +309,7 @@
 .toolbar-icon-btn:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.15);
     border-color: rgba(255, 255, 255, 0.4);
-    color: rgba(255, 255, 255, 0.8);
+    color: #475569;
 }
 
 .toolbar-icon-btn:disabled {
@@ -504,7 +504,7 @@
 }
 
 .close-btn:hover {
-    color: rgba(255, 255, 255, 0.8);
+    color: #475569;
     background: rgba(255, 255, 255, 0.15);
 }
 
@@ -546,7 +546,7 @@
 }
 
 .detail-sha .copy-btn:hover {
-    color: rgba(255, 255, 255, 0.8);
+    color: #475569;
     background: rgba(255, 255, 255, 0.15);
 }
 
@@ -609,7 +609,7 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.8);
+    color: #475569;
     font-size: 15px;
     cursor: pointer;
     transition: all 0.15s;
@@ -687,7 +687,7 @@
 .branch-list::-webkit-scrollbar-thumb:hover,
 .detail-content::-webkit-scrollbar-thumb:hover,
 .graph-viewport::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: rgba(255, 255, 255, 0.4);
 }
 
 .graph-viewport::-webkit-scrollbar-corner {
@@ -839,7 +839,7 @@
 }
 
 .dialog-info p {
-    color: #e0e7ff;
+    color: #374151;
     margin: 0 0 12px 0;
     font-size: 14px;
 }
@@ -881,7 +881,7 @@
 }
 
 .dialog-hint strong {
-    color: rgba(255, 255, 255, 0.8);
+    color: #475569;
 }
 
 .dialog-note {
@@ -911,7 +911,7 @@
     display: block;
     font-size: 15px;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.8);
+    color: #475569;
     margin-bottom: 6px;
 }
 
@@ -1088,7 +1088,7 @@
 
 .dialog-btn.cancel:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.15);
-    color: rgba(255, 255, 255, 0.8);
+    color: #475569;
 }
 
 .dialog-btn.primary {

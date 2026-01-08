@@ -65,14 +65,14 @@
     align-items: center;
     padding: 16px;
     border-bottom: 1px solid #eee;
-    background: rgba(255, 255, 255, 0.1);
+    background: #f8f9fa;
 }
 
 .notification-header h3 {
     margin: 0;
     font-size: 16px;
     font-weight: 600;
-    color: #e0e7ff;
+    color: #333;
 }
 
 .header-actions {
@@ -153,13 +153,13 @@
 .notification-title {
     font-size: 14px;
     font-weight: 600;
-    color: #e0e7ff;
+    color: #333;
     margin-bottom: 4px;
 }
 
 .notification-message {
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.7);
+    color: #666;
     margin-bottom: 6px;
     line-height: 1.4;
     word-break: break-word;
@@ -174,7 +174,7 @@
 
 .notification-meta .sender {
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.7);
+    color: #666;
 }
 
 .notification-meta .time {

@@ -53,12 +53,12 @@
 .files-empty {
     padding: 80px 20px;
     text-align: center;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .empty-icon {
     font-size: 48px;
-    color: rgba(255, 255, 255, 0.5);
+    color: #cbd5e1;
     display: block;
     margin: 0 auto 16px;
     text-align: center;
@@ -119,12 +119,12 @@
     gap: 14px;
     font-size: 14px;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .file-uploader {
     font-size: 15px;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .file-actions {
