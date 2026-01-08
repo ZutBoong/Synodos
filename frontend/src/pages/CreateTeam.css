@@ -124,6 +124,12 @@ section h2 {
     color: rgba(255, 255, 255, 0.5);
 }
 
+.form-group input[type="text"]:hover,
+.form-group textarea:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.15);
+}
+
 .form-group input[type="text"]:focus,
 .form-group textarea:focus {
     outline: none;
@@ -141,10 +147,18 @@ section h2 {
 .member-search-wrapper {
     position: relative;
     margin-bottom: 20px;
+    padding: 24px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .member-search {
     position: relative;
+    padding: 24px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .member-search svg {
@@ -164,7 +178,7 @@ section h2 {
     font-size: 15px;
     transition: all 0.2s ease;
     box-sizing: border-box;
-    background: rgba(255, 255, 255, 0.15);
+    background: transparent;
     color: white;
 }
 
@@ -175,7 +189,7 @@ section h2 {
 .member-search input:focus {
     outline: none;
     border-color: rgba(255, 255, 255, 0.4);
-    background: rgba(255, 255, 255, 0.1);
+    background: transparent;
     box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
 }
 
@@ -187,13 +201,13 @@ section h2 {
     right: 0;
     max-height: 320px;
     overflow-y: auto;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(139, 92, 246, 0.3);
     border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
     padding: 8px;
 }
 
@@ -284,12 +298,12 @@ section h2 {
 }
 
 .member-item:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(139, 92, 246, 0.1);
 }
 
 .member-item.selected {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: rgba(139, 92, 246, 0.15);
+    border: 1px solid rgba(139, 92, 246, 0.4);
 }
 
 .member-avatar {
@@ -316,12 +330,12 @@ section h2 {
 .member-name {
     font-weight: 600;
     font-size: 15px;
-    color: white;
+    color: #000000;
 }
 
 .member-id {
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(0, 0, 0, 0.6);
 }
 
 .member-checkbox {
@@ -344,7 +358,7 @@ section h2 {
 .no-members {
     padding: 40px 20px;
     text-align: center;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(0, 0, 0, 0.6);
     font-size: 14px;
 }
 
