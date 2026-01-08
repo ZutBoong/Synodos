@@ -257,20 +257,20 @@
 }
 
 .notification-list-item:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .notification-list-item.selected {
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%);
     border-left: 3px solid white;
 }
 
 .notification-list-item.unread {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.18);
 }
 
 .notification-list-item.unread.selected {
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.08) 100%);
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.18) 100%);
 }
 
 .notification-list-icon {
@@ -492,7 +492,7 @@
     align-items: center;
     gap: 12px;
     padding: 14px 16px;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
@@ -512,7 +512,7 @@
     align-items: center;
     gap: 12px;
     padding: 14px 16px;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.2);
 }

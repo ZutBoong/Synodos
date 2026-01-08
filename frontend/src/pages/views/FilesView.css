@@ -1,14 +1,16 @@
 .files-view {
     padding: 24px;
+    color: #e0e7ff;
 }
 
 /* 파일 섹션 */
 .files-section {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
     overflow: hidden;
-    border: 1px solid rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .files-section .section-header {
@@ -23,7 +25,7 @@
     margin: 0;
     font-size: 18px;
     font-weight: 700;
-    color: #1e293b;
+    color: #ffffff;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -38,7 +40,7 @@
 }
 
 .file-count {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     color: #667eea;
     background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%);
@@ -76,16 +78,17 @@
     align-items: flex-start;
     gap: 14px;
     padding: 18px;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    border-radius: 16px;
     transition: all 0.2s ease;
-    border: 1px solid transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .file-card:hover {
-    background: white;
-    border-color: rgba(102, 126, 234, 0.2);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(196, 181, 253, 0.4);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
     transform: translateY(-2px);
 }
 
@@ -114,13 +117,13 @@
 .file-meta {
     display: flex;
     gap: 14px;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 500;
     color: #94a3b8;
 }
 
 .file-uploader {
-    font-size: 11px;
+    font-size: 15px;
     color: #94a3b8;
 }
 

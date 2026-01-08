@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { getRecentMessages, sendMessage, getMessagesBefore } from '../../api/chatApi';
 import websocketService from '../../api/websocketService';
+import ShaderBackground from '../../components/landing/shader-background';
 import './ChatView.css';
 
 function ChatView({ team, teamMembers, loginMember }) {
@@ -163,7 +164,8 @@ function ChatView({ team, teamMembers, loginMember }) {
     };
 
     return (
-        <div className="chat-view">
+        <ShaderBackground>
+            <div className="chat-view">
             <div className="chat-view-header">
                 <div className="chat-view-title">
                     <i className="fa-solid fa-comments"></i>
@@ -244,7 +246,8 @@ function ChatView({ team, teamMembers, loginMember }) {
                     <i className="fa-solid fa-paper-plane"></i>
                 </button>
             </form>
-        </div>
+            </div>
+        </ShaderBackground>
     );
 }
 

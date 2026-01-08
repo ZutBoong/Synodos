@@ -1,10 +1,10 @@
-/* 밝은 테마 (다른 페이지와 일관성) */
+/* Dark theme with glass morphism */
 .branch-view.dark {
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
-    color: #1e293b;
+    background: transparent;
+    color: #e0e7ff;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
 }
 
@@ -17,7 +17,7 @@
     background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
     border-bottom: 1px solid #f59e0b;
     color: #92400e;
-    font-size: 13px;
+    font-size: 15px;
     flex-shrink: 0;
 }
 
@@ -46,12 +46,13 @@
 /* 좌측 브랜치 패널 */
 .branch-panel {
     width: 220px;
-    background: white;
-    border-right: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(12px);
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
 }
 
 .panel-header {
@@ -59,23 +60,24 @@
     align-items: center;
     justify-content: space-between;
     padding: 12px 16px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .panel-title {
-    font-size: 11px;
+    font-size: 15px;
     font-weight: 600;
-    color: #64748b;
+    color: #e0e7ff;
     letter-spacing: 0.5px;
     text-transform: uppercase;
 }
 
 .branch-count {
-    font-size: 11px;
-    color: #64748b;
-    background: #f1f5f9;
+    font-size: 15px;
+    color: #ffffff;
+    background: rgba(196, 181, 253, 0.3);
     padding: 2px 8px;
     border-radius: 10px;
+    font-weight: 600;
 }
 
 .branch-list {
@@ -93,11 +95,12 @@
 }
 
 .branch-item:hover {
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .branch-item.selected {
-    background: #f1f5f9;
+    background: rgba(196, 181, 253, 0.3);
+    border-left: 3px solid #c4b5fd;
 }
 
 .branch-item.hidden {
@@ -123,16 +126,16 @@
 
 .branch-item .branch-name {
     flex: 1;
-    font-size: 13px;
-    color: #1e293b;
+    font-size: 15px;
+    color: #ffffff;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .default-badge {
-    font-size: 9px;
-    color: #64748b;
+    font-size: 15px;
+    color: #e0e7ff;
     background: #e2e8f0;
     padding: 2px 6px;
     border-radius: 4px;
@@ -140,8 +143,8 @@
 }
 
 .empty-badge {
-    font-size: 9px;
-    color: #9ca3af;
+    font-size: 15px;
+    color: #cbd5e1;
     background: #374151;
     padding: 2px 6px;
     border-radius: 4px;
@@ -149,7 +152,7 @@
 }
 
 .pr-badge {
-    font-size: 9px;
+    font-size: 15px;
     color: #fff;
     background: #238636;
     padding: 2px 6px;
@@ -197,7 +200,7 @@
     color: #94a3b8;
     cursor: pointer;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -226,8 +229,8 @@
     justify-content: space-between;
     align-items: center;
     padding: 8px 16px;
-    background: white;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .toolbar-left {
@@ -239,15 +242,15 @@
 .search-box {
     display: flex;
     align-items: center;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 6px;
     padding: 4px 10px;
     width: 240px;
 }
 
 .search-icon {
-    color: #94a3b8;
+    color: #e0e7ff;
     margin-right: 8px;
     flex-shrink: 0;
 }
@@ -256,13 +259,13 @@
     flex: 1;
     border: none;
     background: transparent;
-    color: #1e293b;
-    font-size: 13px;
+    color: #ffffff;
+    font-size: 15px;
     outline: none;
 }
 
 .search-box input::placeholder {
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .clear-btn {
@@ -271,7 +274,7 @@
     justify-content: center;
     border: none;
     background: transparent;
-    color: #94a3b8;
+    color: #e0e7ff;
     cursor: pointer;
     padding: 2px;
     border-radius: 4px;
@@ -279,8 +282,8 @@
 }
 
 .clear-btn:hover {
-    color: #475569;
-    background: #e2e8f0;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .toolbar-right {
@@ -295,17 +298,17 @@
     justify-content: center;
     width: 32px;
     height: 32px;
-    background: white;
-    border: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 6px;
-    color: #64748b;
+    color: #e0e7ff;
     cursor: pointer;
     transition: all 0.15s;
 }
 
 .toolbar-icon-btn:hover:not(:disabled) {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.4);
     color: #475569;
 }
 
@@ -328,7 +331,7 @@
     justify-content: center;
     gap: 12px;
     height: 100%;
-    color: #64748b;
+    color: #e0e7ff;
 }
 
 .spinner {
@@ -353,7 +356,7 @@
     width: 100%;
     height: 100%;
     position: relative;
-    background: white;
+    background: rgba(255, 255, 255, 0.15);
     overflow: auto;
 }
 
@@ -368,7 +371,7 @@
 
 /* 브랜치 라벨 */
 .branch-label-text {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     font-family: inherit;
 }
@@ -394,8 +397,8 @@
 /* 호버 툴팁 */
 .commit-tooltip {
     position: absolute;
-    background: white;
-    border: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
     padding: 10px 12px;
     max-width: 300px;
@@ -406,29 +409,29 @@
 
 .tooltip-sha {
     font-family: 'SFMono-Regular', Consolas, monospace;
-    font-size: 11px;
+    font-size: 15px;
     color: #667eea;
     margin-bottom: 4px;
 }
 
 .tooltip-message {
-    font-size: 12px;
-    color: #1e293b;
+    font-size: 14px;
+    color: #ffffff;
     line-height: 1.4;
     margin-bottom: 6px;
     word-break: break-word;
 }
 
 .tooltip-author {
-    font-size: 11px;
-    color: #64748b;
+    font-size: 15px;
+    color: #e0e7ff;
 }
 
 /* 컨텍스트 메뉴 */
 .context-menu {
     position: absolute;
-    background: white;
-    border: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
     padding: 6px 0;
     min-width: 160px;
@@ -444,14 +447,14 @@
     padding: 8px 14px;
     border: none;
     background: transparent;
-    color: #1e293b;
-    font-size: 13px;
+    color: #ffffff;
+    font-size: 15px;
     cursor: pointer;
     text-align: left;
 }
 
 .context-menu-item:hover {
-    background: #f1f5f9;
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .menu-icon {
@@ -463,7 +466,7 @@
 /* 우측 상세 패널 */
 .detail-panel {
     width: 280px;
-    background: white;
+    background: rgba(255, 255, 255, 0.15);
     border-left: 1px solid rgba(0, 0, 0, 0.08);
     display: flex;
     flex-direction: column;
@@ -476,13 +479,13 @@
     align-items: center;
     justify-content: space-between;
     padding: 12px 16px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .detail-title {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
-    color: #64748b;
+    color: #e0e7ff;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -502,7 +505,7 @@
 
 .close-btn:hover {
     color: #475569;
-    background: #f1f5f9;
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .detail-content {
@@ -523,7 +526,7 @@
 
 .sha-badge {
     font-family: 'SFMono-Regular', Consolas, monospace;
-    font-size: 12px;
+    font-size: 14px;
     color: #fff;
     padding: 4px 10px;
     border-radius: 6px;
@@ -537,27 +540,27 @@
     background: transparent;
     cursor: pointer;
     padding: 4px;
-    color: #64748b;
+    color: #e0e7ff;
     border-radius: 4px;
     transition: all 0.15s;
 }
 
 .detail-sha .copy-btn:hover {
     color: #475569;
-    background: #f1f5f9;
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .detail-label {
-    font-size: 11px;
-    color: #64748b;
+    font-size: 15px;
+    color: #e0e7ff;
     margin-bottom: 6px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .detail-message {
-    font-size: 13px;
-    color: #1e293b;
+    font-size: 15px;
+    color: #ffffff;
     line-height: 1.5;
     word-break: break-word;
 }
@@ -576,17 +579,17 @@
     align-items: center;
     justify-content: center;
     color: #fff;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
 }
 
 .detail-date {
-    font-size: 13px;
-    color: #64748b;
+    font-size: 15px;
+    color: #e0e7ff;
 }
 
 .detail-branch {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 500;
 }
 
@@ -603,17 +606,17 @@
     gap: 8px;
     width: 100%;
     padding: 10px 16px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 6px;
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.1);
     color: #475569;
-    font-size: 13px;
+    font-size: 15px;
     cursor: pointer;
     transition: all 0.15s;
 }
 
 .action-button:hover {
-    background: #f1f5f9;
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .action-button.primary {
@@ -642,19 +645,21 @@
     align-items: center;
     justify-content: center;
     margin-bottom: 16px;
-    color: #94a3b8;
+    color: #c4b5fd;
 }
 
 .branch-view-empty h3 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #1e293b;
+    font-size: 22px;
+    font-weight: 700;
+    color: #ffffff;
     margin: 0 0 8px 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .branch-view-empty p {
-    font-size: 14px;
-    color: #64748b;
+    font-size: 16px;
+    font-weight: 500;
+    color: #e0e7ff;
     margin: 0;
 }
 
@@ -731,7 +736,7 @@
 }
 
 .menu-branch-hint {
-    font-size: 11px;
+    font-size: 15px;
     color: #94a3b8;
     margin-left: 4px;
 }
@@ -751,7 +756,7 @@
 }
 
 .dialog {
-    background: white;
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 12px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
     min-width: 400px;
@@ -782,7 +787,7 @@
     margin: 0;
     font-size: 16px;
     font-weight: 600;
-    color: #1e293b;
+    color: #ffffff;
 }
 
 .dialog-close {
@@ -793,15 +798,15 @@
     height: 32px;
     border: none;
     background: transparent;
-    color: #64748b;
+    color: #e0e7ff;
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.15s;
 }
 
 .dialog-close:hover {
-    background: #f1f5f9;
-    color: #1e293b;
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
 }
 
 .dialog-body {
@@ -813,18 +818,18 @@
     align-items: center;
     gap: 8px;
     margin-bottom: 12px;
-    font-size: 13px;
+    font-size: 15px;
 }
 
 .dialog-info .info-label {
-    color: #64748b;
+    color: #e0e7ff;
     min-width: 80px;
 }
 
 .dialog-info .info-value {
-    color: #1e293b;
+    color: #ffffff;
     font-family: 'SFMono-Regular', Consolas, monospace;
-    background: #f1f5f9;
+    background: rgba(255, 255, 255, 0.15);
     padding: 2px 8px;
     border-radius: 4px;
     max-width: 280px;
@@ -844,15 +849,15 @@
     align-items: center;
     gap: 10px;
     padding: 12px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 6px;
     margin: 12px 0;
 }
 
 .commit-info-box code {
     font-family: 'SFMono-Regular', Consolas, monospace;
-    font-size: 12px;
+    font-size: 14px;
     color: #6e40c9;
     background: #f3e8ff;
     padding: 4px 8px;
@@ -861,16 +866,16 @@
 }
 
 .commit-info-box .commit-message {
-    color: #1e293b;
-    font-size: 13px;
+    color: #ffffff;
+    font-size: 15px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .dialog-hint {
-    font-size: 12px;
-    color: #64748b;
+    font-size: 14px;
+    color: #e0e7ff;
     margin: 8px 0 0 0;
     line-height: 1.5;
 }
@@ -888,7 +893,7 @@
     border: 1px solid #bfdbfe;
     border-radius: 6px;
     margin: 16px 0;
-    font-size: 12px;
+    font-size: 14px;
     color: #1e40af;
     line-height: 1.4;
 }
@@ -904,7 +909,7 @@
 
 .dialog-field label {
     display: block;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 500;
     color: #475569;
     margin-bottom: 6px;
@@ -914,11 +919,11 @@
 .dialog-field select {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
     font-size: 14px;
-    color: #1e293b;
-    background: #f8fafc;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
     transition: all 0.15s;
     box-sizing: border-box;
 }
@@ -927,13 +932,13 @@
 .dialog-field select:focus {
     outline: none;
     border-color: #667eea;
-    background: white;
+    background: rgba(255, 255, 255, 0.15);
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .dialog-field input[readOnly] {
     background: #e2e8f0;
-    color: #64748b;
+    color: #e0e7ff;
     cursor: not-allowed;
 }
 
@@ -942,7 +947,7 @@
     color: #dc2626;
     padding: 10px 14px;
     border-radius: 8px;
-    font-size: 13px;
+    font-size: 15px;
     margin-top: 12px;
 }
 
@@ -968,7 +973,7 @@
 }
 
 .dialog-warning strong {
-    color: #1e293b;
+    color: #ffffff;
 }
 
 /* 다이얼로그 넓은 버전 */
@@ -993,14 +998,14 @@
     padding: 16px 12px;
     border: 2px solid #e2e8f0;
     border-radius: 10px;
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.1);
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .merge-type-btn:hover:not(:disabled) {
-    border-color: #cbd5e1;
-    background: #f1f5f9;
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .merge-type-btn.active {
@@ -1013,19 +1018,19 @@
 }
 
 .merge-type-btn svg {
-    color: #64748b;
+    color: #e0e7ff;
     transition: color 0.2s;
 }
 
 .merge-type-btn span {
     font-size: 14px;
     font-weight: 600;
-    color: #1e293b;
+    color: #ffffff;
 }
 
 .merge-type-btn small {
-    font-size: 11px;
-    color: #64748b;
+    font-size: 15px;
+    color: #e0e7ff;
 }
 
 .merge-type-btn:disabled {
@@ -1037,7 +1042,7 @@
 .dialog-field textarea {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
     font-size: 14px;
     font-family: inherit;
@@ -1062,7 +1067,7 @@
     gap: 10px;
     padding: 16px 20px;
     border-top: 1px solid #e2e8f0;
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 0 0 12px 12px;
 }
 
@@ -1076,13 +1081,13 @@
 }
 
 .dialog-btn.cancel {
-    background: white;
-    border: 1px solid #e2e8f0;
-    color: #64748b;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #e0e7ff;
 }
 
 .dialog-btn.cancel:hover:not(:disabled) {
-    background: #f1f5f9;
+    background: rgba(255, 255, 255, 0.15);
     color: #475569;
 }
 

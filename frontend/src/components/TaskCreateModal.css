@@ -23,9 +23,11 @@
 
 /* ===== 모달 컨테이너 ===== */
 .task-modal-container {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 24px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
     animation: modalSlideIn 0.3s ease-out;
     width: 600px;
     max-width: 90vw;
@@ -33,6 +35,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    color: white;
 }
 
 @keyframes modalSlideIn {
@@ -48,11 +51,13 @@
 
 /* ===== 헤더 ===== */
 .task-modal-header {
+    background: rgba(196, 181, 253, 0.2);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 20px 24px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     flex-shrink: 0;
 }
 
@@ -127,12 +132,12 @@
 }
 
 .task-modal-content::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 3px;
 }
 
 .task-modal-content::-webkit-scrollbar-thumb:hover {
-    background: #cbd5e1;
+    background: rgba(255, 255, 255, 0.3);
 }
 
 /* ===== 폼 필드 ===== */
@@ -144,7 +149,7 @@
     display: block;
     font-weight: 600;
     margin-bottom: 8px;
-    color: #374151;
+    color: rgba(255, 255, 255, 0.9);
     font-size: 13px;
 }
 
@@ -154,21 +159,23 @@
 .form-field textarea {
     width: 100%;
     padding: 12px 14px;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
     font-size: 14px;
     font-family: inherit;
     transition: all 0.2s ease;
     box-sizing: border-box;
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    color: white;
 }
 
 .form-field input[type="text"]:hover,
 .form-field input[type="date"]:hover,
 .form-field input[type="time"]:hover,
 .form-field textarea:hover {
-    border-color: #cbd5e1;
-    background: white;
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.18);
 }
 
 .form-field input[type="text"]:focus,
@@ -176,9 +183,9 @@
 .form-field input[type="time"]:focus,
 .form-field textarea:focus {
     outline: none;
-    border-color: #667eea;
-    background: white;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    border-color: rgba(196, 181, 253, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 4px rgba(196, 181, 253, 0.2);
 }
 
 .form-field textarea {
@@ -201,25 +208,27 @@
 
 .search-input {
     padding: 10px 14px;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
     font-size: 13px;
     width: 100%;
-    background-color: #f8fafc;
+    background-color: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
     box-sizing: border-box;
     transition: all 0.2s ease;
+    color: white;
 }
 
 .search-input:hover {
-    border-color: #cbd5e1;
-    background: white;
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.18);
 }
 
 .search-input:focus {
     outline: none;
-    border-color: #667eea;
-    background: white;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    border-color: rgba(196, 181, 253, 0.5);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 4px rgba(196, 181, 253, 0.2);
 }
 
 .dropdown-list {
@@ -230,10 +239,11 @@
     margin-top: 6px;
     max-height: 200px;
     overflow-y: auto;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
     z-index: 10;
 }
 
@@ -246,7 +256,7 @@
 }
 
 .dropdown-list::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 3px;
 }
 
@@ -257,7 +267,7 @@
     padding: 12px 14px;
     cursor: pointer;
     transition: all 0.15s ease;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .dropdown-item:last-child {
@@ -265,27 +275,27 @@
 }
 
 .dropdown-item:hover {
-    background-color: #f8fafc;
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .dropdown-item.selected {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+    background: rgba(196, 181, 253, 0.2);
 }
 
 .dropdown-item input[type="checkbox"] {
     cursor: pointer;
     width: 16px;
     height: 16px;
-    accent-color: #667eea;
+    accent-color: rgba(196, 181, 253, 0.8);
 }
 
 .dropdown-item span {
     font-size: 14px;
-    color: #1e293b;
+    color: white;
 }
 
 .dropdown-item .member-id {
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.7);
     font-weight: 400;
     font-size: 12px;
 }
@@ -293,7 +303,7 @@
 .dropdown-empty {
     padding: 16px;
     text-align: center;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.6);
     font-size: 13px;
 }
 
@@ -313,12 +323,12 @@
 }
 
 .selected-members::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 3px;
 }
 
 .selected-members::-webkit-scrollbar-thumb:hover {
-    background: #cbd5e1;
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .selected-tags {
@@ -375,9 +385,10 @@
     align-items: center;
     gap: 12px;
     padding: 20px 24px;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
 }
 
 .footer-right {
@@ -397,19 +408,23 @@
 }
 
 .task-modal-footer .cancel-btn {
-    background-color: #f1f5f9;
-    color: #64748b;
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .task-modal-footer .cancel-btn:hover {
-    background-color: #e2e8f0;
-    color: #334155;
+    background-color: rgba(255, 255, 255, 0.15);
+    color: white;
 }
 
 .task-modal-footer .save-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: rgba(196, 181, 253, 0.3);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(196, 181, 253, 0.4);
     color: white;
-    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 14px rgba(196, 181, 253, 0.3);
 }
 
 .task-modal-footer .save-btn:hover:not(:disabled) {

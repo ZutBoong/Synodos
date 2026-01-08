@@ -4,14 +4,17 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: #ffffff;
+    background: rgba(20, 20, 30, 0.95);
+    backdrop-filter: blur(20px);
+    color: white;
 }
 
 /* 헤더 */
 .task-detail-view-header {
     flex-shrink: 0;
-    border-bottom: 1px solid #e5e7eb;
-    background: #f9fafb;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
 }
 
 .task-detail-view-header-inner {
@@ -40,10 +43,11 @@
     padding: 0 !important;
     margin: 0 !important;
     margin-bottom: 0 !important;
-    background: white !important;
-    border: 1px solid #e5e7eb !important;
-    border-radius: 6px;
-    color: #6b7280 !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.8) !important;
     cursor: pointer;
     transition: all 0.15s ease;
     flex-shrink: 0;
@@ -55,9 +59,9 @@
 }
 
 .task-detail-view .back-btn:hover {
-    background: #f3f4f6;
-    color: #374151;
-    border-color: #d1d5db;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border-color: rgba(196, 181, 253, 0.4);
 }
 
 .task-detail-view .back-btn i {
@@ -69,16 +73,16 @@
     align-items: center;
     gap: 6px;
     font-size: 13px;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.7);
     margin-left: 8px;
 }
 
 .saving-indicator i {
-    color: #3b82f6;
+    color: rgba(196, 181, 253, 1);
 }
 
 .status-check {
-    color: #10b981;
+    color: #6ee7b7;
     font-size: 11px;
     margin-left: 4px;
 }
@@ -86,25 +90,29 @@
 .task-id-badge {
     font-size: 14px;
     font-weight: 600;
-    color: #6b7280;
-    background: #e5e7eb;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
     padding: 4px 10px;
-    border-radius: 6px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .copy-btn {
-    background: none;
-    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     padding: 6px 8px;
     cursor: pointer;
-    color: #6b7280;
-    border-radius: 4px;
+    color: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
     transition: all 0.15s ease;
 }
 
 .copy-btn:hover {
-    background: #e5e7eb;
-    color: #374151;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border-color: rgba(196, 181, 253, 0.4);
 }
 
 .header-right {
@@ -114,18 +122,20 @@
 }
 
 .action-btn {
-    background: none;
-    border: 1px solid #e5e7eb;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 8px 10px;
     cursor: pointer;
-    color: #6b7280;
-    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
     transition: all 0.15s ease;
 }
 
 .action-btn:hover {
-    background: #f3f4f6;
-    border-color: #d1d5db;
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(196, 181, 253, 0.4);
+    color: white;
 }
 
 .action-btn.favorite-btn.active {
@@ -169,7 +179,7 @@
 .task-title {
     font-size: 24px;
     font-weight: 700;
-    color: #111827;
+    color: white;
     margin: 0 0 12px 0;
     line-height: 1.3;
     display: flex;
@@ -181,7 +191,7 @@
     width: 100%;
     font-size: 24px;
     font-weight: 700;
-    color: #111827;
+    color: white;
     padding: 4px 0;
     border: none;
     border-bottom: 2px solid transparent;
@@ -191,16 +201,16 @@
 }
 
 .title-input:hover {
-    border-bottom-color: #e5e7eb;
+    border-bottom-color: rgba(255, 255, 255, 0.2);
 }
 
 .title-input:focus {
     outline: none;
-    border-bottom-color: #3b82f6;
+    border-bottom-color: rgba(196, 181, 253, 0.5);
 }
 
 .title-input::placeholder {
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .urgent-icon {
@@ -229,14 +239,15 @@
     align-items: flex-start;
     gap: 12px;
     padding: 16px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 8px;
+    background: rgba(248, 113, 113, 0.2);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(248, 113, 113, 0.3);
+    border-radius: 16px;
     margin-bottom: 24px;
 }
 
 .rejection-notice > i {
-    color: #dc2626;
+    color: #f87171;
     font-size: 20px;
     flex-shrink: 0;
     margin-top: 2px;
@@ -244,13 +255,13 @@
 
 .rejection-notice strong {
     display: block;
-    color: #991b1b;
+    color: #fca5a5;
     font-size: 14px;
     margin-bottom: 4px;
 }
 
 .rejection-notice p {
-    color: #dc2626;
+    color: #fca5a5;
     font-size: 14px;
     margin: 0;
     line-height: 1.5;
@@ -261,8 +272,10 @@
     display: flex;
     gap: 4px;
     padding: 4px;
-    background: #f3f4f6;
-    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
     margin-bottom: 20px;
 }
 
@@ -275,23 +288,23 @@
     padding: 12px 16px;
     border: none;
     background: transparent;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.7);
     font-size: 14px;
     font-weight: 500;
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .tab-btn:hover {
-    color: #374151;
-    background: rgba(255, 255, 255, 0.5);
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .tab-btn.active {
-    background: white;
-    color: #111827;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .tab-btn i {
@@ -346,16 +359,17 @@
 
 .date-card {
     flex: 1;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
     padding: 16px;
     transition: all 0.2s ease;
 }
 
 .date-card:hover {
-    border-color: #d1d5db;
-    background: #f3f4f6;
+    border-color: rgba(196, 181, 253, 0.3);
+    background: rgba(255, 255, 255, 0.18);
 }
 
 .date-card-header {
@@ -363,14 +377,14 @@
     align-items: center;
     gap: 8px;
     margin-bottom: 12px;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.7);
     font-size: 13px;
     font-weight: 500;
 }
 
 .date-card-header i {
     font-size: 14px;
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .date-card-inputs {
@@ -382,28 +396,31 @@
 .date-card-inputs input[type="time"] {
     flex: 1;
     padding: 10px 12px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
     font-size: 14px;
-    color: #111827;
-    background: white;
+    color: white;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
     transition: all 0.15s ease;
 }
 
 .date-card-inputs input[type="date"]:hover,
 .date-card-inputs input[type="time"]:hover {
-    border-color: #d1d5db;
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.18);
 }
 
 .date-card-inputs input[type="date"]:focus,
 .date-card-inputs input[type="time"]:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: rgba(196, 181, 253, 0.5);
+    box-shadow: 0 0 0 3px rgba(196, 181, 253, 0.2);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .date-arrow {
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.6);
     font-size: 14px;
     flex-shrink: 0;
 }
@@ -416,7 +433,7 @@
 
 .meta-item label {
     font-size: 12px;
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.7);
     font-weight: 500;
     display: flex;
     align-items: center;
@@ -429,7 +446,7 @@
 
 .meta-item span {
     font-size: 14px;
-    color: #111827;
+    color: white;
     font-weight: 500;
 }
 
@@ -446,18 +463,18 @@
     border-radius: 0;
     font-size: 14px;
     font-weight: 500;
-    color: #111827;
+    color: white;
     background: transparent;
     transition: border-color 0.15s ease;
 }
 
 .date-time-inputs input:hover {
-    border-bottom-color: #e5e7eb;
+    border-bottom-color: rgba(255, 255, 255, 0.2);
 }
 
 .date-time-inputs input:focus {
     outline: none;
-    border-bottom-color: #3b82f6;
+    border-bottom-color: rgba(196, 181, 253, 0.5);
 }
 
 .date-time-inputs input[type="date"] {
@@ -486,7 +503,7 @@
 .people-group > label {
     font-size: 14px;
     font-weight: 600;
-    color: #374151;
+    color: rgba(255, 255, 255, 0.9);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -507,22 +524,25 @@
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
-    background: #f3f4f6;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 20px;
     font-size: 13px;
 }
 
 .person-chip.verifier {
-    background: #e0e7ff;
+    background: rgba(196, 181, 253, 0.2);
+    border-color: rgba(196, 181, 253, 0.3);
 }
 
 .person-name {
     font-weight: 500;
-    color: #374151;
+    color: white;
 }
 
 .person-id {
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.6);
     font-size: 12px;
 }
 
@@ -591,10 +611,11 @@
     top: 100%;
     left: 0;
     right: 0;
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     max-height: 200px;
     overflow-y: auto;
     z-index: 100;
@@ -608,14 +629,15 @@
     padding: 10px 12px;
     cursor: pointer;
     transition: background 0.15s ease;
+    color: white;
 }
 
 .member-option:hover {
-    background: #f3f4f6;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .member-option.selected {
-    background: #dbeafe;
+    background: rgba(196, 181, 253, 0.2);
 }
 
 .member-option input[type="checkbox"] {
@@ -678,19 +700,22 @@
     gap: 8px;
     font-size: 14px;
     font-weight: 600;
-    color: #374151;
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 10px;
 }
 
 .task-description-section > label i {
-    color: #6b7280;
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .description-content {
-    background: #f9fafb;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
     padding: 16px;
-    border-radius: 8px;
+    border-radius: 16px;
     line-height: 1.7;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .description-content p {
@@ -824,13 +849,16 @@
     align-items: center;
     gap: 12px;
     padding: 12px;
-    background: #f9fafb;
-    border-radius: 8px;
-    transition: background 0.15s ease;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    transition: all 0.15s ease;
 }
 
 .file-item:hover {
-    background: #f3f4f6;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(196, 181, 253, 0.3);
 }
 
 .file-icon {
@@ -853,7 +881,7 @@
 .file-name {
     font-size: 14px;
     font-weight: 500;
-    color: #111827;
+    color: white;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

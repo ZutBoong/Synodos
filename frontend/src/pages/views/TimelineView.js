@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import TaskDetailView from '../../components/TaskDetailView';
+import ShaderBackground from '../../components/landing/shader-background';
 import './TimelineView.css';
 
 
@@ -537,12 +538,13 @@ function TimelineView({
     };
 
     return (
-        <div
-            className={`timeline-view ${viewMode === 'week' ? 'week-view' : ''} ${selectedTask ? 'task-detail-open' : ''}`}
-            onMouseMove={isDraggingScroll ? handleScrollDragMove : undefined}
-            onMouseUp={isDraggingScroll ? handleScrollDragEnd : undefined}
-            onMouseLeave={isDraggingScroll ? handleScrollDragEnd : undefined}
-        >
+        <ShaderBackground>
+            <div
+                className={`timeline-view ${viewMode === 'week' ? 'week-view' : ''} ${selectedTask ? 'task-detail-open' : ''}`}
+                onMouseMove={isDraggingScroll ? handleScrollDragMove : undefined}
+                onMouseUp={isDraggingScroll ? handleScrollDragEnd : undefined}
+                onMouseLeave={isDraggingScroll ? handleScrollDragEnd : undefined}
+            >
             {/* 태스크 상세 패널 (전체화면) */}
             {selectedTask ? (
                 <TaskDetailView
@@ -730,7 +732,8 @@ function TimelineView({
             </div>
             </>
             )}
-        </div>
+            </div>
+        </ShaderBackground>
     );
 }
 

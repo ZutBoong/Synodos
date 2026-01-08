@@ -283,7 +283,7 @@
 }
 
 .sidebar-footer:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .user-avatar {
@@ -653,7 +653,7 @@
 }
 
 .member-item:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .member-avatar {

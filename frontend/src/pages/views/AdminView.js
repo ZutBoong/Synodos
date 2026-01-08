@@ -3,6 +3,7 @@ import {
     updateTeam, updateTeamDescription, regenerateTeamCode,
     kickMember, deleteTeam
 } from '../../api/teamApi';
+import ShaderBackground from '../../components/landing/shader-background';
 import './AdminView.css';
 
 function AdminView({ team, teamMembers, loginMember, isLeader, updateTeam: updateTeamProp }) {
@@ -134,7 +135,8 @@ function AdminView({ team, teamMembers, loginMember, isLeader, updateTeam: updat
     }
 
     return (
-        <div className="admin-view">
+        <ShaderBackground>
+            <div className="admin-view">
             {/* 팀 정보 섹션 */}
             <div className="admin-section">
                 <h2>팀 정보</h2>
@@ -297,7 +299,8 @@ function AdminView({ team, teamMembers, loginMember, isLeader, updateTeam: updat
                     </button>
                 </div>
             </div>
-        </div>
+            </div>
+        </ShaderBackground>
     );
 }
 

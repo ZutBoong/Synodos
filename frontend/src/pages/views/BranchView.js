@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getBranches, getCommitsGraph, getDefaultBranch, createBranch, mergeBranches as mergeBranchesApi, deleteBranch, revertCommit, getTeamPRs } from '../../api/githubApi';
 import { tasklistByTeam } from '../../api/boardApi';
 import axiosInstance from '../../api/axiosInstance';
+import ShaderBackground from '../../components/landing/shader-background';
 import './BranchView.css';
 
 // 그래프 설정 (GitKraken 스타일)
@@ -1434,8 +1435,9 @@ function BranchView({ team, loginMember, filters }) {
 
     if (!isGithubConnected) {
         return (
-            <div className="branch-view dark">
-                <div className="branch-view-empty">
+            <ShaderBackground>
+                <div className="branch-view dark">
+                    <div className="branch-view-empty">
                     <div className="empty-icon">
                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
@@ -1444,15 +1446,17 @@ function BranchView({ team, loginMember, filters }) {
                     </div>
                     <h3>GitHub 저장소 연결 필요</h3>
                     <p>브랜치 시각화를 위해 GitHub 저장소를 연결해주세요.</p>
+                    </div>
                 </div>
-            </div>
+            </ShaderBackground>
         );
     }
 
     const { nodes, edges, branchRows, baseY, bounds } = renderGraphData();
 
     return (
-        <div className="branch-view dark" onClick={handleBackgroundClick}>
+        <ShaderBackground>
+            <div className="branch-view dark" onClick={handleBackgroundClick}>
             {/* GitHub 미연결 경고 배너 */}
             {!isUserGithubConnected && (
                 <div className="github-warning-banner">
@@ -2690,7 +2694,8 @@ function BranchView({ team, loginMember, filters }) {
                     )}
                 </div>
             )}
-        </div>
+            </div>
+        </ShaderBackground>
     );
 }
 

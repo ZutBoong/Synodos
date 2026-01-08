@@ -3,6 +3,7 @@ import { getTaskFavoritesByTeam, toggleTaskFavorite } from '../../api/boardApi';
 import { useNavigate } from 'react-router-dom';
 import TeamHeader from '../../components/TeamHeader';
 import { WORKFLOW_STATUSES } from '../../constants/workflowStatuses';
+import ShaderBackground from '../../components/landing/shader-background';
 import './OverviewView.css';
 
 // 화면 높이에 따른 표시 개수 계산
@@ -124,8 +125,9 @@ function OverviewView({ team, tasks, teamMembers, loginMember, isLeader, updateT
     const hasMoreFavorites = favoriteTasks.length > maxDisplayItems;
 
     return (
-        <div className="overview-view">
-            <TeamHeader team={team} />
+        <ShaderBackground>
+            <div className="overview-view">
+                <TeamHeader team={team} />
 
             {/* 하단: 좌측(참여중인 태스크), 우측(즐겨찾기 태스크) */}
             <div className="overview-bottom-row">
@@ -223,7 +225,8 @@ function OverviewView({ team, tasks, teamMembers, loginMember, isLeader, updateT
                     </div>
                 </div>
             )}
-        </div>
+            </div>
+        </ShaderBackground>
     );
 }
 

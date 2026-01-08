@@ -7,6 +7,7 @@
     flex-direction: column;
     box-sizing: border-box;
     background: transparent;
+    color: #e0e7ff;
 }
 
 /* 태스크 상세 패널 모드 */
@@ -53,7 +54,7 @@
 }
 
 .board-view .task-detail-header .back-btn i {
-    font-size: 12px;
+    font-size: 14px;
 }
 
 /* ===== 컬럼 래퍼 ===== */
@@ -101,54 +102,64 @@
 
 /* ===== 컬럼 ===== */
 .board-view .column {
-    background: white;
-    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
     width: calc(25% - 15px);
-    min-width: 280px;
+    min-width: 300px;
     flex-shrink: 0;
-    padding: 16px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-    transition: box-shadow 0.2s ease;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: all 0.3s ease;
+    max-height: calc(100vh - 140px);
+    overflow: hidden;
+    align-items: stretch;
 }
 
 .board-view .column:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    border-color: rgba(196, 181, 253, 0.4);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
 .board-view .column-header {
     display: flex;
     flex-direction: column;
-    padding: 10px 12px;
-    margin-bottom: 12px;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .board-view .column-header h3 {
     margin: 0;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
-    color: #1e293b;
+    color: #ffffff;
     cursor: pointer;
     flex: 1;
     transition: all 0.15s ease;
 }
 
 .board-view .column-header h3:hover {
-    color: #667eea;
+    color: #c4b5fd;
 }
 
 .board-view .column-header input {
     flex: 1;
-    padding: 8px 12px;
-    border: 2px solid #667eea;
-    border-radius: 8px;
-    font-size: 15px;
+    padding: 10px 14px;
+    border: 2px solid rgba(196, 181, 253, 0.4);
+    border-radius: 12px;
+    font-size: 16px;
     font-weight: 600;
     outline: none;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(196, 181, 253, 0.1);
 }
 
 /* 컬럼 타이틀 행 */
@@ -193,28 +204,29 @@
 .board-view .column-menu-btn {
     background: none;
     border: none;
-    font-size: 18px;
+    font-size: 20px;
     cursor: pointer;
-    padding: 6px 10px;
-    color: #94a3b8;
-    border-radius: 8px;
+    padding: 8px 12px;
+    color: #e0e7ff;
+    border-radius: 10px;
     transition: all 0.15s ease;
 }
 
 .board-view .column-menu-btn:hover {
-    background: #f1f5f9;
-    color: #64748b;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
 }
 
 .board-view .column-menu-dropdown {
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% + 10px);
     right: 0;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-    min-width: 180px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+    min-width: 200px;
     z-index: 100;
     overflow: hidden;
     animation: dropdownSlide 0.2s ease;
@@ -234,31 +246,31 @@
 .board-view .column-menu-dropdown button {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     width: 100%;
-    padding: 12px 16px;
+    padding: 14px 18px;
     background: none;
     border: none;
     text-align: left;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
-    color: #475569;
+    color: #e0e7ff;
     transition: all 0.15s ease;
 }
 
 .board-view .column-menu-dropdown button:hover {
-    background: #f8fafc;
-    color: #1e293b;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
 }
 
 .board-view .column-menu-dropdown .menu-delete-btn {
-    color: #ef4444;
+    color: #f87171;
 }
 
 .board-view .column-menu-dropdown .menu-delete-btn:hover {
-    background: #fef2f2;
-    color: #dc2626;
+    background: rgba(248, 113, 113, 0.2);
+    color: #ffffff;
 }
 
 /* GitHub 명령어 설정 */
@@ -269,7 +281,7 @@
 
 .board-view .column-menu-dropdown .github-prefix-item label {
     display: block;
-    font-size: 11px;
+    font-size: 15px;
     font-weight: 600;
     color: #94a3b8;
     text-transform: uppercase;
@@ -283,7 +295,7 @@
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
-    font-size: 13px;
+    font-size: 15px;
     color: #475569;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -299,7 +311,7 @@
     padding: 8px 10px;
     border: 1px solid #3b82f6;
     border-radius: 6px;
-    font-size: 13px;
+    font-size: 15px;
     color: #1e293b;
     outline: none;
     box-sizing: border-box;
@@ -311,6 +323,27 @@
     padding: 6px;
     border-radius: 10px;
     transition: all 0.2s ease;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-bottom: 0;
+}
+
+.board-view .tasks-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.board-view .tasks-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.board-view .tasks-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.board-view .tasks-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .board-view .tasks-container.dragging-over {
@@ -319,43 +352,64 @@
 
 /* ===== 태스크 카드 ===== */
 .board-view .task-card {
-    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-    border-radius: 12px;
-    padding: 14px 14px 14px 16px;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    border-radius: 16px;
+    padding: 16px 16px 16px 20px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
     cursor: pointer;
     transition: all 0.2s ease;
-    border: 1px solid #e2e8f0;
-    border-left: 3px solid #cbd5e1;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
+    overflow: hidden;
+}
+
+.board-view .task-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, #a78bfa 0%, #c4b5fd 100%);
+    opacity: 0.7;
+    transition: all 0.2s ease;
 }
 
 .board-view .task-card:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    border-color: rgba(102, 126, 234, 0.3);
-    border-left-color: #667eea;
-    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    border-color: rgba(196, 181, 253, 0.4);
+    transform: translateY(-3px);
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.board-view .task-card:hover::before {
+    opacity: 1;
 }
 
 .board-view .task-card.dragging {
     transform: rotate(3deg) scale(1.02);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
-    border-left-color: #667eea;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+    border-color: rgba(196, 181, 253, 0.6);
 }
 
 .board-view .task-card.done {
-    opacity: 0.6;
-    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
-    border-color: #86efac;
-    border-left-color: #10b981;
+    opacity: 0.7;
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.board-view .task-card.done::before {
+    background: linear-gradient(180deg, #6ee7b7 0%, #34d399 100%);
+    opacity: 0.7;
 }
 
 .board-view .task-card.done .task-card-title {
     text-decoration: line-through;
-    color: #10b981;
+    color: #6ee7b7;
 }
 
 /* 상태별 왼쪽 바 색상 */
@@ -418,23 +472,25 @@
 }
 
 .board-view .task-card-title {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
-    color: #1e293b;
+    color: #ffffff;
     word-break: break-word;
     line-height: 1.5;
 }
 
 .board-view .task-card-title .task-id {
     display: inline-block;
-    font-size: 11px;
+    font-size: 15px;
     font-weight: 600;
-    color: #667eea;
-    background: #eef2ff;
-    padding: 2px 6px;
-    border-radius: 4px;
-    margin-right: 6px;
+    color: #c4b5fd;
+    background: rgba(196, 181, 253, 0.2);
+    backdrop-filter: blur(5px);
+    padding: 3px 8px;
+    border-radius: 6px;
+    margin-right: 8px;
     font-family: 'Monaco', 'Consolas', monospace;
+    border: 1px solid rgba(196, 181, 253, 0.3);
 }
 
 .board-view .task-card-meta {
@@ -442,9 +498,9 @@
     justify-content: space-between;
     align-items: center;
     gap: 10px;
-    margin-top: 10px;
-    font-size: 12px;
-    color: #64748b;
+    margin-top: 12px;
+    font-size: 14px;
+    color: #e0e7ff;
 }
 
 .board-view .task-card-meta .due-date {
@@ -455,13 +511,13 @@
 }
 
 .board-view .task-card-meta .due-date.overdue {
-    color: #ef4444;
+    color: #f87171;
     font-weight: 600;
 }
 
 /* 워크플로우 상태 배지 */
 .board-view .workflow-status-badge {
-    font-size: 10px;
+    font-size: 12px;
     padding: 6px 10px;
     border-radius: 20px;
     display: inline-flex;
@@ -511,7 +567,7 @@
 }
 
 .board-view .task-card-meta .urgent-badge i {
-    font-size: 12px;
+    font-size: 14px;
     color: white;
 }
 
@@ -567,110 +623,126 @@
 
 /* ===== 태스크 추가 ===== */
 .board-view .add-task {
-    margin-top: 12px;
+    margin-top: auto;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    flex-shrink: 0;
+    padding-top: 12px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .board-view .add-task-btn {
     width: 100%;
-    padding: 12px 16px;
-    background: rgba(102, 126, 234, 0.08);
-    color: #667eea;
-    border: 2px dashed #cbd5e1;
-    border-radius: 10px;
+    padding: 14px 18px;
+    background: rgba(196, 181, 253, 0.1);
+    backdrop-filter: blur(5px);
+    color: #c4b5fd;
+    border: 2px dashed rgba(196, 181, 253, 0.4);
+    border-radius: 14px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
     text-align: center;
+    box-sizing: border-box;
+    margin: 0;
+    display: block;
+    align-self: stretch;
 }
 
 .board-view .add-task-btn:hover {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: rgba(196, 181, 253, 0.3);
     color: white;
-    border-color: transparent;
+    border-color: rgba(196, 181, 253, 0.6);
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 8px 20px rgba(196, 181, 253, 0.4);
 }
 
 .board-view .add-task input {
-    padding: 12px 14px;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
+    padding: 12px 16px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
     font-size: 14px;
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    color: #ffffff;
     transition: all 0.2s ease;
 }
 
 .board-view .add-task input:focus {
     outline: none;
-    border-color: #667eea;
-    background: white;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    border-color: rgba(196, 181, 253, 0.6);
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 0 4px rgba(196, 181, 253, 0.1);
 }
 
 .board-view .add-task button:not(.add-task-btn) {
-    padding: 12px 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 12px 18px;
+    background: rgba(196, 181, 253, 0.3);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(196, 181, 253, 0.4);
     color: white;
-    border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 15px rgba(196, 181, 253, 0.3);
 }
 
 .board-view .add-task button:not(.add-task-btn):hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 6px 20px rgba(196, 181, 253, 0.4);
+    background: rgba(196, 181, 253, 0.4);
 }
 
 /* ===== 컬럼 추가 ===== */
 .board-view .add-column {
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
     width: calc(25% - 15px);
-    min-width: 280px;
+    min-width: 300px;
     flex-shrink: 0;
-    padding: 16px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    border: 2px dashed #cbd5e1;
+    gap: 12px;
+    border: 2px dashed rgba(196, 181, 253, 0.4);
     transition: all 0.2s ease;
 }
 
 .board-view .add-column:hover {
-    border-color: #667eea;
-    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(196, 181, 253, 0.6);
+    background: rgba(255, 255, 255, 0.22);
 }
 
 .board-view .add-column input {
-    padding: 12px 14px;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
+    padding: 12px 16px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
     font-size: 14px;
-    background: white;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    color: #ffffff;
     transition: all 0.2s ease;
 }
 
 .board-view .add-column input:focus {
     outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    border-color: rgba(196, 181, 253, 0.6);
+    box-shadow: 0 0 0 4px rgba(196, 181, 253, 0.1);
 }
 
 .board-view .add-column button {
-    padding: 12px 16px;
-    background: #f1f5f9;
-    color: #64748b;
-    border: none;
-    border-radius: 10px;
+    padding: 12px 18px;
+    background: rgba(196, 181, 253, 0.3);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(196, 181, 253, 0.4);
+    color: white;
+    border-radius: 12px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -678,8 +750,8 @@
 }
 
 .board-view .add-column button:hover {
-    background: #e2e8f0;
-    color: #334155;
+    background: rgba(196, 181, 253, 0.4);
+    color: #ffffff;
 }
 
 /* ===== 빈 상태 (칼럼 없음) ===== */
@@ -689,10 +761,11 @@
     align-items: center;
     justify-content: center;
     padding: 80px 40px;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-    border: 2px dashed #e2e8f0;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(12px);
+    border-radius: 24px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    border: 2px dashed rgba(255, 255, 255, 0.2);
     text-align: center;
     min-height: 300px;
     margin: 20px;
@@ -700,20 +773,20 @@
 
 .board-view .empty-state-icon {
     margin-bottom: 20px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .board-view .empty-state h3 {
     margin: 0 0 8px 0;
     font-size: 20px;
     font-weight: 600;
-    color: #334155;
+    color: #ffffff;
 }
 
 .board-view .empty-state p {
     margin: 0 0 28px 0;
     font-size: 15px;
-    color: #94a3b8;
+    color: #e0e7ff;
 }
 
 .board-view .add-column-inline {
@@ -787,7 +860,7 @@
     left: 4px;
     top: 100%;
     margin-top: 4px;
-    font-size: 13px;
+    font-size: 15px;
     color: #ef4444;
     white-space: nowrap;
 }
@@ -946,7 +1019,7 @@
 
 .board-view .archive-note-section label {
     font-weight: 600;
-    font-size: 13px;
+    font-size: 15px;
     color: #374151;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -1005,7 +1078,7 @@
     }
 
     .board-view .task-card-title {
-        font-size: 13px;
+        font-size: 15px;
     }
 }
 
@@ -1039,7 +1112,7 @@
     }
 
     .board-view .column-header h3 {
-        font-size: 13px;
+        font-size: 15px;
     }
 
     .board-view .task-card {
@@ -1048,12 +1121,12 @@
     }
 
     .board-view .task-card-title {
-        font-size: 13px;
+        font-size: 15px;
         line-height: 1.4;
     }
 
     .board-view .task-card-meta {
-        font-size: 11px;
+        font-size: 15px;
         margin-top: 8px;
     }
 
@@ -1068,12 +1141,12 @@
     }
 
     .board-view .task-card-meta .urgent-badge i {
-        font-size: 10px;
+        font-size: 12px;
     }
 
     .board-view .add-task-btn {
         padding: 10px 12px;
-        font-size: 13px;
+        font-size: 15px;
     }
 
     /* 모달 전체화면 */
@@ -1131,6 +1204,6 @@
 
     .board-view .column-menu-dropdown button {
         padding: 10px 14px;
-        font-size: 13px;
+        font-size: 15px;
     }
 }

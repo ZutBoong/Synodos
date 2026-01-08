@@ -2,10 +2,13 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     overflow: hidden;
+    color: #e0e7ff;
 }
 
 /* 헤더 */
@@ -33,13 +36,15 @@
     margin: 0;
     font-size: 20px;
     font-weight: 700;
-    color: #1e293b;
+    color: #ffffff;
 }
 
 .chat-member-count {
-    font-size: 13px;
-    color: #64748b;
-    background: #f1f5f9;
+    font-size: 15px;
+    color: #ffffff;
+    background: rgba(196, 181, 253, 0.3);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(196, 181, 253, 0.4);
     padding: 6px 14px;
     border-radius: 20px;
     font-weight: 500;
@@ -53,7 +58,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .chat-view-messages::-webkit-scrollbar {
@@ -91,7 +96,7 @@
     gap: 8px;
     padding: 12px;
     color: #64748b;
-    font-size: 13px;
+    font-size: 15px;
 }
 
 .loading-spinner {
@@ -154,7 +159,7 @@
 .chat-date-divider span {
     background: #e2e8f0;
     color: #64748b;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
     padding: 6px 16px;
     border-radius: 20px;
@@ -194,7 +199,7 @@
 }
 
 .chat-sender {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
     color: #64748b;
     margin-left: 4px;
@@ -229,7 +234,7 @@
 }
 
 .chat-time {
-    font-size: 10px;
+    font-size: 14px;
     color: #94a3b8;
     white-space: nowrap;
     flex-shrink: 0;
@@ -314,6 +319,6 @@
     .chat-avatar {
         width: 32px;
         height: 32px;
-        font-size: 12px;
+        font-size: 14px;
     }
 }

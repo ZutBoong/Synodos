@@ -9,6 +9,7 @@ import {
 } from '../../api/githubIssueApi';
 import { columnlistByTeam } from '../../api/boardApi';
 import { useNavigate } from 'react-router-dom';
+import ShaderBackground from '../../components/landing/shader-background';
 import './SettingsView.css';
 
 function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewColumns, refreshData }) {
@@ -841,7 +842,8 @@ function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewCo
     };
 
     return (
-        <div className="settings-view">
+        <ShaderBackground>
+            <div className="settings-view">
             <nav className="sv-sidebar">
                 <div className="sv-sidebar-title">설정</div>
                 <button className={`sv-nav-item ${activeSection === 'general' ? 'active' : ''}`} onClick={() => setActiveSection('general')}>
@@ -911,7 +913,8 @@ function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewCo
                     </div>
                 </div>
             )}
-        </div>
+            </div>
+        </ShaderBackground>
     );
 }
 

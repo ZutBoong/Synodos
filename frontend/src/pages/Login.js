@@ -71,8 +71,12 @@ function Login() {
         <ShaderBackground>
             <div className="min-h-screen flex items-center justify-center px-6 py-12">
                 <div 
-                    className="w-full max-w-md p-8 rounded-3xl bg-white/10 backdrop-blur-sm border border-white/20"
-                    style={{ filter: "url(#glass-effect)" }}
+                    className="w-full max-w-md p-8 rounded-3xl backdrop-blur-sm"
+                    style={{ 
+                        filter: "url(#glass-effect)",
+                        backgroundColor: "rgba(255, 255, 255, 0.35)",
+                        border: "1px solid rgba(255, 255, 255, 0.3)"
+                    }}
                 >
                     {/* SVG Filters */}
                     <svg className="absolute inset-0 w-0 h-0">
@@ -93,13 +97,13 @@ function Login() {
                     </svg>
 
                     {/* Title */}
-                    <h2 className="text-3xl font-light text-white mb-8 text-center">
+                    <h2 className="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
                         로그인
                     </h2>
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2">
-                            <label className="block text-xs font-light text-white/95 uppercase tracking-wider">
+                            <label className="block text-sm font-semibold text-white uppercase tracking-wider drop-shadow-md">
                                 아이디
                             </label>
                             <input
@@ -108,7 +112,7 @@ function Login() {
                                 value={form.userid}
                                 onChange={handleChange}
                                 placeholder="아이디를 입력하세요"
-                                className="w-full px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-sm font-light focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
+                                className="w-full px-4 py-3 rounded-full bg-white/20 border border-white/30 text-white placeholder-white/80 text-base font-medium focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all duration-200"
                             />
                         </div>
 
@@ -122,19 +126,19 @@ function Login() {
                                 value={form.password}
                                 onChange={handleChange}
                                 placeholder="비밀번호를 입력하세요"
-                                className="w-full px-4 py-3 rounded-full bg-white/5 border border-white/20 text-white placeholder-white/60 text-sm font-light focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-200"
+                                className="w-full px-4 py-3 rounded-full bg-white/20 border border-white/30 text-white placeholder-white/80 text-base font-medium focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all duration-200"
                             />
                         </div>
 
                         {error && (
-                            <div className="px-4 py-3 rounded-full bg-red-500/20 border border-red-500/30 text-red-200 text-xs text-center">
+                            <div className="px-4 py-3 rounded-full bg-red-500/20 border border-red-500/30 text-red-100 text-sm font-semibold text-center">
                                 {error}
                             </div>
                         )}
 
                         <button 
                             type="submit" 
-                            className="w-full px-8 py-3 rounded-full bg-white text-black font-normal text-xs transition-all duration-200 hover:bg-white/90 cursor-pointer"
+                            className="w-full px-8 py-3 rounded-full bg-white text-black font-semibold text-base transition-all duration-200 hover:bg-white/90 cursor-pointer"
                         >
                             로그인
                         </button>
@@ -143,7 +147,7 @@ function Login() {
                     {/* Social Divider */}
                     <div className="flex items-center my-8">
                         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                        <span className="px-4 text-white/85 text-xs font-light">또는</span>
+                        <span className="px-4 text-white text-sm font-medium">또는</span>
                         <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
                     </div>
 
@@ -152,7 +156,7 @@ function Login() {
                         <button
                             type="button"
                             onClick={handleGoogleLogin}
-                            className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-200 hover:scale-110"
+                            className="w-12 h-12 rounded-full bg-white/25 hover:bg-white/35 border border-white/30 backdrop-blur-sm flex items-center justify-center transition-all duration-200 hover:scale-110"
                             title="Google로 로그인"
                         >
                             <svg width="20" height="20" viewBox="0 0 24 24">
@@ -165,7 +169,7 @@ function Login() {
                         <button
                             type="button"
                             onClick={handleNaverLogin}
-                            className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-200 hover:scale-110"
+                            className="w-12 h-12 rounded-full bg-white/25 hover:bg-white/35 border border-white/30 backdrop-blur-sm flex items-center justify-center transition-all duration-200 hover:scale-110"
                             title="Naver로 로그인"
                         >
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -175,7 +179,7 @@ function Login() {
                         <button
                             type="button"
                             onClick={handleKakaoLogin}
-                            className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-200 hover:scale-110"
+                            className="w-12 h-12 rounded-full bg-white/25 hover:bg-white/35 border border-white/30 backdrop-blur-sm flex items-center justify-center transition-all duration-200 hover:scale-110"
                             title="Kakao로 로그인"
                         >
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -185,7 +189,7 @@ function Login() {
                         <button
                             type="button"
                             onClick={handleGitHubLogin}
-                            className="w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-sm flex items-center justify-center transition-all duration-200 hover:scale-110"
+                            className="w-12 h-12 rounded-full bg-white/25 hover:bg-white/35 border border-white/30 backdrop-blur-sm flex items-center justify-center transition-all duration-200 hover:scale-110"
                             title="GitHub로 로그인"
                         >
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -198,21 +202,21 @@ function Login() {
                     <div className="text-center space-x-4 text-xs">
                         <span 
                             onClick={() => navigate('/find-id')} 
-                            className="text-white/90 hover:text-white cursor-pointer transition-colors"
+                            className="text-white font-medium hover:text-white/90 cursor-pointer transition-colors drop-shadow-sm"
                         >
                             아이디 찾기
                         </span>
                         <span className="text-white/50">|</span>
                         <span 
                             onClick={() => navigate('/find-password')} 
-                            className="text-white/90 hover:text-white cursor-pointer transition-colors"
+                            className="text-white font-medium hover:text-white/90 cursor-pointer transition-colors drop-shadow-sm"
                         >
                             비밀번호 찾기
                         </span>
                         <span className="text-white/50">|</span>
                         <span 
                             onClick={() => navigate('/register')} 
-                            className="text-white/90 hover:text-white cursor-pointer transition-colors"
+                            className="text-white font-medium hover:text-white/90 cursor-pointer transition-colors drop-shadow-sm"
                         >
                             회원가입
                         </span>
