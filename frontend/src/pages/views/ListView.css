@@ -96,25 +96,38 @@
     height: 24px;
     color: rgba(255, 255, 255, 0.5);
     cursor: grab;
-    font-size: 14px;
+    font-size: 16px;
     letter-spacing: -2px;
     border-radius: 6px;
     transition: all 0.15s ease;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(196, 181, 253, 0.5);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .column-drag-handle:hover {
-    color: #667eea;
-    background: rgba(102, 126, 234, 0.1);
+    color: #4f46e5;
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(139, 92, 246, 0.7);
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
 }
 
 .column-drag-handle:active {
     cursor: grabbing;
+    background: rgba(255, 255, 255, 1);
+    border-color: rgba(139, 92, 246, 0.9);
+    box-shadow: 0 6px 12px rgba(139, 92, 246, 0.4);
 }
 
 /* 컬럼 드래그 중 */
 .list-column.dragging {
-    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.3);
-    transform: rotate(1deg);
+    box-shadow: 0 16px 50px rgba(139, 92, 246, 0.5);
+    transform: rotate(2deg) scale(1.02);
+    border: 2px solid rgba(196, 181, 253, 0.6);
+    background: rgba(255, 255, 255, 0.6);
+    z-index: 1000;
+    opacity: 0.95;
 }
 
 /* 컬럼 드롭 영역 */
@@ -232,7 +245,10 @@
 }
 
 .column-droppable.dragging-over {
-    background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%);
+    background: rgba(237, 233, 254, 0.6);
+    border: 2px dashed rgba(196, 181, 253, 0.7);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
 }
 
 .column-droppable.collapsed {
@@ -254,9 +270,11 @@
 
 .column-droppable.collapsed.dragging-over .collapsed-dropzone {
     min-height: 50px;
-    background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%);
+    background: rgba(237, 233, 254, 0.7);
+    border: 2px dashed rgba(196, 181, 253, 0.7);
     border-radius: 8px;
     margin: 8px 16px;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
 }
 
 .collapsed-dropzone span {
@@ -282,8 +300,10 @@
 }
 
 .column-droppable.dragging-over .empty-column-dropzone {
-    border-color: #c4b5fd;
-    background: rgba(196, 181, 253, 0.3);
+    border-color: rgba(196, 181, 253, 0.8);
+    border-width: 3px;
+    background: rgba(237, 233, 254, 0.7);
+    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
     color: #ffffff;
     font-weight: 700;
 }
@@ -303,7 +323,13 @@
 .task-table td {
     padding: 14px 20px;
     text-align: left;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.task-table th:last-child,
+.task-table td:last-child {
+    border-right: none;
 }
 
 .task-table th {
@@ -321,24 +347,33 @@
 }
 
 .task-table tbody tr:hover {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    background: rgba(237, 233, 254, 0.4);
 }
 
 /* 드래그 중인 행 */
 .task-table tbody tr.dragging {
-    background: white;
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.25);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 12px 40px rgba(139, 92, 246, 0.5);
     border-radius: 8px;
+    border: 2px solid rgba(196, 181, 253, 0.7);
+    transform: rotate(1deg) scale(1.02);
+    z-index: 1000;
+    opacity: 0.95;
 }
 
 .task-table tbody tr.dragging .drag-handle {
     opacity: 1;
-    color: #667eea;
+    color: #4f46e5;
+    background: rgba(255, 255, 255, 1);
+    border-color: rgba(139, 92, 246, 0.8);
+    box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
 }
 
 /* 드래그 오버 상태 */
 .task-table tbody.dragging-over {
-    background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%);
+    background: rgba(237, 233, 254, 0.5);
+    border: 2px dashed rgba(196, 181, 253, 0.6);
+    border-radius: 8px;
 }
 
 .task-table tbody tr.completed {
@@ -406,6 +441,9 @@
     font-size: 16px;
     letter-spacing: -2px;
     transition: all 0.15s ease;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(196, 181, 253, 0.5);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .task-table tbody tr:hover .drag-handle {
@@ -413,12 +451,18 @@
 }
 
 .drag-handle:hover {
-    background: rgba(102, 126, 234, 0.1);
-    color: #667eea;
+    background: rgba(255, 255, 255, 0.9);
+    color: #4f46e5;
+    border-color: rgba(139, 92, 246, 0.7);
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
 }
 
 .drag-handle:active {
     cursor: grabbing;
+    background: rgba(255, 255, 255, 1);
+    border-color: rgba(139, 92, 246, 0.9);
+    box-shadow: 0 6px 12px rgba(139, 92, 246, 0.4);
 }
 
 .col-check {
@@ -604,7 +648,7 @@
 /* 태스크 추가 */
 .add-task-btn {
     display: block;
-    width: 100%;
+    width: calc(100% - 32px);
     padding: 14px 20px;
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -616,6 +660,7 @@
     cursor: pointer;
     transition: all 0.2s ease;
     margin: 16px;
+    box-sizing: border-box;
 }
 
 .add-task-btn:hover {
@@ -698,23 +743,26 @@
 .add-column-section input {
     width: 100%;
     padding: 12px 16px;
-    border: 2px solid rgba(255, 255, 255, 0.28);
+    border: 2px solid rgba(196, 181, 253, 0.4);
     border-radius: 10px;
     font-size: 14px;
-    background: rgba(255, 255, 255, 0.08);
-    color: #f8f9ff;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    color: #ffffff;
+    font-weight: 500;
     transition: all 0.2s ease;
 }
 
 .add-column-section input:focus {
     outline: none;
-    border-color: rgba(196, 181, 253, 0.8);
-    background: rgba(255, 255, 255, 0.14);
-    box-shadow: 0 0 0 4px rgba(196, 181, 253, 0.18);
+    border-color: rgba(139, 92, 246, 0.6);
+    background: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 0 4px rgba(196, 181, 253, 0.2);
+    color: #ffffff;
 }
 
 .add-column-section input::placeholder {
-    color: rgba(248, 249, 255, 0.6);
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .add-column-section button {
@@ -785,18 +833,22 @@
 .add-column-inline input {
     width: 100%;
     padding: 14px 18px;
-    border: 2px solid #e2e8f0;
+    border: 2px solid rgba(196, 181, 253, 0.4);
     border-radius: 12px;
     font-size: 15px;
-    background: #f8fafc;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(5px);
+    color: #1e293b;
+    font-weight: 500;
     transition: all 0.2s ease;
 }
 
 .add-column-inline input:focus {
     outline: none;
-    border-color: #667eea;
-    background: white;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    border-color: rgba(139, 92, 246, 0.6);
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 0 0 4px rgba(196, 181, 253, 0.2);
+    color: #1e293b;
 }
 
 .add-column-inline input::placeholder {

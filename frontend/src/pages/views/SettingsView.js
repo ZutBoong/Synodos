@@ -843,7 +843,7 @@ function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewCo
 
     return (
         <ShaderBackground>
-            <div className="settings-view">
+        <div className="settings-view">
             <nav className="sv-sidebar">
                 <div className="sv-sidebar-title">설정</div>
                 <button className={`sv-nav-item ${activeSection === 'general' ? 'active' : ''}`} onClick={() => setActiveSection('general')}>
@@ -913,7 +913,7 @@ function SettingsView({ team, loginMember, isLeader, updateTeam, columns: viewCo
                     </div>
                 </div>
             )}
-            </div>
+        </div>
         </ShaderBackground>
     );
 }

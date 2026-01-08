@@ -134,14 +134,14 @@ function OverviewView({ team, tasks, teamMembers, loginMember, isLeader, updateT
                 {/* 참여중인 태스크 */}
                 <div className="overview-section tasks-section">
                     <div className="section-header">
-                        <h2>참여중인 태스크</h2>
+                        <h2>참여중인 작업</h2>
                         <span className="count-badge">{sortedMyTasks.length}</span>
                     </div>
                     <div className="tasks-list">
                         {displayedMyTasks.length > 0 ? (
                             displayedMyTasks.map(renderTaskItem)
                         ) : (
-                            <p className="no-data">참여중인 태스크가 없습니다.</p>
+                            <p className="no-data">참여중인 작업이 없습니다.</p>
                         )}
                     </div>
                     {hasMoreMyTasks && (
@@ -157,14 +157,14 @@ function OverviewView({ team, tasks, teamMembers, loginMember, isLeader, updateT
                 {/* 즐겨찾기한 태스크 */}
                 <div className="overview-section favorites-section">
                     <div className="section-header">
-                        <h2>즐겨찾기한 태스크</h2>
+                        <h2>즐겨찾기한 작업</h2>
                         <span className="count-badge">{favoriteTasks.length}</span>
                     </div>
                     <div className="tasks-list">
                         {displayedFavorites.length > 0 ? (
                             displayedFavorites.map(renderTaskItem)
                         ) : (
-                            <p className="no-data">즐겨찾기한 태스크가 없습니다.</p>
+                            <p className="no-data">즐겨찾기한 작업이 없습니다.</p>
                         )}
                     </div>
                     {hasMoreFavorites && (
