@@ -4,9 +4,11 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: rgba(243, 240, 255, 0.95);
+    background: rgba(243, 240, 255, 0.75);
     backdrop-filter: blur(20px);
     color: #1e293b;
+    position: relative;
+    z-index: 1;
 }
 
 /* 헤더 */

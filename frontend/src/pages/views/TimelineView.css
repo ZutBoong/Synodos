@@ -186,6 +186,8 @@
     overflow-x: auto;
     overflow-y: hidden;
     user-select: none;
+    display: flex;
+    flex-direction: column;
 }
 
 /* 주 뷰가 아닐 때 스크롤 숨기기 */
@@ -231,13 +233,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
     color: #ffffff;
     border-right: 1px solid rgba(255, 255, 255, 0.15);
     box-sizing: border-box;
     background: rgba(255, 255, 255, 0.2);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    padding: 0 4px;
+    white-space: nowrap;
 }
 
 /* 일 헤더 */
@@ -245,6 +249,7 @@
     display: flex;
     height: 40px;
     width: 100%;
+    position: relative;
 }
 
 /* 주 뷰일 때만 min-width 적용 */
@@ -261,6 +266,9 @@
     border-right: 1px solid rgba(255, 255, 255, 0.15);
     box-sizing: border-box;
     flex-shrink: 0;
+    position: relative;
+    padding: 4px 0;
+    gap: 2px;
 }
 
 .day-header.weekend {
@@ -270,13 +278,20 @@
 .day-header.today {
     background: rgba(196, 181, 253, 0.3);
     border: 2px solid #c4b5fd;
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    border-left: 2px solid #c4b5fd;
 }
 
 .day-header .day-name {
-    font-size: 15px;
+    font-size: 12px;
     font-weight: 600;
     color: #e0e7ff;
     text-transform: uppercase;
+    line-height: 1.2;
+    letter-spacing: 0.3px;
+    display: block;
+    width: 100%;
+    text-align: center;
 }
 
 .day-header .day-num {
@@ -284,6 +299,10 @@
     font-weight: 700;
     color: #ffffff;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    line-height: 1.2;
+    display: block;
+    width: 100%;
+    text-align: center;
 }
 
 .day-header.weekend .day-name,
@@ -338,6 +357,7 @@
     left: 200px;
     right: 0;
     pointer-events: none;
+    width: 100%;
 }
 
 /* 주 뷰일 때만 min-width 적용 */
@@ -352,6 +372,8 @@
     min-height: 100%;
     border-right: 1px solid rgba(255, 255, 255, 0.1);
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 .grid-line.weekend {
@@ -362,6 +384,7 @@
     background: rgba(196, 181, 253, 0.2);
     border-left: 2px solid #c4b5fd;
     border-right: 2px solid #c4b5fd;
+    z-index: 1;
 }
 
 /* 타임라인 섹션 */
@@ -399,7 +422,8 @@
 }
 
 .timeline-section-content {
-    /* Rows go here */
+    display: flex;
+    flex-direction: column;
 }
 
 /* 타임라인 행 */
@@ -408,6 +432,8 @@
     height: 48px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     transition: background 0.15s ease;
+    align-items: stretch;
+    width: 100%;
 }
 
 .timeline-row:hover {
@@ -421,11 +447,14 @@
 .timeline-row-label {
     width: 200px;
     min-width: 200px;
+    max-width: 200px;
     padding: 0 20px;
     display: flex;
     align-items: center;
     border-right: 1px solid rgba(255, 255, 255, 0.15);
     background: rgba(255, 255, 255, 0.15);
+    flex-shrink: 0;
+    box-sizing: border-box;
 }
 
 .timeline-row-label .task-name {
@@ -456,12 +485,14 @@
     align-items: center;
     padding: 6px 0;
     flex: 1;
+    width: 100%;
 }
 
 /* 주 뷰일 때만 min-width 적용 */
 .timeline-view.week-view .timeline-row-bars {
     min-width: max-content;
     flex: initial;
+    width: auto;
 }
 
 /* 태스크 바 */
@@ -478,12 +509,17 @@
     min-width: 24px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     border-left: 6px solid #cbd5e1;
+    top: 50%;
+    transform: translateY(-50%);
+    box-sizing: border-box;
 }
 
 .task-bar:hover {
-    background: #e2e8f0 !important;
-    border-color: #94a3b8 !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    background: rgba(237, 233, 254, 0.8) !important;
+    border-color: #8b5cf6 !important;
+    box-shadow: 0 2px 6px rgba(139, 92, 246, 0.3);
+    transform: translateY(-50%) scale(1.02);
+    z-index: 10;
 }
 
 /* 상태별 왼쪽 바 색상 */

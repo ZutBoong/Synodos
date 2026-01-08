@@ -705,7 +705,7 @@ function BoardView({
                                                         className="add-task-btn"
                                                         onClick={() => setCreateTaskModalColumnId(column.columnId)}
                                                     >
-                                                        + 새 태스크 추가
+                                                        + 새 작업 추가
                                                     </button>
                                                 </div>
                                             </div>
@@ -718,7 +718,7 @@ function BoardView({
                                     <div className="column-input-wrapper">
                                         <input
                                             type="text"
-                                            placeholder="새 컬럼 추가..."
+                                            placeholder="새 칼럼 추가..."
                                             value={newColumnTitle}
                                             onChange={(e) => {
                                                 setNewColumnTitle(e.target.value);
@@ -733,7 +733,7 @@ function BoardView({
                                         />
                                         {columnTitleError && <span className="column-input-error">{columnTitleError}</span>}
                                     </div>
-                                    <button onClick={handleAddColumn}>+ 컬럼 추가</button>
+                                    <button onClick={handleAddColumn}>+ 칼럼 추가</button>
                                 </div>
                             </div>
                         )}
