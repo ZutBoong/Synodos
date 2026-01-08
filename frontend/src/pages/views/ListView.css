@@ -1,6 +1,7 @@
 .list-view {
     padding: 24px;
     min-height: calc(100vh - 140px);
+    color: #e0e7ff;
 }
 
 /* 태스크 상세 패널 모드 */
@@ -49,33 +50,41 @@
 }
 
 .list-view .task-detail-header .back-btn i {
-    font-size: 12px;
+    font-size: 14px;
 }
 
 /* 칼럼 */
 .list-column {
-    background: white;
-    border-radius: 16px;
-    margin-bottom: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
     overflow: hidden;
-    border: 1px solid rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: all 0.3s ease;
+}
+
+.list-column:hover {
+    border-color: rgba(196, 181, 253, 0.4);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
 .column-header {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 16px 20px;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 18px 24px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
     cursor: pointer;
     user-select: none;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.2s ease;
 }
 
 .column-header:hover {
-    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 /* 컬럼 드래그 핸들 */
@@ -118,7 +127,7 @@
 }
 
 .expand-icon {
-    font-size: 10px;
+    font-size: 14px;
     color: #64748b;
     transition: transform 0.3s ease;
 }
@@ -135,7 +144,7 @@
 }
 
 .task-count {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
     color: #667eea;
     background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%);
@@ -192,7 +201,7 @@
     border: none;
     background: none;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 15px;
     color: #1e293b;
     transition: all 0.15s ease;
     text-align: left;
@@ -211,7 +220,7 @@
 }
 
 .column-menu-item i {
-    font-size: 12px;
+    font-size: 14px;
     width: 16px;
     text-align: center;
 }
@@ -250,7 +259,7 @@
 }
 
 .collapsed-dropzone span {
-    font-size: 13px;
+    font-size: 15px;
     color: #667eea;
     font-weight: 500;
 }
@@ -261,19 +270,21 @@
     align-items: center;
     justify-content: center;
     padding: 32px 20px;
-    color: #94a3b8;
-    font-size: 14px;
-    border: 2px dashed #e2e8f0;
+    color: #e0e7ff;
+    font-size: 16px;
+    font-weight: 600;
+    border: 2px dashed rgba(255, 255, 255, 0.3);
     border-radius: 12px;
     margin: 16px;
-    background: #fafbfc;
+    background: rgba(255, 255, 255, 0.1);
     transition: all 0.2s ease;
 }
 
 .column-droppable.dragging-over .empty-column-dropzone {
-    border-color: #667eea;
-    background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%);
-    color: #667eea;
+    border-color: #c4b5fd;
+    background: rgba(196, 181, 253, 0.3);
+    color: #ffffff;
+    font-weight: 700;
 }
 
 /* 칼럼 콘텐츠 */
@@ -295,12 +306,13 @@
 }
 
 .task-table th {
-    font-size: 11px;
+    font-size: 16px;
     font-weight: 700;
-    color: #64748b;
+    color: #ffffff;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    background: #fafbfc;
+    background: rgba(255, 255, 255, 0.15);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .task-table tbody tr {
@@ -478,7 +490,7 @@
 
 .assignee-avatar .avatar-initial {
     color: white;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
     text-transform: uppercase;
 }
@@ -486,7 +498,7 @@
 .assignee-avatar.more {
     background: #e2e8f0;
     color: #64748b;
-    font-size: 11px;
+    font-size: 15px;
     font-weight: 600;
 }
 
@@ -539,13 +551,13 @@
 }
 
 .urgent-badge i {
-    font-size: 12px;
+    font-size: 14px;
     color: white;
 }
 
 /* 상태 배지 */
 .status-badge {
-    font-size: 11px;
+    font-size: 15px;
     font-weight: 600;
     color: white;
     padding: 5px 10px;
@@ -590,19 +602,23 @@
     display: block;
     width: 100%;
     padding: 14px 20px;
-    background: none;
-    border: none;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
     text-align: left;
-    font-size: 14px;
-    font-weight: 500;
-    color: #94a3b8;
+    font-size: 15px;
+    font-weight: 600;
+    color: #ffffff;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.2s ease;
+    margin: 16px;
 }
 
 .add-task-btn:hover {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    color: #667eea;
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
 }
 
 .add-task-inline {
@@ -819,7 +835,7 @@
     left: 4px;
     top: 100%;
     margin-top: 4px;
-    font-size: 13px;
+    font-size: 15px;
     color: #ef4444;
     white-space: nowrap;
 }
@@ -854,7 +870,7 @@
     }
 
     .assignee-avatar .avatar-initial {
-        font-size: 11px;
+        font-size: 15px;
     }
 }
 
@@ -878,7 +894,7 @@
     }
 
     .task-count {
-        font-size: 11px;
+        font-size: 15px;
         padding: 3px 10px;
     }
 
@@ -909,7 +925,7 @@
 
     .col-due {
         width: 60px;
-        font-size: 12px;
+        font-size: 14px;
     }
 
     .col-priority {
@@ -922,21 +938,21 @@
     }
 
     .urgent-badge i {
-        font-size: 10px;
+        font-size: 14px;
     }
 
     .status-badge {
-        font-size: 10px;
+        font-size: 14px;
         padding: 4px 8px;
     }
 
     .task-title-link {
-        font-size: 13px;
+        font-size: 15px;
     }
 
     .add-task-btn {
         padding: 12px 16px;
-        font-size: 13px;
+        font-size: 15px;
     }
 
     .add-task-inline {
@@ -963,7 +979,7 @@
     .column-drag-handle {
         width: 20px;
         height: 20px;
-        font-size: 12px;
+        font-size: 14px;
     }
 
     /* 모바일 빈 상태 */
@@ -1022,7 +1038,7 @@
     }
 
     .assignee-avatar .avatar-initial {
-        font-size: 10px;
+        font-size: 14px;
     }
 
     .assignee-avatar.more {

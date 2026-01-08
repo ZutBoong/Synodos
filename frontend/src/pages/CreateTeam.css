@@ -115,7 +115,7 @@ section h2 {
     transition: all 0.2s ease;
     font-family: inherit;
     box-sizing: border-box;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.15);
     color: white;
 }
 
@@ -164,7 +164,7 @@ section h2 {
     font-size: 15px;
     transition: all 0.2s ease;
     box-sizing: border-box;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.15);
     color: white;
 }
 
@@ -219,7 +219,7 @@ section h2 {
 .selected-members {
     margin-bottom: 20px;
     padding: 16px;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 12px;
     border: 1px dashed rgba(255, 255, 255, 0.3);
 }
@@ -363,7 +363,7 @@ section h2 {
 /* 하단 액션 */
 .create-team-footer {
     padding: 20px 40px;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-top: 1px solid rgba(255, 255, 255, 0.2);
@@ -416,7 +416,7 @@ section h2 {
 .github-section {
     margin-top: 24px;
     padding: 24px;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
@@ -589,7 +589,7 @@ section h2 {
 .github-not-connected {
     text-align: center;
     padding: 24px;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.15);
     border: 1px dashed rgba(255, 255, 255, 0.3);
     border-radius: 12px;
     margin-top: 16px;

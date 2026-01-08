@@ -1,5 +1,6 @@
 .admin-view {
     padding: 24px;
+    color: #e0e7ff;
 }
 
 .no-permission {
@@ -18,20 +19,22 @@
 
 /* 섹션 */
 .admin-section {
-    background: #fff;
-    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
     padding: 24px;
     margin-bottom: 20px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .admin-section h2 {
     font-size: 18px;
     font-weight: 600;
-    color: #333;
+    color: #ffffff;
     margin: 0 0 20px 0;
     padding-bottom: 12px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* 필드 */
@@ -45,7 +48,7 @@
 
 .admin-field label {
     display: block;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     color: #666;
     margin-bottom: 8px;
@@ -61,13 +64,13 @@
 .display-field .value {
     flex: 1;
     font-size: 16px;
-    color: #333;
+    color: #ffffff;
 }
 
 .display-field .value.description {
     font-size: 14px;
     line-height: 1.6;
-    color: #555;
+    color: #e0e7ff;
 }
 
 .edit-btn {
@@ -75,7 +78,7 @@
     background: #f0f0f0;
     border: none;
     border-radius: 4px;
-    font-size: 13px;
+    font-size: 15px;
     cursor: pointer;
     transition: background 0.15s;
 }
@@ -177,7 +180,7 @@
     padding: 8px 14px;
     border: none;
     border-radius: 6px;
-    font-size: 13px;
+    font-size: 15px;
     cursor: pointer;
     transition: background 0.15s;
 }
@@ -217,7 +220,7 @@
 }
 
 .hint {
-    font-size: 13px;
+    font-size: 15px;
     color: #888;
     margin: 0;
 }
@@ -265,7 +268,7 @@
 }
 
 .member-userid {
-    font-size: 12px;
+    font-size: 14px;
     color: #888;
 }
 
@@ -274,7 +277,7 @@
 }
 
 .role-badge {
-    font-size: 11px;
+    font-size: 15px;
     font-weight: 600;
     padding: 4px 10px;
     border-radius: 12px;
@@ -296,7 +299,7 @@
     border: 1px solid #dc3545;
     color: #dc3545;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 14px;
     cursor: pointer;
     transition: all 0.15s;
 }

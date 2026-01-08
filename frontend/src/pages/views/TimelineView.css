@@ -3,11 +3,11 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: white;
-    border-radius: 16px;
+    background: transparent;
+    border-radius: 0;
     overflow: hidden;
     box-sizing: border-box;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    color: #e0e7ff;
 }
 
 /* 태스크 상세 패널 모드 */
@@ -26,8 +26,9 @@
     display: flex;
     align-items: center;
     padding: 16px 24px;
-    border-bottom: 1px solid #e2e8f0;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
     flex-shrink: 0;
 }
 
@@ -36,24 +37,24 @@
     align-items: center;
     gap: 8px;
     padding: 10px 16px;
-    background: white;
-    border: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 10px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #64748b;
+    font-size: 15px;
+    font-weight: 600;
+    color: #ffffff;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .timeline-view .task-detail-header .back-btn:hover {
-    background: #f1f5f9;
-    color: #1e293b;
-    border-color: #cbd5e1;
+    background: rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.4);
 }
 
 .timeline-view .task-detail-header .back-btn i {
-    font-size: 12px;
+    font-size: 14px;
 }
 
 /* 타임라인 헤더 */
@@ -63,7 +64,7 @@
     align-items: center;
     padding: 16px 24px;
     border-bottom: 2px solid #f1f5f9;
-    background: white;
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .timeline-nav {
@@ -75,22 +76,23 @@
 .timeline-nav .nav-btn {
     width: 36px;
     height: 36px;
-    border: 2px solid #e2e8f0;
-    background: white;
-    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
     cursor: pointer;
     font-size: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
-    color: #64748b;
+    color: #ffffff;
 }
 
 .timeline-nav .nav-btn:hover {
-    background: #f8fafc;
-    border-color: #667eea;
-    color: #667eea;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(196, 181, 253, 0.4);
+    color: #c4b5fd;
 }
 
 .timeline-nav .today-btn {
@@ -99,7 +101,7 @@
     color: white;
     border: none;
     border-radius: 10px;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -121,9 +123,10 @@
 .sort-selector {
     display: flex;
     gap: 4px;
-    background: #f1f5f9;
+    background: rgba(255, 255, 255, 0.15);
     padding: 4px;
     border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .view-range-selector button,
@@ -133,23 +136,24 @@
     background: transparent;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
-    color: #64748b;
+    color: #e0e7ff;
     transition: all 0.2s ease;
 }
 
 .view-range-selector button:hover,
 .sort-selector button:hover {
-    color: #334155;
-    background: rgba(255, 255, 255, 0.5);
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.25);
 }
 
 .view-range-selector button.active,
 .sort-selector button.active {
-    background: white;
-    color: #667eea;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+    background: rgba(196, 181, 253, 0.3);
+    color: #c4b5fd;
+    box-shadow: 0 2px 8px rgba(196, 181, 253, 0.3);
+    font-weight: 700;
 }
 
 /* 타임라인 본체 */
@@ -164,15 +168,16 @@
 /* 날짜 헤더 영역 */
 .timeline-dates {
     display: flex;
-    border-bottom: 1px solid #e2e8f0;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
     flex-shrink: 0;
 }
 
 .timeline-label-column {
     width: 200px;
     min-width: 200px;
-    border-right: 1px solid #e2e8f0;
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .timeline-date-area {
@@ -193,16 +198,16 @@
 }
 
 .timeline-date-area::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .timeline-date-area::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: rgba(255, 255, 255, 0.3);
     border-radius: 4px;
 }
 
 .timeline-date-area::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: rgba(255, 255, 255, 0.4);
 }
 
 /* 월 헤더 */
@@ -210,7 +215,7 @@
     display: flex;
     position: relative;
     height: 32px;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
     width: 100%;
 }
 
@@ -226,12 +231,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 16px;
     font-weight: 700;
-    color: #1e293b;
-    border-right: 1px solid #e2e8f0;
+    color: #ffffff;
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
     box-sizing: border-box;
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.2);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* 일 헤더 */
@@ -252,40 +258,43 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border-right: 1px solid #f1f5f9;
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
     box-sizing: border-box;
     flex-shrink: 0;
 }
 
 .day-header.weekend {
-    background: rgba(241, 245, 249, 0.5);
+    background: rgba(196, 181, 253, 0.15);
 }
 
 .day-header.today {
-    background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%);
+    background: rgba(196, 181, 253, 0.3);
+    border: 2px solid #c4b5fd;
 }
 
 .day-header .day-name {
-    font-size: 10px;
+    font-size: 15px;
     font-weight: 600;
-    color: #94a3b8;
+    color: #e0e7ff;
     text-transform: uppercase;
 }
 
 .day-header .day-num {
-    font-size: 12px;
-    font-weight: 600;
-    color: #1e293b;
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .day-header.weekend .day-name,
 .day-header.weekend .day-num {
-    color: #cbd5e1;
+    color: #c4b5fd;
 }
 
 .day-header.today .day-num {
-    color: #667eea;
+    color: #c4b5fd;
     font-weight: 800;
+    text-shadow: 0 2px 4px rgba(196, 181, 253, 0.5);
 }
 
 /* 타임라인 콘텐츠 */
@@ -308,16 +317,16 @@
 }
 
 .timeline-content::-webkit-scrollbar-track {
-    background: #f1f5f9;
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .timeline-content::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: rgba(255, 255, 255, 0.3);
     border-radius: 4px;
 }
 
 .timeline-content::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: rgba(255, 255, 255, 0.4);
 }
 
 
@@ -341,23 +350,23 @@
     top: 0;
     bottom: 0;
     min-height: 100%;
-    border-right: 1px solid #f1f5f9;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
     box-sizing: border-box;
 }
 
 .grid-line.weekend {
-    background: rgba(241, 245, 249, 0.3);
+    background: rgba(196, 181, 253, 0.1);
 }
 
 .grid-line.today {
-    background: linear-gradient(135deg, rgba(237, 233, 254, 0.5) 0%, rgba(224, 231, 255, 0.5) 100%);
-    border-left: 2px solid #667eea;
-    border-right: 2px solid #667eea;
+    background: rgba(196, 181, 253, 0.2);
+    border-left: 2px solid #c4b5fd;
+    border-right: 2px solid #c4b5fd;
 }
 
 /* 타임라인 섹션 */
 .timeline-section {
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .timeline-section-header {
@@ -365,8 +374,9 @@
     align-items: center;
     gap: 10px;
     padding: 12px 20px;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border-bottom: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
     width: 200px;
     min-width: 200px;
     box-sizing: border-box;
@@ -374,17 +384,18 @@
 
 .timeline-section-header .section-name {
     font-weight: 700;
-    font-size: 13px;
-    color: #1e293b;
+    font-size: 15px;
+    color: #ffffff;
 }
 
 .timeline-section-header .task-count {
-    font-size: 11px;
-    font-weight: 600;
-    color: #667eea;
-    background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%);
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    background: rgba(196, 181, 253, 0.3);
     padding: 3px 8px;
     border-radius: 12px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .timeline-section-content {
@@ -395,12 +406,12 @@
 .timeline-row {
     display: flex;
     height: 48px;
-    border-bottom: 1px solid #f8fafc;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     transition: background 0.15s ease;
 }
 
 .timeline-row:hover {
-    background: #fafbfc;
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .timeline-row.empty {
@@ -413,14 +424,14 @@
     padding: 0 20px;
     display: flex;
     align-items: center;
-    border-right: 1px solid #e2e8f0;
-    background: white;
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .timeline-row-label .task-name {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 500;
-    color: #1e293b;
+    color: #ffffff;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -429,13 +440,14 @@
 }
 
 .timeline-row-label .task-name:hover {
-    color: #667eea;
+    color: #c4b5fd;
 }
 
 .timeline-row-label .empty-text {
-    font-size: 12px;
-    color: #94a3b8;
+    font-size: 15px;
+    color: #a0aec0;
     font-style: italic;
+    font-weight: 500;
 }
 
 .timeline-row-bars {
@@ -500,13 +512,14 @@
 }
 
 .task-bar .bar-label {
-    font-size: 11px;
-    color: #334155;
-    font-weight: 600;
+    font-size: 15px;
+    color: #ffffff;
+    font-weight: 700;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     padding: 0 10px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* ===== 반응형: 태블릿 (768px ~ 1023px) ===== */
@@ -533,12 +546,12 @@
     .view-range-selector button,
     .sort-selector button {
         padding: 6px 10px;
-        font-size: 12px;
+        font-size: 14px;
     }
 
     .timeline-nav .today-btn {
         padding: 6px 14px;
-        font-size: 12px;
+        font-size: 14px;
     }
 }
 
@@ -562,11 +575,11 @@
     }
 
     .timeline-section-header .section-name {
-        font-size: 11px;
+        font-size: 15px;
     }
 
     .timeline-section-header .task-count {
-        font-size: 10px;
+        font-size: 14px;
         padding: 2px 6px;
     }
 
@@ -588,7 +601,7 @@
 
     .timeline-nav .today-btn {
         padding: 6px 12px;
-        font-size: 12px;
+        font-size: 14px;
     }
 
     .timeline-header-controls {
@@ -605,7 +618,7 @@
     .view-range-selector button,
     .sort-selector button {
         padding: 6px 10px;
-        font-size: 12px;
+        font-size: 14px;
         flex: 1;
     }
 
@@ -618,11 +631,11 @@
     }
 
     .timeline-row-label .task-name {
-        font-size: 11px;
+        font-size: 15px;
     }
 
     .timeline-row-label .empty-text {
-        font-size: 10px;
+        font-size: 14px;
     }
 
     .task-bar {
@@ -631,7 +644,7 @@
     }
 
     .task-bar .bar-label {
-        font-size: 10px;
+        font-size: 14px;
         padding: 0 6px;
     }
 
@@ -640,11 +653,11 @@
     }
 
     .day-header .day-num {
-        font-size: 10px;
+        font-size: 14px;
     }
 
     .month-header {
-        font-size: 10px;
+        font-size: 14px;
     }
 
     .grid-lines {

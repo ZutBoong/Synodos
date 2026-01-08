@@ -172,8 +172,8 @@
     min-height: 500px;
 }
 
-/* 캘린더 헤더 - MyActivity 전용 스코프 */
-.myactivity-page .calendar-header {
+/* 캘린더 헤더 */
+.calendar-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -182,13 +182,13 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.myactivity-page .calendar-nav {
+.calendar-nav {
     display: flex;
     align-items: center;
     gap: 14px;
 }
 
-.myactivity-page .calendar-nav h2 {
+.calendar-nav h2 {
     margin: 0;
     font-size: 22px;
     font-weight: 700;
@@ -197,7 +197,7 @@
     text-align: center;
 }
 
-.myactivity-page .nav-btn {
+.nav-btn {
     width: 40px;
     height: 40px;
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -213,13 +213,13 @@
     color: white;
 }
 
-.myactivity-page .nav-btn:hover {
+.nav-btn:hover {
     background: rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.3);
     color: white;
 }
 
-.myactivity-page .today-btn {
+.today-btn {
     padding: 10px 20px;
     background: white;
     color: black;
@@ -232,25 +232,25 @@
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
-.myactivity-page .today-btn:hover {
+.today-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
     background: rgba(255, 255, 255, 0.9);
 }
 
-/* 캘린더 그리드 - MyActivity 전용 스코프 */
-.myactivity-page .calendar-grid {
+/* 캘린더 그리드 */
+.calendar-grid {
     flex: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(10px);
 }
 
-.myactivity-page .calendar-weekdays {
+.calendar-weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     background: rgba(255, 255, 255, 0.1);
@@ -258,7 +258,7 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.myactivity-page .weekday {
+.weekday {
     padding: 14px;
     text-align: center;
     font-weight: 700;
@@ -268,53 +268,53 @@
     letter-spacing: 0.5px;
 }
 
-.myactivity-page .weekday:first-child {
+.weekday:first-child {
     color: #fca5a5;
 }
 
-.myactivity-page .weekday:last-child {
+.weekday:last-child {
     color: #93c5fd;
 }
 
-.myactivity-page .calendar-days {
+.calendar-days {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     flex: 1;
     overflow-y: auto;
 }
 
-.myactivity-page .calendar-day {
+.calendar-day {
     min-height: 110px;
     border-right: 1px solid rgba(255, 255, 255, 0.1);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding: 10px;
     display: flex;
     flex-direction: column;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.15);
     transition: all 0.15s ease;
 }
 
-.myactivity-page .calendar-day:nth-child(7n) {
+.calendar-day:nth-child(7n) {
     border-right: none;
 }
 
-.myactivity-page .calendar-day:hover {
+.calendar-day:hover {
     background: rgba(255, 255, 255, 0.1);
 }
 
-.myactivity-page .calendar-day.other-month {
-    background: rgba(255, 255, 255, 0.02);
+.calendar-day.other-month {
+    background: rgba(255, 255, 255, 0.12);
 }
 
-.myactivity-page .calendar-day.other-month .day-number {
+.calendar-day.other-month .day-number {
     color: rgba(255, 255, 255, 0.3);
 }
 
-.myactivity-page .calendar-day.today {
+.calendar-day.today {
     background: rgba(196, 181, 253, 0.2);
 }
 
-.myactivity-page .calendar-day.today .day-number {
+.calendar-day.today .day-number {
     background: rgba(196, 181, 253, 0.4);
     color: white;
     border-radius: 20px;
@@ -327,18 +327,18 @@
     font-weight: 700;
 }
 
-.myactivity-page .day-header {
+.day-header {
     margin-bottom: 8px;
 }
 
-.myactivity-page .day-number {
+.day-number {
     font-size: 14px;
     font-weight: 600;
     color: white;
 }
 
-/* 태스크 - MyActivity 전용 스코프 */
-.myactivity-page .day-tasks {
+/* 태스크 */
+.day-tasks {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -346,7 +346,7 @@
     overflow: hidden;
 }
 
-.myactivity-page .day-tasks .task-item {
+.day-tasks .task-item {
     padding: 6px 10px;
     border-radius: 12px;
     font-size: 12px;
@@ -365,18 +365,18 @@
     gap: 4px;
 }
 
-.myactivity-page .day-tasks .task-item .urgent-icon {
+.day-tasks .task-item .urgent-icon {
     font-size: 10px;
     flex-shrink: 0;
     color: #fca5a5;
 }
 
-.myactivity-page .day-tasks .task-item:hover {
+.day-tasks .task-item:hover {
     background: rgba(255, 255, 255, 0.2);
     border-color: rgba(255, 255, 255, 0.3);
 }
 
-.myactivity-page .more-tasks {
+.more-tasks {
     font-size: 11px;
     font-weight: 600;
     color: rgba(255, 255, 255, 0.7);
@@ -387,7 +387,7 @@
     transition: all 0.15s ease;
 }
 
-.myactivity-page .more-tasks:hover {
+.more-tasks:hover {
     color: white;
     background: rgba(255, 255, 255, 0.2);
 }
@@ -638,7 +638,7 @@
     font-size: 14px;
     text-align: center;
     padding: 32px 20px;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -779,7 +779,7 @@
 
 /* 반응형 - 캘린더 */
 @media (max-width: 1200px) {
-    .myactivity-page .calendar-day {
+    .calendar-day {
         min-height: 90px;
     }
 }
@@ -815,7 +815,7 @@
         min-height: 300px;
     }
 
-    .myactivity-page .calendar-header {
+    .calendar-header {
         flex-direction: column;
         gap: 16px;
     }
@@ -844,16 +844,16 @@
         padding: 16px 20px;
     }
 
-    .myactivity-page .calendar-day {
+    .calendar-day {
         min-height: 70px;
         padding: 6px;
     }
 
-    .myactivity-page .day-number {
+    .day-number {
         font-size: 12px;
     }
 
-    .myactivity-page .task-item {
+    .task-item {
         font-size: 10px;
         padding: 4px 6px;
     }

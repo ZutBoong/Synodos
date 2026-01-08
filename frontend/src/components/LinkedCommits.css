@@ -7,7 +7,7 @@
 .linked-commits-loading {
     text-align: center;
     padding: 12px;
-    color: #888;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .linked-commit-item {
@@ -16,15 +16,16 @@
     align-items: center;
     gap: 8px;
     padding: 10px 12px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border: 1px solid #e9ecef;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     transition: all 0.2s;
 }
 
 .linked-commit-item:hover {
-    background: #f0f4f8;
-    border-color: #dee2e6;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(196, 181, 253, 0.3);
 }
 
 .commit-link {

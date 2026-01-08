@@ -1,8 +1,10 @@
 .github-issue-link {
     padding: 12px;
-    background: #f8fafc;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
 }
 
 .github-issue-link.loading {

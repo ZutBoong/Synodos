@@ -26,8 +26,8 @@
 .calendar-header {
     height: 56px;
     min-height: 56px;
-    background: white;
-    border-bottom: 1px solid #e5e5e5;
+    background: transparent; /* 흰색 배경 제거 */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     align-items: center;
     justify-content: space-between;

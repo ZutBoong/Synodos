@@ -1,11 +1,13 @@
 .chat-panel {
   width: 100%;
   height: 100%;
-  background: white;
-  border-left: 1px solid #e0e0e0;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
   display: flex;
   flex-direction: column;
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
+  color: white;
 }
 
 .chat-header {
@@ -13,14 +15,15 @@
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid #e0e0e0;
-  background: #f8f9fa;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(5px);
 }
 
 .chat-header h3 {
   margin: 0;
   font-size: 16px;
-  color: #333;
+  color: white;
 }
 
 .chat-close-btn {
@@ -53,7 +56,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #888;
+  color: rgba(255, 255, 255, 0.6);
   text-align: center;
 }
 
@@ -82,26 +85,31 @@
 
 .chat-sender {
   font-size: 12px;
-  color: #666;
+  color: rgba(255, 255, 255, 0.7);
   margin-bottom: 2px;
   padding-left: 8px;
 }
 
 .chat-bubble {
-  background: #f1f3f5;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
   padding: 8px 12px;
   border-radius: 16px;
   border-top-left-radius: 4px;
   max-width: 100%;
   word-wrap: break-word;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
 }
 
 .chat-message.mine .chat-bubble {
-  background: #4a90d9;
+  background: rgba(196, 181, 253, 0.3);
+  backdrop-filter: blur(5px);
   color: white;
   border-radius: 16px;
   border-top-right-radius: 4px;
   border-top-left-radius: 16px;
+  border: 1px solid rgba(196, 181, 253, 0.4);
 }
 
 .chat-content {
@@ -112,7 +120,7 @@
 
 .chat-time {
   font-size: 10px;
-  color: #999;
+  color: rgba(255, 255, 255, 0.5);
   margin-top: 4px;
 }
 
@@ -123,22 +131,26 @@
 .chat-input-form {
   display: flex;
   padding: 12px;
-  border-top: 1px solid #e0e0e0;
-  background: #f8f9fa;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
   gap: 8px;
 }
 
 .chat-input {
   flex: 1;
   padding: 10px 14px;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 20px;
   font-size: 14px;
   outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
 }
 
 .chat-input:focus {
-  border-color: #4a90d9;
+  border-color: rgba(196, 181, 253, 0.5);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .chat-input:disabled {
@@ -147,22 +159,26 @@
 
 .chat-send-btn {
   padding: 10px 16px;
-  background: #4a90d9;
+  background: rgba(196, 181, 253, 0.3);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(196, 181, 253, 0.4);
   color: white;
-  border: none;
   border-radius: 20px;
   font-size: 14px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .chat-send-btn:hover:not(:disabled) {
-  background: #3a7bc8;
+  background: rgba(196, 181, 253, 0.4);
+  border-color: rgba(196, 181, 253, 0.5);
 }
 
 .chat-send-btn:disabled {
-  background: #ccc;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
   cursor: not-allowed;
+  opacity: 0.5;
 }
 
 /* 채팅 토글 버튼 */

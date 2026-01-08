@@ -1,6 +1,7 @@
 .filter-bar {
-    background: white;
-    border-bottom: 1px solid #e5e5e5;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
 }
 
@@ -16,14 +17,16 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    background: #f5f5f5;
-    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
     padding: 8px 12px;
     width: 280px;
 }
 
 .search-box svg {
-    color: #888;
+    color: rgba(255, 255, 255, 0.7);
     flex-shrink: 0;
 }
 
@@ -33,10 +36,11 @@
     background: none;
     font-size: 14px;
     outline: none;
+    color: white;
 }
 
 .search-box input::placeholder {
-    color: #999;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .filter-toggle {
@@ -44,23 +48,26 @@
     align-items: center;
     gap: 6px;
     padding: 8px 14px;
-    background: #f5f5f5;
-    border: none;
-    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
     font-size: 14px;
-    color: #555;
+    color: rgba(255, 255, 255, 0.8);
     cursor: pointer;
     transition: all 0.15s;
     position: relative;
 }
 
 .filter-toggle:hover {
-    background: #e8e8e8;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
 }
 
 .filter-toggle.active {
-    background: #e8f4fc;
-    color: #0d6efd;
+    background: rgba(196, 181, 253, 0.2);
+    color: white;
+    border-color: rgba(196, 181, 253, 0.4);
 }
 
 .filter-badge {
@@ -78,7 +85,8 @@
     flex-wrap: wrap;
     gap: 16px;
     padding: 12px 16px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .filter-section {
@@ -90,23 +98,26 @@
 .filter-section label {
     font-size: 12px;
     font-weight: 600;
-    color: #666;
+    color: rgba(255, 255, 255, 0.8);
     text-transform: uppercase;
 }
 
 .filter-section select {
     padding: 6px 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
     font-size: 13px;
     min-width: 120px;
-    background: white;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
     cursor: pointer;
+    color: white;
 }
 
 .filter-section select:focus {
     outline: none;
-    border-color: #0d6efd;
+    border-color: rgba(196, 181, 253, 0.5);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .filter-chips {
@@ -117,23 +128,25 @@
 
 .filter-chip {
     padding: 4px 10px;
-    background: #f5f5f5;
-    border: 1px solid #ddd;
-    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
     font-size: 12px;
-    color: #555;
+    color: rgba(255, 255, 255, 0.8);
     cursor: pointer;
     transition: all 0.15s;
 }
 
 .filter-chip:hover {
-    border-color: var(--chip-color, #999);
+    border-color: rgba(196, 181, 253, 0.4);
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .filter-chip.active {
     color: white;
-    border-color: var(--chip-color, #0d6efd);
-    background: var(--chip-color, #0d6efd);
+    border-color: rgba(196, 181, 253, 0.5);
+    background: rgba(196, 181, 253, 0.3);
 }
 
 .filter-chip.tag-chip {
