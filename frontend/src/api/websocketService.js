@@ -22,22 +22,18 @@ class WebSocketService {
             heartbeatIncoming: 4000,
             heartbeatOutgoing: 4000,
             onConnect: () => {
-                console.log('WebSocket connected');
                 this.connected = true;
                 if (this.onConnectedCallback) {
                     this.onConnectedCallback();
                 }
             },
             onStompError: (frame) => {
-                console.error('STOMP error:', frame);
                 if (onError) onError(frame);
             },
             onDisconnect: () => {
-                console.log('WebSocket disconnected');
                 this.connected = false;
             },
             onWebSocketClose: () => {
-                console.log('WebSocket closed');
                 this.connected = false;
             }
         });
@@ -51,7 +47,7 @@ class WebSocketService {
                 try {
                     sub.unsubscribe();
                 } catch (e) {
-                    console.warn('Unsubscribe error:', e);
+                    // Error handled silently
                 }
             });
             this.subscriptions = {};
@@ -68,27 +64,23 @@ class WebSocketService {
             try {
                 this.subscriptions[destination].unsubscribe();
             } catch (e) {
-                console.warn('Unsubscribe error:', e);
+                // Error handled silently
             }
             delete this.subscriptions[destination];
         }
 
         if (this.client && this.connected) {
-            console.log('Subscribing to:', destination);
             this.subscriptions[destination] = this.client.subscribe(
                 destination,
                 (message) => {
                     try {
                         const event = JSON.parse(message.body);
-                        console.log('Received event:', event);
                         onMessage(event);
                     } catch (e) {
-                        console.error('Error parsing WebSocket message:', e);
+                        // Error handled silently
                     }
                 }
             );
-        } else {
-            console.warn('Cannot subscribe - not connected');
         }
     }
 
@@ -98,7 +90,7 @@ class WebSocketService {
             try {
                 this.subscriptions[destination].unsubscribe();
             } catch (e) {
-                console.warn('Unsubscribe error:', e);
+                // Error handled silently
             }
             delete this.subscriptions[destination];
         }
@@ -113,27 +105,23 @@ class WebSocketService {
             try {
                 this.subscriptions[destination].unsubscribe();
             } catch (e) {
-                console.warn('Unsubscribe error:', e);
+                // Error handled silently
             }
             delete this.subscriptions[destination];
         }
 
         if (this.client && this.connected) {
-            console.log('Subscribing to notifications:', destination);
             this.subscriptions[destination] = this.client.subscribe(
                 destination,
                 (message) => {
                     try {
                         const notification = JSON.parse(message.body);
-                        console.log('Received notification:', notification);
                         onNotification(notification);
                     } catch (e) {
-                        console.error('Error parsing notification:', e);
+                        // Error handled silently
                     }
                 }
             );
-        } else {
-            console.warn('Cannot subscribe to notifications - not connected');
         }
     }
 
@@ -143,7 +131,7 @@ class WebSocketService {
             try {
                 this.subscriptions[destination].unsubscribe();
             } catch (e) {
-                console.warn('Unsubscribe error:', e);
+                // Error handled silently
             }
             delete this.subscriptions[destination];
         }

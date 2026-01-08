@@ -128,10 +128,7 @@ public class TaskController {
 			@PathVariable("taskId") int taskId,
 			@RequestBody Task task) {
 		task.setTaskId(taskId);
-		System.out.println("task dates update: " + task);
 		int result = service.updateDates(task);
-		if (result == 1)
-			System.out.println("태스크 날짜 변경 성공");
 		return result;
 	}
 }

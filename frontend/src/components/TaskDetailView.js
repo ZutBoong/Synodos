@@ -152,7 +152,6 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
             };
             await taskupdate(taskData);
         } catch (error) {
-            console.error('태스크 정보 저장 실패:', error);
             hasError = true;
         }
 
@@ -160,7 +159,6 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
         try {
             await updateTaskAssignees(task.taskId, updatedAssignees, senderNo);
         } catch (error) {
-            console.error('담당자 저장 실패:', error);
             hasError = true;
         }
 
@@ -168,13 +166,12 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
         try {
             await updateTaskVerifiers(task.taskId, updatedVerifiers, senderNo);
         } catch (error) {
-            console.error('검증자 저장 실패:', error);
             hasError = true;
         }
 
         if (hasError) {
             // 에러가 있으면 사용자에게 알림 (너무 자주 뜨지 않도록 debounce 고려)
-            console.warn('일부 변경사항 저장에 실패했습니다.');
+            // Error tracked via hasError flag
         }
 
         setSaving(false);
@@ -204,7 +201,6 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
         if (lastCommentEvent && task?.taskId && commentSectionRef.current) {
             // 이 태스크의 댓글 이벤트인지 확인
             if (lastCommentEvent.payload?.taskId === task.taskId) {
-                console.log('Comment event for current task, refreshing...', lastCommentEvent);
                 commentSectionRef.current.refresh();
             }
         }
@@ -232,7 +228,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
             const members = await getTeamMembers(teamId);
             setTeamMembers(members || []);
         } catch (error) {
-            console.error('팀 멤버 조회 실패:', error);
+            // Error handled silently
         }
     };
 
@@ -248,7 +244,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                 fetchTaskPRs();
             }
         } catch (error) {
-            console.error('팀 정보 조회 실패:', error);
+            // Error handled silently
         }
     };
 
@@ -264,7 +260,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                 setPRForm(prev => ({ ...prev, baseBranch: defBranch }));
             }
         } catch (error) {
-            console.error('브랜치 목록 조회 실패:', error);
+            // Error handled silently
         }
     };
 
@@ -275,7 +271,6 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
             const prs = await getTaskPRs(task.taskId, teamId);
             setTaskPRs(Array.isArray(prs) ? prs : []);
         } catch (error) {
-            console.error('PR 목록 조회 실패:', error);
             setTaskPRs([]);
         }
     };
@@ -292,7 +287,6 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                 setPRForm(prev => ({ ...prev, headBranch: result.branchName }));
             }
         } catch (error) {
-            console.error('브랜치 생성 실패:', error);
             alert(error.response?.data || '브랜치 생성에 실패했습니다.');
         } finally {
             setPRLoading(false);
@@ -323,7 +317,6 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                 fetchTaskPRs();
             }
         } catch (error) {
-            console.error('PR 생성 실패:', error);
             alert(error.response?.data || 'PR 생성에 실패했습니다.');
         } finally {
             setPRLoading(false);
@@ -361,7 +354,6 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                 checkingStatus: false
             }));
         } catch (error) {
-            console.error('PR 상태 확인 실패:', error);
             setMergeDialog(prev => ({
                 ...prev,
                 checkingStatus: false
@@ -428,7 +420,6 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                 }
             }
         } catch (error) {
-            console.error('PR 머지 실패:', error);
             const errorData = error.response?.data || '';
             if (typeof errorData === 'string' && errorData.includes('not mergeable') && retryCount < 2) {
                 // 자동 재시도
@@ -488,7 +479,6 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                 }));
             }
         } catch (error) {
-            console.error('AI 충돌 해결 실패:', error);
             setAiResolution(prev => ({
                 ...prev,
                 loading: false,
@@ -562,7 +552,6 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                 }));
             }
         } catch (error) {
-            console.error('최종 코드 생성 실패:', error);
             setAiResolution(prev => ({
                 ...prev,
                 generatingCode: false,
@@ -646,7 +635,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                         }
                         // GitHub가 여전히 충돌이라고 해도 로컬 상태 유지 (무시)
                     } catch (e) {
-                        console.error('PR 상태 확인 실패:', e);
+                        // Error handled silently
                     }
                 }, 3000);
             } else {
@@ -657,7 +646,6 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                 }));
             }
         } catch (error) {
-            console.error('해결 코드 적용 실패:', error);
             setAiResolution(prev => ({
                 ...prev,
                 applying: false,
@@ -684,7 +672,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
             const fileList = await getFilesByTask(task.taskId);
             setFiles(fileList || []);
         } catch (error) {
-            console.error('파일 목록 조회 실패:', error);
+            // Error handled silently
         }
     };
 
@@ -694,7 +682,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
             const result = await checkTaskFavorite(task.taskId, loginMember.no);
             setIsFavorite(result.isFavorite);
         } catch (error) {
-            console.error('즐겨찾기 상태 확인 실패:', error);
+            // Error handled silently
         }
     };
 
@@ -704,7 +692,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
             const result = await toggleTaskFavorite(task.taskId, loginMember.no);
             setIsFavorite(result.isFavorite);
         } catch (error) {
-            console.error('즐겨찾기 토글 실패:', error);
+            // Error handled silently
         }
     };
 
@@ -719,7 +707,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                 setIsArchived(true);
             }
         } catch (error) {
-            console.error('아카이브 토글 실패:', error);
+            // Error handled silently
         }
     };
 
@@ -734,7 +722,6 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
             alert('태스크가 강제 완료되었습니다.');
             if (onUpdate) onUpdate();
         } catch (error) {
-            console.error('강제 완료 실패:', error);
             alert(error.response?.data?.error || '강제 완료에 실패했습니다.');
         } finally {
             setForceCompleting(false);
@@ -770,7 +757,6 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                 alert(result.message || '파일 업로드에 실패했습니다.');
             }
         } catch (error) {
-            console.error('파일 업로드 실패:', error);
             alert('파일 업로드에 실패했습니다.');
         } finally {
             setUploading(false);
@@ -785,7 +771,6 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                 await fetchFiles();
             }
         } catch (error) {
-            console.error('파일 삭제 실패:', error);
             alert('파일 삭제에 실패했습니다.');
         }
     };
@@ -858,7 +843,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                                     await navigator.clipboard.writeText(`#${task?.taskId}`);
                                     alert('태스크 ID가 복사되었습니다.');
                                 } catch (err) {
-                                    console.error('복사 실패:', err);
+                                    // Error handled silently
                                 }
                             }}
                             title="태스크 ID 복사"

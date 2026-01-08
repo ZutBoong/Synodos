@@ -136,16 +136,42 @@ function NotificationsPage() {
 
     const getNotificationIcon = (type) => {
         switch (type) {
-            case 'TASK_ASSIGNED':
-                return '📋';
-            case 'TASK_VERIFY_REQUEST':
-                return '✅';
-            case 'TASK_COMMENT':
-                return '💬';
-            case 'TASK_MENTION':
-                return '@';
+            // 팀 관련
             case 'TEAM_INVITE':
                 return '👥';
+            // 담당자/검수자 배정
+            case 'TASK_ASSIGNEE':
+                return '📋';
+            case 'TASK_VERIFIER':
+                return '🔍';
+            // 워크플로우
+            case 'TASK_REVIEW':
+                return '✅';
+            case 'TASK_APPROVED':
+                return '✓';
+            case 'TASK_REJECTED':
+                return '❌';
+            case 'TASK_ACCEPTED':
+                return '👍';
+            case 'TASK_DECLINED':
+                return '👎';
+            // 댓글/멘션
+            case 'COMMENT_ADDED':
+                return '💬';
+            case 'MENTION':
+                return '@';
+            // 마감일
+            case 'DEADLINE_APPROACHING':
+                return '⏰';
+            case 'DEADLINE_OVERDUE':
+                return '🚨';
+            // 기타
+            case 'COLUMN_UPDATED':
+                return '📝';
+            case 'TASK_UPDATED':
+                return '🔄';
+            case 'COMMIT_LINKED':
+                return '🔗';
             default:
                 return '🔔';
         }
@@ -153,16 +179,42 @@ function NotificationsPage() {
 
     const getNotificationTypeLabel = (type) => {
         switch (type) {
-            case 'TASK_ASSIGNED':
-                return '작업 배정';
-            case 'TASK_VERIFY_REQUEST':
-                return '검수 요청';
-            case 'TASK_COMMENT':
-                return '댓글';
-            case 'TASK_MENTION':
-                return '멘션';
+            // 팀 관련
             case 'TEAM_INVITE':
                 return '팀 초대';
+            // 담당자/검수자 배정
+            case 'TASK_ASSIGNEE':
+                return '작업 배정';
+            case 'TASK_VERIFIER':
+                return '검수자 배정';
+            // 워크플로우
+            case 'TASK_REVIEW':
+                return '검수 요청';
+            case 'TASK_APPROVED':
+                return '작업 승인';
+            case 'TASK_REJECTED':
+                return '작업 반려';
+            case 'TASK_ACCEPTED':
+                return '작업 수락';
+            case 'TASK_DECLINED':
+                return '작업 거절';
+            // 댓글/멘션
+            case 'COMMENT_ADDED':
+                return '댓글';
+            case 'MENTION':
+                return '멘션';
+            // 마감일
+            case 'DEADLINE_APPROACHING':
+                return '마감 임박';
+            case 'DEADLINE_OVERDUE':
+                return '마감 초과';
+            // 기타
+            case 'COLUMN_UPDATED':
+                return '컬럼 변경';
+            case 'TASK_UPDATED':
+                return '작업 변경';
+            case 'COMMIT_LINKED':
+                return '커밋 연결';
             default:
                 return '알림';
         }
@@ -170,16 +222,42 @@ function NotificationsPage() {
 
     const getNotificationDescription = (type) => {
         switch (type) {
-            case 'TASK_ASSIGNED':
-                return '새로운 작업이 배정되었습니다. 작업 내용을 확인하고 진행해주세요.';
-            case 'TASK_VERIFY_REQUEST':
-                return '작업 검수가 요청되었습니다. 작업 결과를 확인하고 승인 또는 반려해주세요.';
-            case 'TASK_COMMENT':
-                return '작업에 새로운 댓글이 달렸습니다.';
-            case 'TASK_MENTION':
-                return '댓글에서 회원님을 멘션했습니다.';
+            // 팀 관련
             case 'TEAM_INVITE':
                 return '새로운 팀에 초대되었습니다.';
+            // 담당자/검수자 배정
+            case 'TASK_ASSIGNEE':
+                return '새로운 작업이 배정되었습니다. 작업 내용을 확인하고 진행해주세요.';
+            case 'TASK_VERIFIER':
+                return '작업 검수자로 배정되었습니다.';
+            // 워크플로우
+            case 'TASK_REVIEW':
+                return '작업 검수가 요청되었습니다. 작업 결과를 확인하고 승인 또는 반려해주세요.';
+            case 'TASK_APPROVED':
+                return '작업이 승인되었습니다.';
+            case 'TASK_REJECTED':
+                return '작업이 반려되었습니다. 피드백을 확인하고 수정해주세요.';
+            case 'TASK_ACCEPTED':
+                return '담당자가 작업을 수락했습니다.';
+            case 'TASK_DECLINED':
+                return '담당자가 작업을 거절했습니다.';
+            // 댓글/멘션
+            case 'COMMENT_ADDED':
+                return '작업에 새로운 댓글이 달렸습니다.';
+            case 'MENTION':
+                return '댓글에서 회원님을 멘션했습니다.';
+            // 마감일
+            case 'DEADLINE_APPROACHING':
+                return '작업 마감일이 임박했습니다.';
+            case 'DEADLINE_OVERDUE':
+                return '작업 마감일이 지났습니다. 확인해주세요.';
+            // 기타
+            case 'COLUMN_UPDATED':
+                return '컬럼이 변경되었습니다.';
+            case 'TASK_UPDATED':
+                return '작업이 변경되었습니다.';
+            case 'COMMIT_LINKED':
+                return 'GitHub 커밋이 작업에 연결되었습니다.';
             default:
                 return '새로운 알림이 있습니다.';
         }
@@ -300,12 +378,12 @@ function NotificationsPage() {
                                             onClick={() => handleSelectNotification(notification)}
                                         >
                                             <div className="notification-list-icon">
-                                                {getNotificationIcon(notification.type)}
+                                                {getNotificationIcon(notification.notificationType)}
                                             </div>
                                             <div className="notification-list-content">
                                                 <div className="notification-list-header">
                                                     <span className="notification-list-type">
-                                                        {getNotificationTypeLabel(notification.type)}
+                                                        {getNotificationTypeLabel(notification.notificationType)}
                                                     </span>
                                                     <span className="notification-list-time">
                                                         {formatDate(notification.createdAt)}
@@ -326,11 +404,11 @@ function NotificationsPage() {
                                 <div className="notification-detail">
                                     <div className="detail-header">
                                         <div className="detail-icon">
-                                            {getNotificationIcon(selectedNotification.type)}
+                                            {getNotificationIcon(selectedNotification.notificationType)}
                                         </div>
                                         <div className="detail-meta">
                                             <span className="detail-type">
-                                                {getNotificationTypeLabel(selectedNotification.type)}
+                                                {getNotificationTypeLabel(selectedNotification.notificationType)}
                                             </span>
                                             <span className="detail-time">
                                                 {formatFullDate(selectedNotification.createdAt)}
@@ -353,7 +431,7 @@ function NotificationsPage() {
                                     <div className="detail-body">
                                         <h2 className="detail-title">{selectedNotification.message}</h2>
                                         <p className="detail-description">
-                                            {getNotificationDescription(selectedNotification.type)}
+                                            {getNotificationDescription(selectedNotification.notificationType)}
                                         </p>
 
                                         {selectedNotification.taskTitle && (

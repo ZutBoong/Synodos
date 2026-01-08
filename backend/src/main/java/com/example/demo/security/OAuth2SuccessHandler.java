@@ -53,12 +53,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             HttpServletResponse response,
             Authentication authentication) throws IOException {
 
-        System.out.println("=== OAuth2SuccessHandler 진입 ===");
-
         OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
         String registrationId = oauthToken.getAuthorizedClientRegistrationId();
-
-        System.out.println("로그인 provider = " + registrationId);
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         Map<String, Object> attributes = oAuth2User.getAttributes();
@@ -196,31 +192,18 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                             registrationId, oauthToken.getName());
                     if (authorizedClient != null && authorizedClient.getAccessToken() != null) {
                         githubAccessToken = authorizedClient.getAccessToken().getTokenValue();
-                        System.out.println("[OAuth2] GitHub access token 조회 성공 (authorizedClientService)");
                     }
                 } catch (Exception e) {
-                    System.err.println("[OAuth2] authorizedClientService에서 토큰 조회 실패: " + e.getMessage());
-                }
-
-                // 방법 2: OAuth2AuthenticationToken에서 직접 가져오기 (fallback)
-                if (githubAccessToken == null) {
-                    try {
-                        // principal에서 token 정보를 가져올 수 없으면 다른 방법 시도
-                        System.out.println("[OAuth2] fallback: principal name = " + oauthToken.getName());
-                    } catch (Exception e) {
-                        System.err.println("[OAuth2] fallback 조회 실패: " + e.getMessage());
-                    }
+                    // silently ignore
                 }
 
                 // access token이 있으면 전달
                 if (githubAccessToken != null) {
                     builder.queryParam("githubUsername", githubUsername);
                     builder.queryParam("githubAccessToken", githubAccessToken);
-                    System.out.println("[OAuth2] GitHub credentials 전달 성공: " + githubUsername);
                 } else {
                     // access token 없이 username만 전달
                     builder.queryParam("githubUsername", githubUsername);
-                    System.out.println("[OAuth2] WARNING: GitHub username만 전달 (access token 없음): " + githubUsername);
                 }
             }
 

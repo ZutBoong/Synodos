@@ -149,8 +149,6 @@ function TeamView() {
 
     // WebSocket 이벤트 핸들러 (모든 뷰가 공유)
     const handleBoardEvent = useCallback((event) => {
-        console.log('TeamView event received:', event);
-
         switch (event.eventType) {
             // Column 이벤트
             case 'COLUMN_CREATED':
@@ -225,7 +223,8 @@ function TeamView() {
                 break;
 
             default:
-                console.log('Unhandled event type:', event.eventType);
+                // Unhandled event type
+                break;
         }
     }, [teamId]);
 
@@ -245,10 +244,9 @@ function TeamView() {
     useEffect(() => {
         websocketService.connect(
             () => {
-                console.log('WebSocket connected in TeamView');
                 setWsConnected(true);
             },
-            (error) => console.error('WebSocket error:', error)
+            () => {}
         );
 
         return () => {
@@ -299,7 +297,6 @@ function TeamView() {
                 localStorage.setItem('currentTeam', JSON.stringify(teamData));
             }
         } catch (error) {
-            console.error('데이터 로드 실패:', error);
             if (error.response?.status === 404) {
                 alert('팀을 찾을 수 없습니다.');
                 localStorage.removeItem('currentTeam');

@@ -55,7 +55,6 @@ public class ChatService {
 
 	private void broadcastMessage(ChatMessage message) {
 		String destination = "/topic/team/" + message.getTeamId() + "/chat";
-		System.out.println("Chat broadcast to " + destination);
 		messagingTemplate.convertAndSend(destination, message);
 	}
 }

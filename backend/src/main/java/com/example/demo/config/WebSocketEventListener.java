@@ -18,11 +18,7 @@ public class WebSocketEventListener {
 
     @EventListener
     public void handleSessionConnect(SessionConnectEvent event) {
-        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-        String sessionId = headerAccessor.getSessionId();
-
         // memberNo will be set when client sends JOIN_TEAM message
-        System.out.println("WebSocket session connected: " + sessionId);
     }
 
     @EventListener
@@ -30,7 +26,6 @@ public class WebSocketEventListener {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         String sessionId = headerAccessor.getSessionId();
 
-        System.out.println("WebSocket session disconnected: " + sessionId);
         presenceService.userDisconnected(sessionId);
     }
 }

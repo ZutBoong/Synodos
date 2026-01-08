@@ -10,7 +10,6 @@ import com.example.demo.service.TaskVerifierService;
 import com.example.demo.service.TaskWorkflowService;
 
 @RestController
-@CrossOrigin("*")
 @RequestMapping("/api/task")
 public class TaskVerifierController {
 
@@ -27,7 +26,6 @@ public class TaskVerifierController {
 	@GetMapping("/{taskId}/verifiers")
 	public List<TaskVerifier> getVerifiers(@PathVariable("taskId") int taskId) {
 		List<TaskVerifier> verifiers = verifierService.listByTask(taskId);
-		System.out.println("verifiers for task " + taskId + ": " + verifiers);
 		return verifiers;
 	}
 
@@ -58,7 +56,6 @@ public class TaskVerifierController {
 		}
 
 		if (result == 1) {
-			System.out.println("검증자 추가 성공: taskId=" + taskId + ", memberNo=" + memberNo);
 			// 워크플로우 상태 재계산
 			workflowService.recalculateStatus(taskId);
 			return ResponseEntity.ok(Map.of("result", result));
@@ -77,7 +74,6 @@ public class TaskVerifierController {
 			@PathVariable("memberNo") int memberNo) {
 		int result = verifierService.removeVerifier(taskId, memberNo);
 		if (result == 1) {
-			System.out.println("검증자 제거 성공: taskId=" + taskId + ", memberNo=" + memberNo);
 			// 워크플로우 상태 재계산
 			workflowService.recalculateStatus(taskId);
 			return ResponseEntity.ok(Map.of("result", result));
@@ -106,7 +102,6 @@ public class TaskVerifierController {
 			count = verifierService.updateVerifiers(taskId, memberNos);
 		}
 
-		System.out.println("검증자 일괄 변경: taskId=" + taskId + ", count=" + count);
 		// 워크플로우 상태 재계산
 		workflowService.recalculateStatus(taskId);
 		return ResponseEntity.ok(Map.of("count", count));

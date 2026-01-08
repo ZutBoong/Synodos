@@ -21,7 +21,7 @@ function ChatPanel({ teamId, loginMember, isOpen, onClose, stompClient }) {
       setMessages(data);
       setHasMore(data.length >= 100);
     } catch (error) {
-      console.error('Failed to load messages:', error);
+      // Error handled silently
     } finally {
       setLoading(false);
     }
@@ -42,7 +42,7 @@ function ChatPanel({ teamId, loginMember, isOpen, onClose, stompClient }) {
         setMessages(prev => [...olderMessages, ...prev]);
       }
     } catch (error) {
-      console.error('Failed to load more messages:', error);
+      // Error handled silently
     } finally {
       setLoadingMore(false);
     }
@@ -66,17 +66,14 @@ function ChatPanel({ teamId, loginMember, isOpen, onClose, stompClient }) {
     if (!stompClient || !stompClient.connected || !teamId || !isOpen) return;
 
     const destination = `/topic/team/${teamId}/chat`;
-    console.log('Subscribing to chat:', destination);
 
     subscriptionRef.current = stompClient.subscribe(destination, (message) => {
       const chatMessage = JSON.parse(message.body);
-      console.log('Received chat message:', chatMessage);
       setMessages(prev => [...prev, chatMessage]);
     });
 
     return () => {
       if (subscriptionRef.current) {
-        console.log('Unsubscribing from chat');
         subscriptionRef.current.unsubscribe();
         subscriptionRef.current = null;
       }
@@ -106,7 +103,6 @@ function ChatPanel({ teamId, loginMember, isOpen, onClose, stompClient }) {
       await sendMessage(teamId, loginMember.no, newMessage.trim());
       setNewMessage('');
     } catch (error) {
-      console.error('Failed to send message:', error);
       alert('메시지 전송에 실패했습니다.');
     }
   };

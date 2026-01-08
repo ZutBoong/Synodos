@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     getNotifications,
     getUnreadCount,
@@ -11,6 +12,7 @@ import websocketService from '../api/websocketService';
 import './NotificationBell.css';
 
 function NotificationBell({ memberNo }) {
+    const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
@@ -20,7 +22,6 @@ function NotificationBell({ memberNo }) {
 
     // 실시간 알림 수신 핸들러
     const handleRealtimeNotification = useCallback((notification) => {
-        console.log('Real-time notification received:', notification);
         // 알림 목록 상단에 추가
         setNotifications(prev => [notification, ...prev]);
         // 읽지 않은 알림 수 증가
@@ -35,7 +36,6 @@ function NotificationBell({ memberNo }) {
             if (websocketService.isConnected() && !subscribedRef.current) {
                 websocketService.subscribeToUserNotifications(memberNo, handleRealtimeNotification);
                 subscribedRef.current = true;
-                console.log('Subscribed to notifications for member:', memberNo);
             }
         };
 
@@ -83,7 +83,7 @@ function NotificationBell({ memberNo }) {
             const count = await getUnreadCount(memberNo);
             setUnreadCount(count);
         } catch (error) {
-            console.error('알림 수 조회 실패:', error);
+            // Error handled silently
         }
     };
 
@@ -93,7 +93,6 @@ function NotificationBell({ memberNo }) {
             const data = await getNotifications(memberNo);
             setNotifications(Array.isArray(data) ? data : []);
         } catch (error) {
-            console.error('알림 목록 조회 실패:', error);
             setNotifications([]);
         } finally {
             setLoading(false);
@@ -112,21 +111,21 @@ function NotificationBell({ memberNo }) {
         try {
             await markAsRead(notificationId);
             setNotifications(notifications.map(n =>
-                n.notificationId === notificationId ? { ...n, read: true } : n
+                n.notificationId === notificationId ? { ...n, isRead: true } : n
             ));
             setUnreadCount(Math.max(0, unreadCount - 1));
         } catch (error) {
-            console.error('읽음 처리 실패:', error);
+            // Error handled silently
         }
     };
 
     const handleMarkAllAsRead = async () => {
         try {
             await markAllAsRead(memberNo);
-            setNotifications(notifications.map(n => ({ ...n, read: true })));
+            setNotifications(notifications.map(n => ({ ...n, isRead: true })));
             setUnreadCount(0);
         } catch (error) {
-            console.error('모두 읽음 처리 실패:', error);
+            // Error handled silently
         }
     };
 
@@ -136,11 +135,11 @@ function NotificationBell({ memberNo }) {
             await deleteNotification(notificationId);
             const deletedNotif = notifications.find(n => n.notificationId === notificationId);
             setNotifications(notifications.filter(n => n.notificationId !== notificationId));
-            if (deletedNotif && !deletedNotif.read) {
+            if (deletedNotif && !deletedNotif.isRead) {
                 setUnreadCount(Math.max(0, unreadCount - 1));
             }
         } catch (error) {
-            console.error('알림 삭제 실패:', error);
+            // Error handled silently
         }
     };
 
@@ -151,23 +150,104 @@ function NotificationBell({ memberNo }) {
                 setNotifications([]);
                 setUnreadCount(0);
             } catch (error) {
-                console.error('모든 알림 삭제 실패:', error);
+                // Error handled silently
+            }
+        }
+    };
+
+    // 이동 가능한 알림 타입인지 확인
+    const isNavigable = (notification) => {
+        const { notificationType, teamId, taskId } = notification;
+
+        // 태스크 관련 알림: teamId와 taskId 필요
+        const taskTypes = [
+            'TASK_ASSIGNEE', 'TASK_VERIFIER',
+            'TASK_REVIEW', 'TASK_APPROVED', 'TASK_REJECTED', 'TASK_ACCEPTED', 'TASK_DECLINED',
+            'COMMENT_ADDED', 'MENTION',
+            'DEADLINE_APPROACHING', 'DEADLINE_OVERDUE',
+            'COMMIT_LINKED'
+        ];
+        if (taskTypes.includes(notificationType) && teamId && taskId) {
+            return true;
+        }
+
+        // 팀 초대: teamId만 필요
+        if (notificationType === 'TEAM_INVITE' && teamId) {
+            return true;
+        }
+
+        return false;
+    };
+
+    // 알림 클릭 시 이동 처리
+    const handleNotificationClick = async (notification) => {
+        const { notificationId, notificationType, teamId, taskId, isRead } = notification;
+
+        // 읽음 처리
+        if (!isRead) {
+            try {
+                await markAsRead(notificationId);
+                setNotifications(notifications.map(n =>
+                    n.notificationId === notificationId ? { ...n, isRead: true } : n
+                ));
+                setUnreadCount(Math.max(0, unreadCount - 1));
+            } catch (error) {
+                // Error handled silently
+            }
+        }
+
+        // 이동 가능한 알림이면 해당 페이지로 이동
+        if (isNavigable(notification)) {
+            setIsOpen(false); // 드롭다운 닫기
+
+            if (notificationType === 'TEAM_INVITE') {
+                // 팀 초대: 팀 페이지로 이동
+                navigate(`/team/${teamId}`);
+            } else if (taskId && teamId) {
+                // 태스크 관련: 보드 뷰에서 태스크 열기
+                navigate(`/team/${teamId}?view=board&task=${taskId}`);
             }
         }
     };
 
     const getNotificationIcon = (type) => {
         switch (type) {
+            // 팀 관련
             case 'TEAM_INVITE':
                 return '👥';
-            case 'COLUMN_ASSIGNEE':
-                return '📋';
+            // 담당자/검수자 배정
             case 'TASK_ASSIGNEE':
+                return '📋';
+            case 'TASK_VERIFIER':
+                return '🔍';
+            // 워크플로우
+            case 'TASK_REVIEW':
                 return '✅';
+            case 'TASK_APPROVED':
+                return '✓';
+            case 'TASK_REJECTED':
+                return '❌';
+            case 'TASK_ACCEPTED':
+                return '👍';
+            case 'TASK_DECLINED':
+                return '👎';
+            // 댓글/멘션
+            case 'COMMENT_ADDED':
+                return '💬';
+            case 'MENTION':
+                return '@';
+            // 마감일
+            case 'DEADLINE_APPROACHING':
+                return '⏰';
+            case 'DEADLINE_OVERDUE':
+                return '🚨';
+            // 기타
             case 'COLUMN_UPDATED':
                 return '📝';
             case 'TASK_UPDATED':
                 return '🔄';
+            case 'COMMIT_LINKED':
+                return '🔗';
             default:
                 return '🔔';
         }
@@ -224,8 +304,8 @@ function NotificationBell({ memberNo }) {
                             notifications.map((notification) => (
                                 <div
                                     key={notification.notificationId}
-                                    className={`notification-item ${!notification.read ? 'unread' : ''}`}
-                                    onClick={(e) => !notification.read && handleMarkAsRead(notification.notificationId, e)}
+                                    className={`notification-item ${!notification.isRead ? 'unread' : ''} ${isNavigable(notification) ? 'clickable' : ''}`}
+                                    onClick={() => handleNotificationClick(notification)}
                                 >
                                     <span className="notification-icon">
                                         {getNotificationIcon(notification.notificationType)}
@@ -240,6 +320,11 @@ function NotificationBell({ memberNo }) {
                                             <span className="time">{formatTime(notification.createdAt)}</span>
                                         </div>
                                     </div>
+                                    {isNavigable(notification) && (
+                                        <span className="navigate-icon" title="이동">
+                                            →
+                                        </span>
+                                    )}
                                     <button
                                         className="delete-btn"
                                         onClick={(e) => handleDelete(notification.notificationId, e)}
