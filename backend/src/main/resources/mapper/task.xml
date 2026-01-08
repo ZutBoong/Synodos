@@ -190,8 +190,8 @@
 	<!-- 날짜 변경 (타임라인용) -->
 	<update id="updateDates" parameterType="task">
 		UPDATE task
-		SET start_date = #{startDate, jdbcType=TIMESTAMP},
-			due_date = #{dueDate, jdbcType=TIMESTAMP}
+		SET start_date = #{startDate, jdbcType=DATE},
+			due_date = #{dueDate, jdbcType=DATE}
 		WHERE task_id = #{taskId}
 	</update>
 

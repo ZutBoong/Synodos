@@ -134,20 +134,15 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
 
         setSaving(true);
         try {
-            const startDateTime = updatedForm.startDate && updatedForm.startTime
-                ? `${updatedForm.startDate}T${updatedForm.startTime}`
-                : updatedForm.startDate || null;
-            const dueDateTime = updatedForm.dueDate && updatedForm.dueTime
-                ? `${updatedForm.dueDate}T${updatedForm.dueTime}`
-                : updatedForm.dueDate || null;
-
+            // 날짜만 전송 (시간 부분 제외, LocalDate 형식)
             const taskData = {
                 taskId: task.taskId,
+                columnId: task.columnId,
                 title: updatedForm.title,
                 description: updatedForm.description,
                 priority: updatedForm.priority,
-                startDate: startDateTime,
-                dueDate: dueDateTime,
+                startDate: updatedForm.startDate || null,
+                dueDate: updatedForm.dueDate || null,
                 assigneeNo: updatedAssignees.length > 0 ? updatedAssignees[0] : null
             };
 
