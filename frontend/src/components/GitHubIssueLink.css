@@ -8,7 +8,7 @@
 }
 
 .github-issue-link.loading {
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.6);
     font-size: 13px;
 }
 
@@ -28,12 +28,12 @@
 
 .github-not-connected > i {
     font-size: 32px;
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .github-not-connected > span {
     font-size: 13px;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .connect-github-btn {
@@ -134,7 +134,7 @@
 
 .last-synced {
     font-size: 11px;
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .issue-actions {
@@ -185,7 +185,7 @@
 
 .no-issue-text {
     font-size: 13px;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.6);
 }
 
 .no-issue-actions {

@@ -139,7 +139,7 @@
 }
 
 .header-search input::placeholder {
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .search-clear-btn {
@@ -597,7 +597,7 @@
 }
 
 .team-not-found p {
-    color: #9ca3af;
+    color: rgba(255, 255, 255, 0.6);
     font-size: 15px;
 }
 

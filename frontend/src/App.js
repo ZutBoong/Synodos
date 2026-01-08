@@ -4,7 +4,6 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import FindId from './pages/FindId';
 import FindPassword from './pages/FindPassword';
-import Calendar from './pages/Calendar';
 import TeamView from './pages/TeamView';
 import MyPage from './pages/MyPage';
 import MyActivity from './pages/MyActivity';
@@ -57,11 +56,6 @@ function AppContent() {
         <Route path="/invite/:teamCode" element={<Invite />} />
       </Routes>
     );
-  }
-
-  // 캘린더 페이지
-  if (pathname === '/calendar') {
-    return <Calendar />;
   }
 
   // 마이페이지

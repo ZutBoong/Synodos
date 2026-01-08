@@ -197,7 +197,7 @@
     height: 24px;
     border: none;
     background: transparent;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     border-radius: 4px;
     font-size: 14px;
@@ -496,7 +496,7 @@
     justify-content: center;
     border: none;
     background: transparent;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     padding: 4px;
     border-radius: 4px;
@@ -687,7 +687,7 @@
 .branch-list::-webkit-scrollbar-thumb:hover,
 .detail-content::-webkit-scrollbar-thumb:hover,
 .graph-viewport::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: rgba(255, 255, 255, 0.4);
 }
 
 .graph-viewport::-webkit-scrollbar-corner {
@@ -737,7 +737,7 @@
 
 .menu-branch-hint {
     font-size: 15px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
     margin-left: 4px;
 }
 
@@ -1058,7 +1058,7 @@
 }
 
 .dialog-field textarea::placeholder {
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .dialog-footer {

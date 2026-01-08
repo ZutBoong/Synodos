@@ -36,32 +36,112 @@ if ($LASTEXITCODE -eq 0) {
 Write-Host "2. GitHub 저장소 생성 중..." -ForegroundColor Yellow
 gh repo create $RepoName --public --description "Synodos GitHub Integration Test Repository"
 
+# 작업 디렉토리 생성
+$WorkDir = "temp-test-repo"
+if (Test-Path $WorkDir) {
+    Remove-Item -Recurse -Force $WorkDir
+}
+New-Item -ItemType Directory -Path $WorkDir | Out-Null
+Set-Location $WorkDir
+
 # Git 초기화
 Write-Host "3. Git 저장소 초기화..." -ForegroundColor Yellow
 git init
-git remote remove origin 2>$null
 git remote add origin "https://github.com/$Owner/$RepoName.git"
 
 # 사용자 설정
 git config user.email "synodos@example.com"
 git config user.name "Synodos Bot"
 
-# ========== MAIN 브랜치 커밋들 ==========
+# ========== 파일 생성 및 MAIN 브랜치 커밋들 ==========
 Write-Host "4. Main 브랜치 커밋 생성 중..." -ForegroundColor Yellow
 
-# 커밋 1: 초기 설정
+# src 디렉토리 생성
+New-Item -ItemType Directory -Path "src" -Force | Out-Null
+
+# 커밋 1: README
+@"
+# Synodos-Test Repository
+
+This is a test repository for Synodos GitHub integration testing.
+
+## Features
+- Branch management
+- Commit history
+- PR testing
+- Merge conflict resolution
+
+## Setup
+```bash
+npm install
+npm start
+```
+"@ | Out-File -FilePath "README.md" -Encoding UTF8
 git add README.md
 git commit -m "Initial commit: Add README"
 
-# 커밋 2: 소스 파일 추가
+# 커밋 2: config.js
+@"
+// Application Configuration
+const config = {
+    appName: 'Synodos Test App',
+    version: '1.0.0',
+    apiUrl: 'https://api.example.com',
+    debug: false
+};
+
+module.exports = config;
+"@ | Out-File -FilePath "src/config.js" -Encoding UTF8
 git add src/config.js
 git commit -m "feat: Add application configuration"
 
-# 커밋 3
+# 커밋 3: utils.js
+@"
+// Utility Functions
+function formatDate(date) {
+    return date.toISOString().split('T')[0];
+}
+
+function generateId() {
+    return Math.random().toString(36).substr(2, 9);
+}
+
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+module.exports = { formatDate, generateId, delay };
+"@ | Out-File -FilePath "src/utils.js" -Encoding UTF8
 git add src/utils.js
 git commit -m "feat: Add utility functions"
 
-# 커밋 4
+# 커밋 4: api.js
+@"
+// API Client
+const config = require('./config');
+
+class ApiClient {
+    constructor() {
+        this.baseUrl = config.apiUrl;
+    }
+
+    async get(endpoint) {
+        const response = await fetch(this.baseUrl + endpoint);
+        return response.json();
+    }
+
+    async post(endpoint, data) {
+        const response = await fetch(this.baseUrl + endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        return response.json();
+    }
+}
+
+module.exports = new ApiClient();
+"@ | Out-File -FilePath "src/api.js" -Encoding UTF8
 git add src/api.js
 git commit -m "feat: Add API client"
 
@@ -436,7 +516,7 @@ git push -u origin feature/search --force
 # ========== PR 생성 ==========
 Write-Host "6. Pull Request 생성 중..." -ForegroundColor Yellow
 
-# feature/user-auth PR (PR 대기)
+# feature/user-auth PR
 gh pr create --repo "$Owner/$RepoName" --head feature/user-auth --base main --title "feat: User Authentication System" --body @"
 ## Summary
 Complete user authentication system with login, register, and token refresh.
@@ -453,7 +533,7 @@ Complete user authentication system with login, register, and token refresh.
 - [ ] Test logout
 "@
 
-# feature/dark-mode PR (PR 대기)
+# feature/dark-mode PR
 gh pr create --repo "$Owner/$RepoName" --head feature/dark-mode --base main --title "feat: Dark Mode Support" --body @"
 ## Summary
 Add dark mode theme toggle functionality.
@@ -500,6 +580,9 @@ gh issue create --repo "$Owner/$RepoName" --title "[Feature] Export to PDF" --bo
 gh issue create --repo "$Owner/$RepoName" --title "[Bug] Notification sound not playing" --body "Desktop notifications work but sound doesn't play on Windows." --label "status:waiting" --milestone "v1.0 Release"
 gh issue create --repo "$Owner/$RepoName" --title "[Feature] Calendar integration" --body "Integrate with Google Calendar for task scheduling." --label "status:waiting" --milestone "v1.0 Release"
 
+# 작업 디렉토리로 복귀
+Set-Location ..
+
 Write-Host ""
 Write-Host "=== 설정 완료! ===" -ForegroundColor Green
 Write-Host ""
@@ -514,5 +597,10 @@ Write-Host "Issues (10개):" -ForegroundColor Cyan
 Write-Host "  - Sprint 1: 3개 (done 1, in-progress 1, waiting 1)"
 Write-Host "  - Sprint 2: 4개 (review 2, in-progress 2)"
 Write-Host "  - v1.0 Release: 3개 (waiting 3)"
+Write-Host ""
+Write-Host "Milestones (마감일 포함):" -ForegroundColor Cyan
+Write-Host "  - Sprint 1: 2026-01-15"
+Write-Host "  - Sprint 2: 2026-01-31"
+Write-Host "  - v1.0 Release: 2026-02-15"
 Write-Host ""
 Write-Host "저장소 URL: https://github.com/$Owner/$RepoName" -ForegroundColor Cyan

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { taskupdate, updateTaskAssignees, updateTaskVerifiers, archiveTask, unarchiveTask, toggleTaskFavorite, checkTaskFavorite } from '../api/boardApi';
 import { getTeamMembers, getTeam } from '../api/teamApi';
 import { uploadFile, getFilesByTask, deleteFile, formatFileSize, getFileIcon } from '../api/fileApi';
-import { createTaskBranch, createTaskPR, getTaskPRs, getBranches, getDefaultBranch, mergePR, getPRDetail, aiResolveConflict, applyConflictResolution } from '../api/githubApi';
+import { createTaskBranch, createTaskPR, getTaskPRs, getBranches, getDefaultBranch, mergePR, getPRDetail, aiResolveConflictStepBased, generateFinalCode, applyConflictResolution } from '../api/githubApi';
 import CommentSection from './CommentSection';
 import CommitBrowser from './CommitBrowser';
 import LinkedCommits from './LinkedCommits';
@@ -69,15 +69,21 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
         checkingStatus: false // 머지 가능 여부 확인 중
     });
 
-    // AI 충돌 해결 상태
+    // AI 충돌 해결 상태 (단계별 위저드)
     const [aiResolution, setAiResolution] = useState({
         show: false,           // AI 해결 패널 표시
         filename: null,        // 현재 해결 중인 파일
         loading: false,        // AI 분석 중
         applying: false,       // 해결 코드 적용 중
-        result: null,          // AI 해결 결과
+        generatingCode: false, // 최종 코드 생성 중
+        result: null,          // AI 해결 결과 (단계별)
         error: null,           // 에러 메시지
-        selectedOption: null   // 선택된 옵션 인덱스
+        // 단계별 위저드 상태
+        currentStep: 0,        // 현재 단계 (0-indexed)
+        selections: {},        // 각 단계별 선택 {stepNumber: choiceId}
+        hoveredChoice: null,   // hover 중인 선택지
+        finalCode: null,       // 생성된 최종 코드
+        showFinalPreview: false // 최종 미리보기 표시
     });
 
     const commentSectionRef = useRef(null);
@@ -127,37 +133,50 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
         if (!task?.taskId || initialLoadRef.current) return;
 
         setSaving(true);
-        try {
-            const startDateTime = updatedForm.startDate && updatedForm.startTime
-                ? `${updatedForm.startDate}T${updatedForm.startTime}`
-                : updatedForm.startDate || null;
-            const dueDateTime = updatedForm.dueDate && updatedForm.dueTime
-                ? `${updatedForm.dueDate}T${updatedForm.dueTime}`
-                : updatedForm.dueDate || null;
+        const senderNo = loginMember?.no || null;
+        let hasError = false;
 
+        // 태스크 기본 정보 저장 (제목, 설명, 우선순위, 날짜)
+        try {
             const taskData = {
                 taskId: task.taskId,
+                columnId: task.columnId || 1, // columnId가 없으면 기본값
                 title: updatedForm.title,
                 description: updatedForm.description,
                 priority: updatedForm.priority,
-                startDate: startDateTime,
-                dueDate: dueDateTime,
+                startDate: updatedForm.startDate || null,
+                dueDate: updatedForm.dueDate || null,
                 assigneeNo: updatedAssignees.length > 0 ? updatedAssignees[0] : null
             };
-
             await taskupdate(taskData);
-
-            const senderNo = loginMember?.no || null;
-            await updateTaskAssignees(task.taskId, updatedAssignees, senderNo);
-            await updateTaskVerifiers(task.taskId, updatedVerifiers, senderNo);
-
-            // onUpdate는 패널 닫을 때만 호출 (자동저장 시에는 호출하지 않음)
         } catch (error) {
-            console.error('자동 저장 실패:', error);
-        } finally {
-            setSaving(false);
+            console.error('태스크 정보 저장 실패:', error);
+            hasError = true;
         }
-    }, [task?.taskId, loginMember?.no]);
+
+        // 담당자 업데이트 (태스크 저장과 독립적으로 실행)
+        try {
+            await updateTaskAssignees(task.taskId, updatedAssignees, senderNo);
+        } catch (error) {
+            console.error('담당자 저장 실패:', error);
+            hasError = true;
+        }
+
+        // 검증자 업데이트 (태스크 저장과 독립적으로 실행)
+        try {
+            await updateTaskVerifiers(task.taskId, updatedVerifiers, senderNo);
+        } catch (error) {
+            console.error('검증자 저장 실패:', error);
+            hasError = true;
+        }
+
+        if (hasError) {
+            // 에러가 있으면 사용자에게 알림 (너무 자주 뜨지 않도록 debounce 고려)
+            console.warn('일부 변경사항 저장에 실패했습니다.');
+        }
+
+        setSaving(false);
+    }, [task?.taskId, task?.columnId, loginMember?.no]);
 
     // 디바운스된 자동 저장
     const debouncedSave = useCallback((updatedForm, updatedAssignees, updatedVerifiers) => {
@@ -373,21 +392,20 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
             );
 
             if (result.merged) {
-                alert(`PR #${mergeDialog.pr.prNumber}이(가) 성공적으로 머지되었습니다.`);
+                // 머지 성공 - 다이얼로그 닫기
                 closeMergeDialog();
                 fetchTaskPRs(); // PR 목록 새로고침
-                // 머지 성공 후 TaskDetailView 닫기
-                if (onUpdate) onUpdate();
-                onClose();
+                alert(`PR #${mergeDialog.pr.prNumber}이(가) 성공적으로 머지되었습니다.`);
+                return; // finally 블록 실행 방지
             } else {
                 // 머지 불가능 에러 처리
                 const errorMsg = result.message || '';
                 if (errorMsg.includes('not mergeable') && retryCount < 2) {
                     // GitHub가 아직 준비되지 않음 - 자동 재시도
-                    setMergeDialog(prev => ({ ...prev, loading: true }));
                     await new Promise(resolve => setTimeout(resolve, 3000));
                     return handleMergePR(retryCount + 1);
                 } else if (errorMsg.includes('not mergeable')) {
+                    setMergeDialog(prev => ({ ...prev, loading: false }));
                     const retry = window.confirm(
                         'GitHub에서 아직 머지 가능 상태로 업데이트되지 않았습니다.\n' +
                         '충돌 해결 후 GitHub가 상태를 업데이트하는데 시간이 걸릴 수 있습니다.\n\n' +
@@ -398,8 +416,11 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                         await new Promise(resolve => setTimeout(resolve, 5000));
                         return handleMergePR(0);
                     }
+                    return;
                 } else {
+                    setMergeDialog(prev => ({ ...prev, loading: false }));
                     alert(result.message || 'PR 머지에 실패했습니다.');
+                    return;
                 }
             }
         } catch (error) {
@@ -410,23 +431,24 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                 await new Promise(resolve => setTimeout(resolve, 3000));
                 return handleMergePR(retryCount + 1);
             } else if (typeof errorData === 'string' && errorData.includes('not mergeable')) {
+                setMergeDialog(prev => ({ ...prev, loading: false }));
                 const retry = window.confirm(
                     'GitHub에서 아직 머지 가능 상태로 업데이트되지 않았습니다.\n' +
                     '잠시 후 다시 시도하시겠습니까?'
                 );
                 if (retry) {
+                    setMergeDialog(prev => ({ ...prev, loading: true }));
                     await new Promise(resolve => setTimeout(resolve, 5000));
                     return handleMergePR(0);
                 }
             } else {
+                setMergeDialog(prev => ({ ...prev, loading: false }));
                 alert(errorData || 'PR 머지에 실패했습니다.');
             }
-        } finally {
-            setMergeDialog(prev => ({ ...prev, loading: false }));
         }
     };
 
-    // AI 충돌 해결 시작
+    // AI 충돌 해결 시작 (단계별)
     const handleAiResolveConflict = async (filename) => {
         if (!mergeDialog.pr) return;
 
@@ -435,13 +457,18 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
             filename: filename,
             loading: true,
             applying: false,
+            generatingCode: false,
             result: null,
             error: null,
-            selectedOption: null
+            currentStep: 0,
+            selections: {},
+            hoveredChoice: null,
+            finalCode: null,
+            showFinalPreview: false
         });
 
         try {
-            const result = await aiResolveConflict(teamId, mergeDialog.pr.prNumber, filename, loginMember?.memberNo);
+            const result = await aiResolveConflictStepBased(teamId, mergeDialog.pr.prNumber, filename, loginMember?.memberNo);
 
             if (result.success) {
                 setAiResolution(prev => ({
@@ -466,18 +493,83 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
         }
     };
 
-    // AI 해결 코드 적용
-    const handleApplyResolution = async () => {
+    // 단계에서 선택지 선택
+    const handleSelectChoice = (stepNumber, choiceId) => {
+        setAiResolution(prev => ({
+            ...prev,
+            selections: { ...prev.selections, [stepNumber]: choiceId }
+        }));
+    };
+
+    // 다음 단계로 이동
+    const handleNextStep = () => {
+        const totalSteps = aiResolution.result?.steps?.length || 0;
+        if (aiResolution.currentStep < totalSteps - 1) {
+            setAiResolution(prev => ({ ...prev, currentStep: prev.currentStep + 1 }));
+        }
+    };
+
+    // 이전 단계로 이동
+    const handlePrevStep = () => {
+        if (aiResolution.currentStep > 0) {
+            setAiResolution(prev => ({ ...prev, currentStep: prev.currentStep - 1 }));
+        }
+    };
+
+    // 최종 코드 생성
+    const handleGenerateFinalCode = async () => {
         if (!aiResolution.result || !mergeDialog.pr) return;
 
-        // 선택된 옵션 확인
-        const selectedIdx = aiResolution.selectedOption;
-        if (selectedIdx === null || !aiResolution.result.options?.[selectedIdx]) {
-            alert('해결 옵션을 선택해주세요.');
+        const steps = aiResolution.result.steps || [];
+        const totalSteps = steps.length;
+        const selectionsCount = Object.keys(aiResolution.selections).length;
+
+        if (selectionsCount < totalSteps) {
+            alert('모든 단계에서 선택을 완료해주세요.');
             return;
         }
 
-        const selectedOption = aiResolution.result.options[selectedIdx];
+        setAiResolution(prev => ({ ...prev, generatingCode: true }));
+
+        try {
+            const result = await generateFinalCode(
+                teamId,
+                mergeDialog.pr.prNumber,
+                aiResolution.filename,
+                aiResolution.result.baseContent,
+                aiResolution.result.headContent,
+                steps,
+                aiResolution.selections,
+                loginMember?.memberNo
+            );
+
+            if (result.success) {
+                setAiResolution(prev => ({
+                    ...prev,
+                    generatingCode: false,
+                    finalCode: result.code,
+                    showFinalPreview: true
+                }));
+            } else {
+                setAiResolution(prev => ({
+                    ...prev,
+                    generatingCode: false,
+                    error: result.error || '최종 코드 생성에 실패했습니다.'
+                }));
+            }
+        } catch (error) {
+            console.error('최종 코드 생성 실패:', error);
+            setAiResolution(prev => ({
+                ...prev,
+                generatingCode: false,
+                error: error.response?.data || '최종 코드 생성에 실패했습니다.'
+            }));
+        }
+    };
+
+    // AI 해결 코드 적용 (최종 코드 커밋)
+    const handleApplyResolution = async () => {
+        if (!aiResolution.result || !mergeDialog.pr || !aiResolution.finalCode) return;
 
         setAiResolution(prev => ({ ...prev, applying: true }));
 
@@ -485,14 +577,14 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
             const result = await applyConflictResolution(
                 teamId,
                 mergeDialog.pr.prNumber,
-                aiResolution.result.filename,
-                selectedOption.code,
+                aiResolution.filename,
+                aiResolution.finalCode,
                 aiResolution.result.headSha,
                 loginMember?.memberNo
             );
 
             if (result.success) {
-                const resolvedFilename = aiResolution.result.filename;
+                const resolvedFilename = aiResolution.filename;
                 alert(`충돌이 해결되었습니다: ${resolvedFilename}`);
 
                 // AI 해결 패널 닫기
@@ -501,9 +593,14 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                     filename: null,
                     loading: false,
                     applying: false,
+                    generatingCode: false,
                     result: null,
                     error: null,
-                    selectedOption: null
+                    currentStep: 0,
+                    selections: {},
+                    hoveredChoice: null,
+                    finalCode: null,
+                    showFinalPreview: false
                 });
 
                 // 해결된 파일을 충돌 목록에서 제거 (낙관적 업데이트)
@@ -515,7 +612,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
 
                     return {
                         ...prev,
-                        checkingStatus: true,
+                        checkingStatus: false, // 바로 확인 완료로 표시
                         prDetail: prev.prDetail ? {
                             ...prev.prDetail,
                             conflictFiles: updatedConflictFiles,
@@ -527,23 +624,27 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                     };
                 });
 
-                // 잠시 대기 후 실제 상태 확인 (백그라운드)
-                await new Promise(resolve => setTimeout(resolve, 3000));
-
-                // GitHub 상태 확인 (실패해도 무시 - 낙관적 UI 유지)
-                try {
-                    const detail = await getPRDetail(teamId, mergeDialog.pr.prNumber, loginMember?.memberNo);
-                    // GitHub가 여전히 충돌이라고 하면 그대로 유지, 아니면 업데이트
-                    if (!detail.hasConflicts) {
-                        setMergeDialog(prev => ({ ...prev, prDetail: detail, checkingStatus: false }));
-                    } else {
-                        // GitHub가 충돌이라고 해도 우리가 해결한 파일은 목록에서 제거된 상태 유지
-                        setMergeDialog(prev => ({ ...prev, checkingStatus: false }));
+                // 백그라운드에서 GitHub 상태 확인 (UI 블로킹 없음)
+                setTimeout(async () => {
+                    try {
+                        const detail = await getPRDetail(teamId, mergeDialog.pr.prNumber, loginMember?.memberNo);
+                        // GitHub가 충돌 없다고 확인되면 업데이트
+                        if (!detail.hasConflicts) {
+                            setMergeDialog(prev => ({
+                                ...prev,
+                                prDetail: {
+                                    ...prev.prDetail,
+                                    ...detail,
+                                    // 로컬에서 이미 해결한 파일 목록 유지
+                                    conflictFiles: prev.prDetail?.conflictFiles || []
+                                }
+                            }));
+                        }
+                        // GitHub가 여전히 충돌이라고 해도 로컬 상태 유지 (무시)
+                    } catch (e) {
+                        console.error('PR 상태 확인 실패:', e);
                     }
-                } catch (e) {
-                    console.error('PR 상태 확인 실패:', e);
-                    setMergeDialog(prev => ({ ...prev, checkingStatus: false }));
-                }
+                }, 3000);
             } else {
                 setAiResolution(prev => ({
                     ...prev,
@@ -1442,133 +1543,251 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                                                     </ul>
                                                 </div>
                                             )}
+                                        </div>
+                                    )}
 
-                                            {/* AI 충돌 해결 패널 */}
-                                            {aiResolution.show && (
-                                                <div className="ai-resolution-panel">
-                                                    <div className="ai-panel-header">
-                                                        <div className="ai-panel-title">
-                                                            <i className="fa-solid fa-wand-magic-sparkles"></i>
-                                                            AI 충돌 해결
-                                                        </div>
-                                                        <span className="ai-panel-file">{aiResolution.filename}</span>
-                                                        <button
-                                                            className="ai-panel-close"
-                                                            onClick={handleCancelAiResolution}
-                                                            disabled={aiResolution.applying}
-                                                        >
-                                                            <i className="fa-solid fa-x"></i>
-                                                        </button>
+                                    {/* AI 충돌 해결 모달 - 전체화면 */}
+                                    {aiResolution.show && (
+                                        <div className="ai-resolution-panel" onClick={(e) => e.target === e.currentTarget && handleCancelAiResolution()}>
+                                            <div className="ai-modal-container">
+                                                <div className="ai-panel-header">
+                                                    <div className="ai-panel-title">
+                                                        <i className="fa-solid fa-wand-magic-sparkles"></i>
+                                                        AI 충돌 해결 위저드
                                                     </div>
+                                                    <span className="ai-panel-file">
+                                                        <i className="fa-solid fa-file-code"></i>
+                                                        {aiResolution.filename}
+                                                    </span>
+                                                    <button
+                                                        className="ai-panel-close"
+                                                        onClick={handleCancelAiResolution}
+                                                        disabled={aiResolution.applying}
+                                                    >
+                                                        <i className="fa-solid fa-x"></i>
+                                                    </button>
+                                                </div>
 
-                                                    <div className="ai-panel-body">
-                                                        {/* 로딩 상태 */}
-                                                        {aiResolution.loading && (
-                                                            <div className="ai-loading">
-                                                                <i className="fa-solid fa-spinner fa-spin"></i>
-                                                                <span>AI가 충돌을 분석하고 있습니다...</span>
-                                                                <p className="ai-loading-hint">양쪽 브랜치의 변경사항을 분석하여 최적의 해결책을 찾고 있습니다.</p>
-                                                            </div>
-                                                        )}
+                                                <div className="ai-panel-body">
+                                                    {/* 로딩 상태 */}
+                                                    {aiResolution.loading && (
+                                                        <div className="ai-loading">
+                                                            <i className="fa-solid fa-spinner fa-spin"></i>
+                                                            <span>AI가 충돌을 분석하고 있습니다...</span>
+                                                            <p className="ai-loading-hint">양쪽 브랜치의 변경사항을 분석하여 최적의 해결책을 찾고 있습니다.</p>
+                                                        </div>
+                                                    )}
 
-                                                        {/* 에러 */}
-                                                        {aiResolution.error && (
-                                                            <div className="ai-error">
-                                                                <i className="fa-solid fa-exclamation-circle"></i>
-                                                                <span>{aiResolution.error}</span>
-                                                                <button
-                                                                    className="retry-btn"
-                                                                    onClick={() => handleAiResolveConflict(aiResolution.filename)}
-                                                                >
-                                                                    다시 시도
-                                                                </button>
-                                                            </div>
-                                                        )}
+                                                    {/* 에러 */}
+                                                    {aiResolution.error && (
+                                                        <div className="ai-error">
+                                                            <i className="fa-solid fa-exclamation-circle"></i>
+                                                            <span>{aiResolution.error}</span>
+                                                            <button
+                                                                className="retry-btn"
+                                                                onClick={() => handleAiResolveConflict(aiResolution.filename)}
+                                                            >
+                                                                다시 시도
+                                                            </button>
+                                                        </div>
+                                                    )}
 
-                                                        {/* 해결 결과 */}
-                                                        {aiResolution.result && !aiResolution.loading && !aiResolution.error && (
-                                                            <>
-                                                                {/* 분석 내용 */}
-                                                                <div className="ai-analysis">
-                                                                    <div className="ai-section-title">
-                                                                        <i className="fa-solid fa-magnifying-glass-chart"></i>
-                                                                        충돌 분석
-                                                                    </div>
-                                                                    <p>{aiResolution.result.analysis}</p>
+                                                    {/* 단계별 해결 결과 */}
+                                                    {aiResolution.result && !aiResolution.loading && !aiResolution.error && !aiResolution.showFinalPreview && (
+                                                        <>
+                                                            {/* 요약 및 진행 상황 */}
+                                                            <div className="ai-summary">
+                                                                <div className="ai-section-title">
+                                                                    <i className="fa-solid fa-magnifying-glass-chart"></i>
+                                                                    충돌 분석
                                                                 </div>
-
-                                                                {/* 해결 옵션 카드들 */}
-                                                                <div className="ai-options">
-                                                                    <div className="ai-section-title">
-                                                                        <i className="fa-solid fa-list-check"></i>
-                                                                        해결 옵션 선택
-                                                                    </div>
-                                                                    <div className="ai-option-cards">
-                                                                        {aiResolution.result.options?.map((option, idx) => (
-                                                                            <div
+                                                                <p>{aiResolution.result.summary}</p>
+                                                                <div className="step-progress">
+                                                                    <span className="step-indicator">
+                                                                        단계 {aiResolution.currentStep + 1} / {aiResolution.result.steps?.length || 0}
+                                                                    </span>
+                                                                    <div className="step-dots">
+                                                                        {aiResolution.result.steps?.map((_, idx) => (
+                                                                            <span
                                                                                 key={idx}
-                                                                                className={`ai-option-card ${aiResolution.selectedOption === idx ? 'selected' : ''}`}
-                                                                                onClick={() => setAiResolution(prev => ({ ...prev, selectedOption: idx }))}
-                                                                            >
-                                                                                <div className="option-header">
-                                                                                    <span className="option-number">{idx + 1}</span>
-                                                                                    <span className="option-title">{option.title}</span>
-                                                                                    {aiResolution.selectedOption === idx && (
-                                                                                        <i className="fa-solid fa-check-circle selected-check"></i>
-                                                                                    )}
-                                                                                </div>
-                                                                                <p className="option-description">{option.description}</p>
-                                                                            </div>
+                                                                                className={`step-dot ${idx === aiResolution.currentStep ? 'active' : ''} ${aiResolution.selections[idx + 1] ? 'completed' : ''}`}
+                                                                                onClick={() => setAiResolution(prev => ({ ...prev, currentStep: idx }))}
+                                                                            />
                                                                         ))}
                                                                     </div>
                                                                 </div>
+                                                            </div>
 
-                                                                {/* 선택된 옵션의 코드 미리보기 */}
-                                                                {aiResolution.selectedOption !== null && aiResolution.result.options?.[aiResolution.selectedOption] && (
-                                                                    <div className="ai-code-preview">
-                                                                        <div className="ai-section-title">
-                                                                            <i className="fa-solid fa-code"></i>
-                                                                            {aiResolution.result.options[aiResolution.selectedOption].title} - 코드 미리보기
+                                                            {/* 현재 단계 */}
+                                                            {aiResolution.result.steps?.[aiResolution.currentStep] && (() => {
+                                                                const step = aiResolution.result.steps[aiResolution.currentStep];
+                                                                return (
+                                                                    <div className="ai-step-wizard">
+                                                                        <div className="step-header">
+                                                                            <span className="step-category">{step.category}</span>
+                                                                            <h4 className="step-title">{step.title}</h4>
+                                                                            <p className="step-description">{step.description}</p>
                                                                         </div>
-                                                                        <pre className="code-block">
-                                                                            <code>{aiResolution.result.options[aiResolution.selectedOption].code}</code>
-                                                                        </pre>
-                                                                    </div>
-                                                                )}
 
-                                                                {/* 적용 버튼 */}
-                                                                <div className="ai-actions">
+                                                                        {/* 코드 비교 */}
+                                                                        <div className="step-code-compare">
+                                                                            <div className="code-side base">
+                                                                                <div className="code-label">Base 브랜치</div>
+                                                                                <pre><code>{step.baseSnippet || '(변경 없음)'}</code></pre>
+                                                                            </div>
+                                                                            <div className="code-side head">
+                                                                                <div className="code-label">Head 브랜치</div>
+                                                                                <pre><code>{step.headSnippet || '(변경 없음)'}</code></pre>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* 선택지 목록 */}
+                                                                        <div className="step-choices">
+                                                                            {step.choices?.map((choice) => (
+                                                                                <div
+                                                                                    key={choice.id}
+                                                                                    className={`choice-card ${aiResolution.selections[step.stepNumber] === choice.id ? 'selected' : ''}`}
+                                                                                    onClick={() => handleSelectChoice(step.stepNumber, choice.id)}
+                                                                                >
+                                                                                    <div className="choice-header">
+                                                                                        <span className="choice-id">{choice.id}</span>
+                                                                                        <span className="choice-label">{choice.label}</span>
+                                                                                        {aiResolution.selections[step.stepNumber] === choice.id && (
+                                                                                            <i className="fa-solid fa-check-circle"></i>
+                                                                                        )}
+                                                                                    </div>
+                                                                                    <p className="choice-description">{choice.description}</p>
+                                                                                    <div className="choice-impact">
+                                                                                        <i className="fa-solid fa-arrow-right"></i>
+                                                                                        <span>{choice.impact}</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+
+                                                                        {/* 선택된 옵션 코드 미리보기 */}
+                                                                        {aiResolution.selections[step.stepNumber] && (() => {
+                                                                            const selectedChoice = step.choices?.find(c => c.id === aiResolution.selections[step.stepNumber]);
+                                                                            return selectedChoice ? (
+                                                                                <div className="choice-preview">
+                                                                                    <div className="preview-header">
+                                                                                        <i className="fa-solid fa-code"></i>
+                                                                                        선택된 코드: {selectedChoice.label}
+                                                                                    </div>
+                                                                                    <pre><code>{selectedChoice.code}</code></pre>
+                                                                                </div>
+                                                                            ) : null;
+                                                                        })()}
+                                                                    </div>
+                                                                );
+                                                            })()}
+
+                                                            {/* 네비게이션 버튼 */}
+                                                            <div className="ai-step-nav">
+                                                                <button
+                                                                    className="nav-btn prev"
+                                                                    onClick={handlePrevStep}
+                                                                    disabled={aiResolution.currentStep === 0}
+                                                                    title="이전"
+                                                                >
+                                                                    <i className="fa-solid fa-chevron-left"></i>
+                                                                </button>
+
+                                                                <button
+                                                                    className="cancel-btn"
+                                                                    onClick={handleCancelAiResolution}
+                                                                >
+                                                                    취소
+                                                                </button>
+
+                                                                {aiResolution.currentStep < (aiResolution.result.steps?.length || 0) - 1 ? (
                                                                     <button
-                                                                        className="cancel-btn"
-                                                                        onClick={handleCancelAiResolution}
-                                                                        disabled={aiResolution.applying}
+                                                                        className="nav-btn next"
+                                                                        onClick={handleNextStep}
+                                                                        disabled={!aiResolution.selections[aiResolution.result.steps?.[aiResolution.currentStep]?.stepNumber]}
+                                                                        title="다음"
                                                                     >
-                                                                        취소
+                                                                        <i className="fa-solid fa-chevron-right"></i>
                                                                     </button>
+                                                                ) : (
                                                                     <button
-                                                                        className="apply-btn"
-                                                                        onClick={handleApplyResolution}
-                                                                        disabled={aiResolution.applying || aiResolution.selectedOption === null}
+                                                                        className="generate-btn"
+                                                                        onClick={handleGenerateFinalCode}
+                                                                        disabled={aiResolution.generatingCode || Object.keys(aiResolution.selections).length < (aiResolution.result.steps?.length || 0)}
                                                                     >
-                                                                        {aiResolution.applying ? (
+                                                                        {aiResolution.generatingCode ? (
                                                                             <>
                                                                                 <i className="fa-solid fa-spinner fa-spin"></i>
-                                                                                적용 중...
+                                                                                생성 중...
                                                                             </>
                                                                         ) : (
                                                                             <>
-                                                                                <i className="fa-solid fa-check"></i>
-                                                                                선택한 옵션 적용
+                                                                                <i className="fa-solid fa-wand-magic-sparkles"></i>
+                                                                                최종 코드 생성
                                                                             </>
                                                                         )}
                                                                     </button>
-                                                                </div>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )}
+                                                                )}
+                                                            </div>
+                                                        </>
+                                                    )}
 
+                                                    {/* 최종 코드 미리보기 */}
+                                                    {aiResolution.showFinalPreview && aiResolution.finalCode && (
+                                                        <>
+                                                            <div className="ai-final-preview">
+                                                                <div className="ai-section-title">
+                                                                    <i className="fa-solid fa-code"></i>
+                                                                    최종 코드 미리보기
+                                                                </div>
+                                                                <div className="selections-summary">
+                                                                    <strong>선택한 옵션:</strong>
+                                                                    {aiResolution.result.steps?.map(step => {
+                                                                        const selectedId = aiResolution.selections[step.stepNumber];
+                                                                        const selectedChoice = step.choices?.find(c => c.id === selectedId);
+                                                                        return (
+                                                                            <span key={step.stepNumber} className="selection-badge">
+                                                                                {step.title}: {selectedChoice?.label}
+                                                                            </span>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                                <pre className="final-code-block">
+                                                                    <code>{aiResolution.finalCode}</code>
+                                                                </pre>
+                                                            </div>
+
+                                                            <div className="ai-actions">
+                                                                <button
+                                                                    className="back-btn"
+                                                                    onClick={() => setAiResolution(prev => ({ ...prev, showFinalPreview: false, finalCode: null }))}
+                                                                    disabled={aiResolution.applying}
+                                                                    title="다시 선택"
+                                                                >
+                                                                    <i className="fa-solid fa-arrow-left"></i>
+                                                                </button>
+                                                                <button
+                                                                    className="apply-btn"
+                                                                    onClick={handleApplyResolution}
+                                                                    disabled={aiResolution.applying}
+                                                                >
+                                                                    {aiResolution.applying ? (
+                                                                        <>
+                                                                            <i className="fa-solid fa-spinner fa-spin"></i>
+                                                                            적용 중...
+                                                                        </>
+                                                                    ) : (
+                                                                        <>
+                                                                            <i className="fa-solid fa-check"></i>
+                                                                            이 코드로 충돌 해결
+                                                                        </>
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
                                 </>

@@ -94,7 +94,7 @@
     justify-content: center;
     width: 24px;
     height: 24px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
     cursor: grab;
     font-size: 14px;
     letter-spacing: -2px;
@@ -128,7 +128,7 @@
 
 .expand-icon {
     font-size: 14px;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.6);
     transition: transform 0.3s ease;
 }
 
@@ -170,7 +170,7 @@
     border-radius: 6px;
     cursor: pointer;
     font-size: 16px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
     transition: all 0.15s ease;
 }
 
@@ -347,7 +347,7 @@
 
 .task-table tbody tr.completed .task-title-link {
     text-decoration: line-through;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* 검색 결과 강조/흐림 */
@@ -401,7 +401,7 @@
     width: 28px;
     height: 28px;
     border-radius: 6px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
     cursor: grab;
     font-size: 16px;
     letter-spacing: -2px;
@@ -409,7 +409,7 @@
 }
 
 .task-table tbody tr:hover .drag-handle {
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .drag-handle:hover {
@@ -504,7 +504,7 @@
 }
 
 .no-assignee {
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* 상태 표시 아이콘 */
@@ -516,8 +516,8 @@
     height: 24px;
     border-radius: 50%;
     font-size: 14px;
-    color: #94a3b8;
-    background: #f1f5f9;
+    color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.15);
     transition: all 0.2s ease;
 }
 
@@ -799,7 +799,7 @@
 }
 
 .add-column-inline input::placeholder {
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .add-column-inline button {
