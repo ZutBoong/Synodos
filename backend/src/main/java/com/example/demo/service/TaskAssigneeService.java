@@ -2,15 +2,20 @@ package com.example.demo.service;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.dao.TaskAssigneeDao;
 import com.example.demo.dao.TaskDao;
 import com.example.demo.dao.SynodosColumnDao;
+import com.example.demo.dao.TaskGitHubIssueDao;
 import com.example.demo.model.Task;
 import com.example.demo.model.TaskAssignee;
+import com.example.demo.model.TaskGitHubIssue;
 import com.example.demo.model.SynodosColumn;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class TaskAssigneeService {
 
@@ -24,10 +29,17 @@ public class TaskAssigneeService {
 	private SynodosColumnDao columnDao;
 
 	@Autowired
+	private TaskGitHubIssueDao taskGitHubIssueDao;
+
+	@Autowired
 	private BoardNotificationService notificationService;
 
 	@Autowired
 	private NotificationService persistentNotificationService;
+
+	@Lazy
+	@Autowired
+	private GitHubIssueSyncService gitHubIssueSyncService;
 
 	// 담당자 추가
 	public int addAssignee(TaskAssignee assignee) {
@@ -99,6 +111,12 @@ public class TaskAssigneeService {
 		}
 
 		notifyTaskUpdate(taskId);
+
+		// GitHub Issue 연동된 경우 담당자 동기화
+		if (assignedBy != null) {
+			syncToGitHub(taskId, assignedBy);
+		}
+
 		return count;
 	}
 
@@ -142,6 +160,10 @@ public class TaskAssigneeService {
 		}
 
 		notifyTaskUpdate(taskId);
+
+		// GitHub Issue 연동된 경우 담당자 동기화
+		syncToGitHub(taskId, senderNo);
+
 		return count;
 	}
 
@@ -168,6 +190,21 @@ public class TaskAssigneeService {
 			if (column != null) {
 				notificationService.notifyTaskUpdated(task, column.getTeamId());
 			}
+		}
+	}
+
+	// GitHub Issue 동기화 헬퍼 (담당자 변경 시 호출)
+	private void syncToGitHub(int taskId, int memberNo) {
+		try {
+			// GitHub 이슈가 연결되어 있는지 확인
+			TaskGitHubIssue mapping = taskGitHubIssueDao.findByTaskId(taskId);
+			if (mapping != null) {
+				gitHubIssueSyncService.syncTaskToGitHub(taskId, memberNo);
+				log.info("Synced assignees to GitHub issue #{} for task #{}", mapping.getIssueNumber(), taskId);
+			}
+		} catch (Exception e) {
+			// GitHub 동기화 실패는 담당자 변경을 막지 않음
+			log.warn("Failed to sync assignees to GitHub for task #{}: {}", taskId, e.getMessage());
 		}
 	}
 }

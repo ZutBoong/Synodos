@@ -202,6 +202,18 @@ public class GitHubIssueSyncService {
                 request.setState("open");
             }
 
+            // Assignees 동기화
+            List<TaskAssignee> assignees = taskAssigneeDao.listByTask(taskId);
+            if (!assignees.isEmpty()) {
+                List<String> githubAssignees = mapMembersToGitHubUsers(
+                    assignees.stream().map(TaskAssignee::getMemberNo).collect(Collectors.toList())
+                );
+                request.setAssignees(githubAssignees);
+            } else {
+                // 담당자가 없으면 빈 리스트로 설정하여 GitHub에서도 제거
+                request.setAssignees(new java.util.ArrayList<>());
+            }
+
             gitHubIssueService.updateIssue(repoInfo.owner, repoInfo.repo, token,
                 mapping.getIssueNumber(), request);
 

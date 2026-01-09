@@ -768,9 +768,11 @@
 }
 
 .dialog {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(30, 30, 50, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
     min-width: 400px;
     max-width: 500px;
     animation: dialogEnter 0.2s ease-out;
