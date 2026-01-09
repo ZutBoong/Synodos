@@ -1,14 +1,20 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { PulsingBorder } from "@paper-design/shaders-react";
 import { motion } from "framer-motion";
 
 export default function Circle() {
     const pathId = "circle-path-circle";
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setIsMounted(true), 100);
+        return () => clearTimeout(timer);
+    }, []);
 
     return (
         <div className="absolute bottom-8 right-8 z-[9999]">
             <div className="relative w-20 h-20 flex items-center justify-center cursor-pointer">
-                <PulsingBorder
+                {isMounted && <PulsingBorder
                     colors={["#BEECFF", "#E77EDC", "#FF4C3E", "#00FF88", "#FFD700", "#FF6B35", "#8A2BE2"]}
                     colorBack="#00000000"
                     speed={1.5}
@@ -25,7 +31,7 @@ export default function Circle() {
                     rotation={0}
                     frame={9161408.251009725}
                     style={{ width: "60px", height: "60px", borderRadius: "50%" }}
-                />
+                />}
 
                 <motion.svg
                     className="absolute inset-0 w-full h-full"

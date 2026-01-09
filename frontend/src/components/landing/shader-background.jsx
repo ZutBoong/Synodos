@@ -5,6 +5,13 @@ import { MeshGradient } from "@paper-design/shaders-react";
 export default function ShaderBackground({ children }) {
     const containerRef = useRef(null);
     const [, setIsActive] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        // 마운트 후 약간의 딜레이를 주어 텍스처 로딩 시간 확보
+        const timer = setTimeout(() => setIsMounted(true), 100);
+        return () => clearTimeout(timer);
+    }, []);
 
     useEffect(() => {
         const handleMouseEnter = () => setIsActive(true);
@@ -54,28 +61,32 @@ export default function ShaderBackground({ children }) {
 
             {/* ✅ 배경은 스크롤과 무관하게 고정 */}
             <div className="fixed inset-0 -z-10 pointer-events-none" style={{ backgroundColor: "#0b0714" }}>
-                <MeshGradient
-                    className="absolute inset-0 w-full h-full"
-                    colors={[
-                        "#0b0714", // 거의 검정에 가까운 딥 퍼플
-                        "#c4b5fd", // 연보라 (lavender)
-                        "#8b5cf6", // 퍼플 (primary)
-                        "#312e81", // 딥 인디고
-                        "#60a5fa", // 살짝 푸른 블루 포인트
-                    ]}
-                    speed={0.25}
-                />
-                <MeshGradient
-                    className="absolute inset-0 w-full h-full opacity-50"
-                    colors={[
-                        "#0b0714",
-                        "#a78bfa", // 밝은 퍼플
-                        "#6366f1", // 블루퍼플
-                        "#0b0714",
-                    ]}
-                    speed={0.18}
-                    wireframe="true"
-                />
+                {isMounted && (
+                    <>
+                        <MeshGradient
+                            className="absolute inset-0 w-full h-full"
+                            colors={[
+                                "#0b0714", // 거의 검정에 가까운 딥 퍼플
+                                "#c4b5fd", // 연보라 (lavender)
+                                "#8b5cf6", // 퍼플 (primary)
+                                "#312e81", // 딥 인디고
+                                "#60a5fa", // 살짝 푸른 블루 포인트
+                            ]}
+                            speed={0.25}
+                        />
+                        <MeshGradient
+                            className="absolute inset-0 w-full h-full opacity-50"
+                            colors={[
+                                "#0b0714",
+                                "#a78bfa", // 밝은 퍼플
+                                "#6366f1", // 블루퍼플
+                                "#0b0714",
+                            ]}
+                            speed={0.18}
+                            wireframe="true"
+                        />
+                    </>
+                )}
             </div>
 
             {/* Foreground */}

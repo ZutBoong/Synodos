@@ -46,6 +46,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
     const [selectedVerifiers, setSelectedVerifiers] = useState([]);
     const [assigneeSearch, setAssigneeSearch] = useState('');
     const [verifierSearch, setVerifierSearch] = useState('');
+    const prevTaskIdRef = useRef(null);
 
     const [showCommitBrowser, setShowCommitBrowser] = useState(false);
 
@@ -98,25 +99,30 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
     // 탭 상태
     const [activeTab, setActiveTab] = useState('info');
 
-    // task 변경 시 폼 초기화
+    // task 변경 시 폼 초기화 (다른 태스크를 열 때만 담당자/검증자 리셋)
     useEffect(() => {
         if (task) {
-            initialLoadRef.current = true;
-            setForm({
-                title: task.title || '',
-                description: task.description || '',
-                priority: task.priority || null, // 우선순위 미설정이면 null
-                startDate: formatDateForInput(task.startDate),
-                startTime: extractTimeFromDateTime(task.startDate),
-                dueDate: formatDateForInput(task.dueDate),
-                dueTime: extractTimeFromDateTime(task.dueDate)
-            });
-            setSelectedAssignees(task.assignees?.map(a => a.memberNo) || []);
-            setSelectedVerifiers(task.verifiers?.map(v => v.memberNo) || []);
-            // 초기 로드 후 플래그 해제
-            setTimeout(() => {
-                initialLoadRef.current = false;
-            }, 100);
+            const isNewTask = prevTaskIdRef.current !== task.taskId;
+
+            if (isNewTask) {
+                initialLoadRef.current = true;
+                setForm({
+                    title: task.title || '',
+                    description: task.description || '',
+                    priority: task.priority || null,
+                    startDate: formatDateForInput(task.startDate),
+                    startTime: extractTimeFromDateTime(task.startDate),
+                    dueDate: formatDateForInput(task.dueDate),
+                    dueTime: extractTimeFromDateTime(task.dueDate)
+                });
+                setSelectedAssignees(task.assignees?.map(a => a.memberNo) || []);
+                setSelectedVerifiers(task.verifiers?.map(v => v.memberNo) || []);
+                prevTaskIdRef.current = task.taskId;
+
+                setTimeout(() => {
+                    initialLoadRef.current = false;
+                }, 100);
+            }
         }
     }, [task]);
 
