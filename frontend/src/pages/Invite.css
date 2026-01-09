@@ -129,6 +129,53 @@
     color: white;
 }
 
+/* GitHub 초대 알림 */
+.github-invitation-notice {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    background: rgba(36, 41, 47, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.github-invitation-notice i.fa-github {
+    font-size: 24px;
+    color: white;
+}
+
+.github-invitation-notice span {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.github-invitation-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.github-invitation-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(46, 160, 67, 0.4);
+}
+
+.github-invitation-link i {
+    font-size: 12px;
+}
+
 @media (max-width: 480px) {
     .invite-container {
         padding: 32px 24px;

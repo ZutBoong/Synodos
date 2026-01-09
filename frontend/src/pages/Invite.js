@@ -69,8 +69,8 @@ function Invite() {
     };
 
     const handleGoToTeam = () => {
-        if (teamInfo?.teamId) {
-            navigate(`/team/${teamInfo.teamId}?view=overview`);
+        if (teamInfo?.team?.teamId) {
+            navigate(`/team/${teamInfo.team.teamId}?view=overview`);
         } else {
             navigate('/');
         }
@@ -138,7 +138,21 @@ function Invite() {
                             <i className="fa-solid fa-check"></i>
                         </div>
                         <h2>팀 가입 완료!</h2>
-                        <p><strong>{teamInfo?.teamName || '팀'}</strong>에 성공적으로 가입했습니다.</p>
+                        <p><strong>{teamInfo?.team?.teamName || '팀'}</strong>에 성공적으로 가입했습니다.</p>
+                        {teamInfo?.githubInvitationSent && (
+                            <div className="github-invitation-notice">
+                                <i className="fa-brands fa-github"></i>
+                                <span>GitHub 저장소 초대가 전송되었습니다.</span>
+                                <a
+                                    href={teamInfo.githubInvitationUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="github-invitation-link"
+                                >
+                                    초대 수락하기 <i className="fa-solid fa-arrow-up-right-from-square"></i>
+                                </a>
+                            </div>
+                        )}
                         <div className="invite-actions">
                             <button className="invite-btn primary" onClick={handleGoToTeam}>
                                 팀으로 이동

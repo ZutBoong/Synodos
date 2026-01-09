@@ -301,7 +301,9 @@ function TeamView() {
                 alert('팀을 찾을 수 없습니다.');
                 localStorage.removeItem('currentTeam');
                 navigate('/');
-            } else if (error.response?.status === 403) {
+            } else if (error.response?.status === 403 || error.response?.status === 401) {
+                // 팀 접근 권한이 없는 경우 (강퇴 또는 탈퇴)
+                // 401도 여기서 처리 (토큰은 유효하지만 팀 접근 권한이 없는 경우)
                 alert('해당 팀에 접근 권한이 없습니다. 팀에서 퇴출되었을 수 있습니다.');
                 localStorage.removeItem('currentTeam');
                 navigate('/');

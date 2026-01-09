@@ -55,8 +55,11 @@ public class TeamService {
 	}
 
 	// 팀 멤버 추가 + 알림 발송 + GitHub Collaborator 등록
-	public int addMemberWithNotification(TeamMember member, int inviterNo) {
+	public Map<String, Object> addMemberWithNotification(TeamMember member, int inviterNo) {
+		Map<String, Object> response = new HashMap<>();
 		int result = dao.insertMember(member);
+		response.put("result", result);
+
 		if (result > 0) {
 			Team team = dao.findById(member.getTeamId());
 			if (team != null) {
@@ -69,44 +72,55 @@ public class TeamService {
 				);
 
 				// GitHub Collaborator 자동 등록 시도
-				tryAddGitHubCollaborator(team, member.getMemberNo());
+				Map<String, Object> githubResult = tryAddGitHubCollaborator(team, member.getMemberNo());
+				response.putAll(githubResult);
 			}
 		}
-		return result;
+		return response;
 	}
 
 	/**
 	 * 팀에 GitHub 저장소가 연결되어 있고, 멤버가 GitHub 계정을 연동했으면
 	 * 자동으로 GitHub Collaborator로 등록합니다.
+	 * @return Map containing githubInvitationSent (boolean) and githubInvitationUrl (String)
 	 */
-	private void tryAddGitHubCollaborator(Team team, int memberNo) {
+	private Map<String, Object> tryAddGitHubCollaborator(Team team, int memberNo) {
+		Map<String, Object> result = new HashMap<>();
+		result.put("githubInvitationSent", false);
+
 		try {
+			log.info("tryAddGitHubCollaborator called for team {} and member {}", team.getTeamId(), memberNo);
+
 			// 1. 팀에 GitHub 저장소가 연결되어 있는지 확인
 			String repoUrl = team.getGithubRepoUrl();
+			log.info("Team {} GitHub repo URL: {}", team.getTeamId(), repoUrl);
 			if (repoUrl == null || repoUrl.trim().isEmpty()) {
-				log.debug("Team {} has no GitHub repo connected, skipping collaborator addition", team.getTeamId());
-				return;
+				log.info("Team {} has no GitHub repo connected, skipping collaborator addition", team.getTeamId());
+				return result;
 			}
 
 			// 2. 저장소 URL 파싱
 			GitHubService.RepoInfo repoInfo = gitHubService.parseRepoUrl(repoUrl);
 			if (repoInfo == null) {
 				log.warn("Invalid GitHub repo URL for team {}: {}", team.getTeamId(), repoUrl);
-				return;
+				return result;
 			}
+			log.info("Parsed repo info: owner={}, repo={}", repoInfo.owner, repoInfo.repo);
 
 			// 3. 새 멤버의 GitHub username 확인
 			Member newMember = memberDao.findByNo(memberNo);
+			log.info("New member {} GitHub username: {}", memberNo, newMember != null ? newMember.getGithubUsername() : "null");
 			if (newMember == null || newMember.getGithubUsername() == null || newMember.getGithubUsername().trim().isEmpty()) {
-				log.debug("Member {} has no GitHub username linked, skipping collaborator addition", memberNo);
-				return;
+				log.info("Member {} has no GitHub username linked, skipping collaborator addition", memberNo);
+				return result;
 			}
 
 			// 4. 팀 리더의 GitHub access token 확인
 			Member leader = memberDao.findByNo(team.getLeaderNo());
+			log.info("Team leader {} has GitHub token: {}", team.getLeaderNo(), leader != null && leader.getGithubAccessToken() != null);
 			if (leader == null || leader.getGithubAccessToken() == null || leader.getGithubAccessToken().trim().isEmpty()) {
-				log.debug("Team leader {} has no GitHub access token, skipping collaborator addition", team.getLeaderNo());
-				return;
+				log.info("Team leader {} has no GitHub access token, skipping collaborator addition", team.getLeaderNo());
+				return result;
 			}
 
 			// 5. GitHub Collaborator로 추가 (push 권한)
@@ -122,6 +136,13 @@ public class TeamService {
 			if (collaboratorResult.isSuccess()) {
 				log.info("Successfully added {} as GitHub collaborator to {}/{}: {}",
 					githubUsername, repoInfo.owner, repoInfo.repo, collaboratorResult.getMessage());
+
+				// 초대가 전송된 경우 초대 수락 URL 반환
+				if (collaboratorResult.isInvitationSent()) {
+					result.put("githubInvitationSent", true);
+					result.put("githubInvitationUrl", "https://github.com/" + repoInfo.owner + "/" + repoInfo.repo + "/invitations");
+					result.put("githubRepoUrl", "https://github.com/" + repoInfo.owner + "/" + repoInfo.repo);
+				}
 			} else {
 				log.warn("Failed to add {} as GitHub collaborator to {}/{}: {}",
 					githubUsername, repoInfo.owner, repoInfo.repo, collaboratorResult.getMessage());
@@ -130,6 +151,7 @@ public class TeamService {
 			// Collaborator 추가 실패는 팀 가입을 막지 않음
 			log.error("Error while adding GitHub collaborator for member {}: {}", memberNo, e.getMessage());
 		}
+		return result;
 	}
 
 	// 팀 코드로 팀 조회

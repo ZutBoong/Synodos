@@ -30,10 +30,23 @@ axiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response && error.response.status === 401) {
-            // 토큰 만료 시 로그아웃 처리
-            localStorage.removeItem('token');
-            localStorage.removeItem('member');
-            window.location.href = '/login';
+            // 토큰 만료 또는 유효하지 않은 토큰인 경우에만 로그아웃 처리
+            // 특정 API 호출 중 401이 발생해도 무조건 로그아웃하지 않음
+            const errorMessage = error.response.data?.message || error.response.data?.error || '';
+            const isTokenError =
+                errorMessage.includes('token') ||
+                errorMessage.includes('Token') ||
+                errorMessage.includes('JWT') ||
+                errorMessage.includes('인증') ||
+                errorMessage.includes('expired') ||
+                errorMessage.includes('invalid') ||
+                !localStorage.getItem('token'); // 토큰이 없는 경우
+
+            if (isTokenError) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('member');
+                window.location.href = '/login';
+            }
         }
         return Promise.reject(error);
     }

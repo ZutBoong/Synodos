@@ -105,11 +105,18 @@ public class TeamController {
 		member.setRole("MEMBER");
 
 		// 알림 + GitHub Collaborator 자동 등록 포함
-		int insertResult = service.addMemberWithNotification(member, team.getLeaderNo());
+		Map<String, Object> serviceResult = service.addMemberWithNotification(member, team.getLeaderNo());
+		int insertResult = (int) serviceResult.get("result");
 		if (insertResult == 1) {
 			result.put("success", true);
 			result.put("message", "팀에 가입되었습니다.");
 			result.put("team", team);
+			// GitHub 초대 정보 포함
+			if (Boolean.TRUE.equals(serviceResult.get("githubInvitationSent"))) {
+				result.put("githubInvitationSent", true);
+				result.put("githubInvitationUrl", serviceResult.get("githubInvitationUrl"));
+				result.put("githubRepoUrl", serviceResult.get("githubRepoUrl"));
+			}
 		} else {
 			result.put("success", false);
 			result.put("message", "팀 가입에 실패했습니다.");
@@ -207,10 +214,17 @@ public class TeamController {
 		member.setRole("MEMBER");
 
 		// 알림이 포함된 멤버 추가
-		int insertResult = service.addMemberWithNotification(member, leaderNo);
+		Map<String, Object> serviceResult = service.addMemberWithNotification(member, leaderNo);
+		int insertResult = (int) serviceResult.get("result");
 		if (insertResult == 1) {
 			result.put("success", true);
 			result.put("message", "팀원이 초대되었습니다.");
+			// GitHub 초대 정보 포함
+			if (Boolean.TRUE.equals(serviceResult.get("githubInvitationSent"))) {
+				result.put("githubInvitationSent", true);
+				result.put("githubInvitationUrl", serviceResult.get("githubInvitationUrl"));
+				result.put("githubRepoUrl", serviceResult.get("githubRepoUrl"));
+			}
 		} else {
 			result.put("success", false);
 			result.put("message", "팀원 초대에 실패했습니다.");

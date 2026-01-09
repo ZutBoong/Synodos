@@ -111,6 +111,13 @@ function Sidebar({ isOpen, onToggle, currentTeam, onSelectTeam, loginMember }) {
                     onSelectTeam(teamsArray[0]);
                 }
             } catch (error) {
+                // 네트워크 오류나 401 오류 시 팀 목록을 비우지 않음
+                // (기존 팀 목록 유지하여 잘못된 리다이렉트 방지)
+                console.error('팀 목록 로드 실패:', error);
+                if (!error.response || error.response.status === 401) {
+                    // 401 오류 또는 네트워크 오류인 경우 기존 상태 유지
+                    return;
+                }
                 setTeams([]);
             }
         };
