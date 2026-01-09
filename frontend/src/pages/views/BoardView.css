@@ -74,7 +74,7 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
     transition: all 0.3s ease;
     max-height: calc(100vh - 140px);
-    overflow: visible;
+    overflow: hidden;
     align-items: stretch;
 }
 
@@ -272,7 +272,8 @@
     border-radius: 10px;
     transition: all 0.2s ease;
     flex: 1;
-    overflow: visible;  /* DnD nested scroll container 이슈 해결 - auto에서 visible로 변경 */
+    overflow-y: auto;
+    overflow-x: hidden;
     margin-bottom: 0;
 }
 
