@@ -104,7 +104,8 @@ public class TeamController {
 		member.setMemberNo(memberNo);
 		member.setRole("MEMBER");
 
-		int insertResult = service.addMember(member);
+		// 알림 + GitHub Collaborator 자동 등록 포함
+		int insertResult = service.addMemberWithNotification(member, team.getLeaderNo());
 		if (insertResult == 1) {
 			result.put("success", true);
 			result.put("message", "팀에 가입되었습니다.");

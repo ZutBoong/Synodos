@@ -825,6 +825,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
             ? selectedAssignees.filter(no => no !== memberNo)
             : [...selectedAssignees, memberNo];
         setSelectedAssignees(newAssignees);
+        setAssigneeSearch('');
         debouncedSave(form, newAssignees, selectedVerifiers);
     };
 
@@ -833,6 +834,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
             ? selectedVerifiers.filter(no => no !== memberNo)
             : [...selectedVerifiers, memberNo];
         setSelectedVerifiers(newVerifiers);
+        setVerifierSearch('');
         debouncedSave(form, selectedAssignees, newVerifiers);
     };
 
