@@ -63,6 +63,7 @@
     transition: all 0.2s ease;
     box-sizing: border-box;
     background: #f8fafc;
+    color: #000;
 }
 
 .auth-box .form-group input:hover {

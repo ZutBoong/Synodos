@@ -9,6 +9,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backend/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./backend/src/main/resources/sample-data.sql:/docker-entrypoint-initdb.d/02_sample-data.sql
     ports:
       - "5432:5432"
     healthcheck:

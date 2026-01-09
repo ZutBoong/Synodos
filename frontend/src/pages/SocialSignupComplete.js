@@ -198,7 +198,7 @@ function SocialSignupComplete() {
                             type="text"
                             value={decodeURIComponent(name || '')}
                             disabled
-                            style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed' }}
+                            style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed', color: '#000' }}
                         />
                     </div>
 
@@ -228,7 +228,7 @@ function SocialSignupComplete() {
                             onBlur={handleEmailBlur}
                             placeholder="이메일을 입력해주세요"
                             disabled={!needsEmailInput && initialEmail}
-                            style={!needsEmailInput && initialEmail ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed' } : {}}
+                            style={!needsEmailInput && initialEmail ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed', color: '#000' } : {}}
                         />
                         {emailError && <span className="error-msg">{emailError}</span>}
                         {needsEmailInput && (
