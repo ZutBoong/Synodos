@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import { taskupdate, updateTaskAssignees, updateTaskVerifiers, archiveTask, unarchiveTask, toggleTaskFavorite, checkTaskFavorite, forceCompleteTask } from '../api/boardApi';
 import { getTeamMembers, getTeam } from '../api/teamApi';
 import { uploadFile, getFilesByTask, deleteFile, formatFileSize, getFileIcon } from '../api/fileApi';
@@ -1578,8 +1579,8 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                                         </div>
                                     )}
 
-                                    {/* AI 충돌 해결 모달 - 전체화면 */}
-                                    {aiResolution.show && (
+                                    {/* AI 충돌 해결 모달 - 전체화면 (Portal로 body에 렌더링) */}
+                                    {aiResolution.show && ReactDOM.createPortal(
                                         <div className="ai-resolution-panel" onClick={(e) => e.target === e.currentTarget && handleCancelAiResolution()}>
                                             <div className="ai-modal-container">
                                                 <div className="ai-panel-header">
@@ -1820,7 +1821,8 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                                                     )}
                                                 </div>
                                             </div>
-                                        </div>
+                                        </div>,
+                                        document.body
                                     )}
                                 </>
                             )}

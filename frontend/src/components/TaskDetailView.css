@@ -1696,8 +1696,8 @@
 }
 
 .ai-modal-container {
-    width: 90%;
-    max-width: 900px;
+    width: 95%;
+    max-width: 1200px;
     max-height: 90vh;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
     backdrop-filter: blur(20px);
