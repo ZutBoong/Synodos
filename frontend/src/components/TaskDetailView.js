@@ -1727,7 +1727,7 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                                                                 </button>
 
                                                                 <button
-                                                                    className="cancel-btn"
+                                                                    className="ai-cancel-btn"
                                                                     onClick={handleCancelAiResolution}
                                                                 >
                                                                     취소
