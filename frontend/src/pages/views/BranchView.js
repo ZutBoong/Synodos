@@ -7,14 +7,13 @@ import './BranchView.css';
 
 // 그래프 설정 (GitKraken 스타일)
 const GRAPH_CONFIG = {
-    nodeRadius: 12,
+    nodeRadius: 18,
     horizontalSpacing: 80,
     rowHeight: 80,
     leftPadding: 180,
     topPadding: 70,
     timelineHeight: 30,
     branchColors: [
-        '#6e40c9', // purple
         '#2ea44f', // green
         '#0969da', // blue
         '#cf222e', // red
@@ -22,6 +21,7 @@ const GRAPH_CONFIG = {
         '#e85aad', // pink
         '#1a7f5a', // teal
         '#fa7a18', // orange
+        '#0891b2', // cyan
     ]
 };
 
@@ -254,6 +254,8 @@ function BranchView({ team, loginMember, filters }) {
     const handleDragStart = (node, e) => {
         if (e.button !== 0) return; // 좌클릭만
         if (node.isEmptyBranch) return; // 빈 브랜치는 드래그 불가
+        // PR이 있는 브랜치는 드래그 불가
+        if (openPRs.some(pr => pr.headRef === node.branch)) return;
         e.preventDefault();
         const rect = viewportRef.current?.getBoundingClientRect();
         setDragState({
@@ -315,6 +317,8 @@ function BranchView({ team, loginMember, filters }) {
     const handleContextMenu = (node, e) => {
         e.preventDefault();
         e.stopPropagation();
+        // PR이 있는 브랜치는 우클릭 메뉴 비활성화
+        if (openPRs.some(pr => pr.headRef === node.branch)) return;
         const rect = viewportRef.current?.getBoundingClientRect();
         setContextMenu({
             x: e.clientX - (rect?.left || 0),
@@ -384,6 +388,8 @@ function BranchView({ team, loginMember, filters }) {
     const handleBranchContextMenu = (branch, e) => {
         e.preventDefault();
         e.stopPropagation();
+        // PR이 있는 브랜치는 우클릭 메뉴 비활성화
+        if (openPRs.some(pr => pr.headRef === branch)) return;
         setBranchContextMenu({
             x: e.clientX,
             y: e.clientY,
@@ -1691,7 +1697,7 @@ function BranchView({ team, loginMember, filters }) {
                                             return { x, date, dateStr, dateKey, hasMultiple, isExpanded, isFirst };
                                         });
 
-                                        const timelineY = 20;
+                                        const timelineY = 35;
                                         const minX = Math.min(...nodes.map(n => n.x)) - 10;
                                         const maxX = Math.max(...nodes.map(n => n.x)) + 10;
 
@@ -1719,55 +1725,81 @@ function BranchView({ team, loginMember, filters }) {
                                                     strokeWidth={1}
                                                 />
                                                 {/* 날짜 마커 */}
-                                                {dateMarkers.map((marker, idx) => (
-                                                    <g key={idx}>
-                                                        {/* 눈금선 */}
-                                                        <line
-                                                            x1={marker.x}
-                                                            y1={timelineY - 4}
-                                                            x2={marker.x}
-                                                            y2={timelineY + 4}
-                                                            stroke="#94a3b8"
-                                                            strokeWidth={1}
-                                                        />
-                                                        {/* 펼침 아이콘 (같은 날짜 여러 커밋 있을 때 첫 번째에만) */}
-                                                        {marker.hasMultiple && marker.isFirst && (
-                                                            <text
-                                                                x={marker.x - 25}
-                                                                y={timelineY - 10}
-                                                                textAnchor="middle"
-                                                                fill="#667eea"
-                                                                fontSize="10"
-                                                                fontWeight="500"
-                                                                style={{ cursor: 'pointer' }}
+                                                {dateMarkers.map((marker, idx) => {
+                                                    const textWidth = marker.isExpanded ? 45 : 50;
+                                                    const textHeight = 20;
+                                                    const bgX = marker.x - textWidth / 2;
+                                                    const bgY = timelineY - 26;
+
+                                                    return (
+                                                        <g key={idx}>
+                                                            {/* 눈금선 */}
+                                                            <line
+                                                                x1={marker.x}
+                                                                y1={timelineY - 4}
+                                                                x2={marker.x}
+                                                                y2={timelineY + 4}
+                                                                stroke="#94a3b8"
+                                                                strokeWidth={1}
+                                                            />
+                                                            {/* 날짜/시간 배경 */}
+                                                            <rect
+                                                                x={bgX}
+                                                                y={bgY}
+                                                                width={textWidth}
+                                                                height={textHeight}
+                                                                rx={4}
+                                                                ry={4}
+                                                                fill={marker.isExpanded ? '#e0e7ff' : '#f1f5f9'}
+                                                                stroke={marker.hasMultiple ? '#667eea' : '#cbd5e1'}
+                                                                strokeWidth={1}
+                                                                style={{ cursor: marker.hasMultiple ? 'pointer' : 'default' }}
                                                                 onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    toggleDate(marker.dateKey);
+                                                                    if (marker.hasMultiple) {
+                                                                        e.stopPropagation();
+                                                                        toggleDate(marker.dateKey);
+                                                                    }
+                                                                }}
+                                                            />
+                                                            {/* 펼침 아이콘 (같은 날짜 여러 커밋 있을 때 첫 번째에만) */}
+                                                            {marker.hasMultiple && marker.isFirst && (
+                                                                <text
+                                                                    x={bgX + 8}
+                                                                    y={timelineY - 12}
+                                                                    textAnchor="middle"
+                                                                    fill="#667eea"
+                                                                    fontSize="10"
+                                                                    fontWeight="600"
+                                                                    style={{ cursor: 'pointer' }}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        toggleDate(marker.dateKey);
+                                                                    }}
+                                                                >
+                                                                    {marker.isExpanded ? '▼' : '▶'}
+                                                                </text>
+                                                            )}
+                                                            {/* 날짜/시간 텍스트 */}
+                                                            <text
+                                                                x={marker.x + (marker.hasMultiple && marker.isFirst ? 5 : 0)}
+                                                                y={timelineY - 11}
+                                                                textAnchor="middle"
+                                                                fill={marker.hasMultiple ? '#4338ca' : '#475569'}
+                                                                fontSize="13"
+                                                                fontWeight="600"
+                                                                style={{ cursor: marker.hasMultiple ? 'pointer' : 'default' }}
+                                                                onClick={(e) => {
+                                                                    if (marker.hasMultiple) {
+                                                                        e.stopPropagation();
+                                                                        toggleDate(marker.dateKey);
+                                                                    }
                                                                 }}
                                                             >
-                                                                {marker.isExpanded ? '▼' : '▶'}
+                                                                {marker.dateStr}
                                                             </text>
-                                                        )}
-                                                        {/* 날짜/시간 텍스트 */}
-                                                        <text
-                                                            x={marker.x}
-                                                            y={timelineY - 10}
-                                                            textAnchor="middle"
-                                                            fill={marker.hasMultiple ? '#667eea' : '#64748b'}
-                                                            fontSize={marker.isExpanded ? "11" : "12"}
-                                                            fontWeight="500"
-                                                            style={{ cursor: marker.hasMultiple ? 'pointer' : 'default' }}
-                                                            onClick={(e) => {
-                                                                if (marker.hasMultiple) {
-                                                                    e.stopPropagation();
-                                                                    toggleDate(marker.dateKey);
-                                                                }
-                                                            }}
-                                                        >
-                                                            {marker.dateStr}
-                                                        </text>
-                                                    </g>
-                                                ))}
+                                                        </g>
+                                                    );
+                                                })}
                                             </g>
                                         );
                                     })()}
@@ -1795,6 +1827,12 @@ function BranchView({ team, loginMember, filters }) {
 
                                         const isExpanded = expandedBranches.has(branch);
 
+                                        // 브랜치 이름 배경 크기 계산
+                                        const branchDisplayName = branch.length > 16 ? branch.substring(0, 16) + '...' : branch;
+                                        const branchTextWidth = Math.max(branchDisplayName.length * 6.5 + 28, 50);
+                                        const branchBgHeight = 22;
+                                        const branchBgY = y - branchBgHeight / 2;
+
                                         return (
                                             <g key={`branch-bg-${branch}`}>
                                                 <line
@@ -1806,15 +1844,37 @@ function BranchView({ team, loginMember, filters }) {
                                                     strokeWidth={2}
                                                     strokeOpacity={0.2}
                                                 />
+                                                {/* 브랜치 이름 배경 */}
+                                                <rect
+                                                    x={5}
+                                                    y={branchBgY}
+                                                    width={branchTextWidth}
+                                                    height={branchBgHeight}
+                                                    rx={4}
+                                                    ry={4}
+                                                    fill="#f1f5f9"
+                                                    stroke="#cbd5e1"
+                                                    strokeWidth={1}
+                                                    style={{ cursor: 'pointer' }}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setExpandedBranches(prev => {
+                                                            const next = new Set(prev);
+                                                            if (next.has(branch)) {
+                                                                next.delete(branch);
+                                                            } else {
+                                                                next.add(branch);
+                                                            }
+                                                            return next;
+                                                        });
+                                                    }}
+                                                />
                                                 {/* 브랜치 이름 (클릭하여 확장) */}
                                                 <text
-                                                    x={10}
-                                                    y={y + 4}
+                                                    x={12}
+                                                    y={y + 5}
                                                     className="branch-label-text"
                                                     fill={color}
-                                                    stroke="white"
-                                                    strokeWidth={3}
-                                                    paintOrder="stroke"
                                                     style={{ cursor: 'pointer', fontWeight: isExpanded ? 700 : 600 }}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
@@ -1830,10 +1890,10 @@ function BranchView({ team, loginMember, filters }) {
                                                     }}
                                                 >
                                                     {isExpanded
-                                                        ? <tspan fontSize="14" dy="-4">⌄</tspan>
-                                                        : <tspan fontSize="14" dy="0">›</tspan>
+                                                        ? <tspan fontSize="13" dy="-3">⌄</tspan>
+                                                        : <tspan fontSize="13" dy="0">›</tspan>
                                                     }
-                                                    <tspan dx="4" dy={isExpanded ? "4" : "0"}>{branch.length > 16 ? branch.substring(0, 16) + '...' : branch}</tspan>
+                                                    <tspan dx="4" dy={isExpanded ? "3" : "0"} fontSize="13">{branchDisplayName}</tspan>
                                                 </text>
                                             </g>
                                         );
@@ -1860,7 +1920,7 @@ function BranchView({ team, loginMember, filters }) {
                                                     x2={edge.toX}
                                                     y2={edge.toY}
                                                     stroke={edgeColor}
-                                                    strokeWidth={4}
+                                                    strokeWidth={5}
                                                     strokeDasharray={dashArray}
                                                     filter={fromNode?.isEmptyBranch ? undefined : `url(#glow-${colorIndex})`}
                                                 />
@@ -1875,7 +1935,7 @@ function BranchView({ team, loginMember, filters }) {
                                                         x2={edge.toX}
                                                         y2={edge.toY}
                                                         stroke={edgeColor}
-                                                        strokeWidth={4}
+                                                        strokeWidth={5}
                                                         strokeOpacity={0.7}
                                                         strokeDasharray={dashArray}
                                                     />
@@ -1893,7 +1953,7 @@ function BranchView({ team, loginMember, filters }) {
                                                     <path
                                                         d={pathD}
                                                         stroke={edgeColor}
-                                                        strokeWidth={4}
+                                                        strokeWidth={5}
                                                         fill="none"
                                                         strokeOpacity={0.7}
                                                         strokeDasharray={dashArray}
@@ -1944,7 +2004,7 @@ function BranchView({ team, loginMember, filters }) {
                                                             r={GRAPH_CONFIG.nodeRadius + 8}
                                                             fill="none"
                                                             stroke="#238636"
-                                                            strokeWidth={4}
+                                                            strokeWidth={5}
                                                             opacity={0.9}
                                                         />
                                                         {/* PR 배지 */}
@@ -1962,7 +2022,7 @@ function BranchView({ team, loginMember, filters }) {
                                                         r={GRAPH_CONFIG.nodeRadius + 10}
                                                         fill="none"
                                                         stroke="#22c55e"
-                                                        strokeWidth={4}
+                                                        strokeWidth={5}
                                                         strokeDasharray="5 3"
                                                         opacity={0.8}
                                                     />
@@ -1975,7 +2035,7 @@ function BranchView({ team, loginMember, filters }) {
                                                         r={GRAPH_CONFIG.nodeRadius + 6}
                                                         fill="none"
                                                         stroke={node.color}
-                                                        strokeWidth={4}
+                                                        strokeWidth={5}
                                                         opacity={0.5}
                                                     />
                                                 )}
@@ -1986,7 +2046,7 @@ function BranchView({ team, loginMember, filters }) {
                                                     r={GRAPH_CONFIG.nodeRadius}
                                                     fill={isDragging ? '#94a3b8' : node.color}
                                                     stroke="white"
-                                                    strokeWidth={4}
+                                                    strokeWidth={5}
                                                     filter={`url(#glow-${Math.abs(node.row) % GRAPH_CONFIG.branchColors.length})`}
                                                     className="node-circle"
                                                     opacity={isDragging ? 0.5 : 1}
@@ -1994,11 +2054,11 @@ function BranchView({ team, loginMember, filters }) {
                                                 {/* 이니셜 */}
                                                 <text
                                                     x={node.x}
-                                                    y={node.y + 5}
+                                                    y={node.y + 6}
                                                     className="node-initial"
                                                     textAnchor="middle"
                                                     fill="#fff"
-                                                    fontSize="11"
+                                                    fontSize="14"
                                                     fontWeight="bold"
                                                     opacity={isDragging ? 0.5 : 1}
                                                 >
@@ -2017,15 +2077,15 @@ function BranchView({ team, loginMember, filters }) {
                                                 r={GRAPH_CONFIG.nodeRadius}
                                                 fill={dragState.node.color}
                                                 stroke="white"
-                                                strokeWidth={4}
+                                                strokeWidth={5}
                                                 opacity={0.8}
                                             />
                                             <text
                                                 x={dragState.currentX}
-                                                y={dragState.currentY + 5}
+                                                y={dragState.currentY + 6}
                                                 textAnchor="middle"
                                                 fill="#fff"
-                                                fontSize="11"
+                                                fontSize="14"
                                                 fontWeight="bold"
                                             >
                                                 {(dragState.node.commit.authorLogin || dragState.node.commit.authorName || '?')[0].toUpperCase()}

@@ -131,9 +131,6 @@ function CreateTeam() {
                 let message = `팀이 생성되었습니다!\n팀 코드: ${result.teamCode}`;
                 if (result.githubConnected) {
                     message += '\n\nGitHub 저장소가 연결되었습니다.';
-                    if (!result.webhookCreated) {
-                        message += '\n(Webhook 등록에 실패했습니다. 팀 설정에서 다시 시도하세요.)';
-                    }
                 }
                 alert(message);
                 // 사이드바 팀 목록 갱신

@@ -421,6 +421,15 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
             }
         } catch (error) {
             const errorData = error.response?.data || '';
+            const statusCode = error.response?.status;
+
+            // 검증자 권한 오류 (403)
+            if (statusCode === 403) {
+                setMergeDialog(prev => ({ ...prev, loading: false }));
+                alert(errorData || '이 PR을 머지할 권한이 없습니다.');
+                return;
+            }
+
             if (typeof errorData === 'string' && errorData.includes('not mergeable') && retryCount < 2) {
                 // 자동 재시도
                 await new Promise(resolve => setTimeout(resolve, 3000));
@@ -834,7 +843,6 @@ function TaskDetailView({ task, teamId, onClose, onUpdate, loginMember, lastComm
                         }}>
                             <i className="fa-solid fa-arrow-left"></i>
                         </button>
-                        <span className="task-id-badge">#{task?.taskId}</span>
                         <button
                             type="button"
                             className="copy-btn"

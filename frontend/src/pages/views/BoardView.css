@@ -2,7 +2,7 @@
 .board-view {
     padding: 24px;
     height: 100%;
-    overflow: hidden;
+    overflow: visible;  /* DnD nested scroll container 이슈 해결 */
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -31,12 +31,11 @@
     align-items: flex-start;
     flex: 1;
     padding: 0 50px 20px 50px;
-    overflow-x: auto;
-    overflow-y: auto;
+    overflow: visible;  /* DnD nested scroll container 이슈 해결 - auto에서 visible로 변경 */
     min-height: 0;
     cursor: grab;
 
-    /* 스크롤바 스타일링 */
+    /* 스크롤바 스타일링 - overflow: visible이므로 현재 비활성화됨 */
     scrollbar-width: thin;
     scrollbar-color: rgba(102, 126, 234, 0.3) transparent;
 }
@@ -273,8 +272,7 @@
     border-radius: 10px;
     transition: all 0.2s ease;
     flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: visible;  /* DnD nested scroll container 이슈 해결 - auto에서 visible로 변경 */
     margin-bottom: 0;
 }
 
@@ -305,7 +303,6 @@
 /* ===== 태스크 카드 ===== */
 .board-view .task-card {
     background: rgba(255, 255, 255, 0.4);
-    /* backdrop-filter: blur(5px); - DnD 방해 */
     border-radius: 16px;
     padding: 16px 16px 16px 20px;
     margin-bottom: 12px;
@@ -316,7 +313,6 @@
     transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     border: 1px solid rgba(255, 255, 255, 0.3);
     position: relative;
-    /* overflow: hidden; - DnD 방해 */
 }
 
 /* 태스크 왼쪽 상태바 제거됨
@@ -339,17 +335,13 @@
     background: rgba(255, 255, 255, 0.5);
 }
 
-/* .board-view .task-card:hover::before {
-    opacity: 1;
-} */
-
 .board-view .task-card.dragging {
     box-shadow: 0 20px 50px rgba(139, 92, 246, 0.6);
     border: 2px solid rgba(196, 181, 253, 0.8);
     background: rgba(255, 255, 255, 0.7);
     z-index: 1000;
     opacity: 0.95;
-    transition: none !important;
+    /* transition: none !important; - DnD 방해 */
 }
 
 .board-view .task-card.done {
@@ -358,17 +350,11 @@
     border-color: rgba(255, 255, 255, 0.3);
 }
 
-/* .board-view .task-card.done::before {
-    background: linear-gradient(180deg, #6ee7b7 0%, #34d399 100%);
-    opacity: 0.7;
-} */
-
 .board-view .task-card.done .task-card-title {
     text-decoration: line-through;
     color: #6ee7b7;
 }
 
-/* 상태별 왼쪽 바 색상 */
 .board-view .task-card.status-waiting {
     border-left-color: #94a3b8;
 }
@@ -393,7 +379,6 @@
     border-left-color: #6b7280;
 }
 
-/* 검색 결과 강조/흐림 */
 .board-view .task-card.search-match {
     box-shadow: 0 0 0 2px #667eea, 0 4px 12px rgba(102, 126, 234, 0.3);
     transform: scale(1.02);
@@ -410,7 +395,6 @@
     filter: grayscale(0%);
 }
 
-/* 검색 포커스 애니메이션 (네비게이션으로 이동 시) */
 .board-view .task-card.search-focus {
     animation: searchFocusPulse 1.5s ease;
 }
@@ -588,10 +572,10 @@
 .board-view .add-task-btn {
     width: 100%;
     padding: 14px 18px;
-    background: rgba(196, 181, 253, 0.1);
+    background: rgba(196, 181, 253, 0.15);
     backdrop-filter: blur(5px);
     color: #ffffff;
-    border: 2px dashed rgba(196, 181, 253, 0.4);
+    border: 2px dashed rgba(196, 181, 253, 0.7);
     border-radius: 14px;
     font-size: 14px;
     font-weight: 600;
@@ -606,11 +590,12 @@
 }
 
 .board-view .add-task-btn:hover {
-    background: rgba(196, 181, 253, 0.3);
+    background: rgba(196, 181, 253, 0.4);
     color: white;
-    border-color: rgba(196, 181, 253, 0.6);
+    border-color: rgba(196, 181, 253, 1);
+    border-style: solid;
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(196, 181, 253, 0.4);
+    box-shadow: 0 8px 25px rgba(196, 181, 253, 0.5);
 }
 
 .board-view .add-task input {

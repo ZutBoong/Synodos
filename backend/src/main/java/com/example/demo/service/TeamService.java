@@ -274,8 +274,14 @@ public class TeamService {
 							result.put("webhookCreated", true);
 							log.info("Webhook created for team {} with repo {}", team.getTeamId(), githubRepoFullName);
 						} catch (Exception e) {
-							log.warn("Webhook creation failed for team {}: {}", team.getTeamId(), e.getMessage());
-							result.put("webhookCreated", false);
+							// 이미 웹훅이 존재하는 경우는 성공으로 처리
+							if (e.getMessage() != null && e.getMessage().contains("이미 Webhook이 등록되어 있습니다")) {
+								result.put("webhookCreated", true);
+								log.info("Webhook already exists for team {} with repo {}", team.getTeamId(), githubRepoFullName);
+							} else {
+								log.warn("Webhook creation failed for team {}: {}", team.getTeamId(), e.getMessage());
+								result.put("webhookCreated", false);
+							}
 						}
 					}
 				}

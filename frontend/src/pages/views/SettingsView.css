@@ -489,9 +489,9 @@
 
 /* ===== 위험 구역 ===== */
 .sv-danger-card {
-    background: rgba(248, 113, 113, 0.15);
+    background: rgba(254, 226, 226, 0.85);
     backdrop-filter: blur(12px);
-    border-color: rgba(248, 113, 113, 0.3);
+    border-color: rgba(248, 113, 113, 0.5);
 }
 
 .sv-danger-card .sv-card-body {

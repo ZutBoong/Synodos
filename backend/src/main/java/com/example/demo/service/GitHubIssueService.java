@@ -374,7 +374,14 @@ public class GitHubIssueService {
         if (!milestoneNode.isMissingNode() && !milestoneNode.isNull()) {
             issue.setMilestoneNumber(milestoneNode.path("number").asInt());
             issue.setMilestoneTitle(milestoneNode.path("title").asText());
-            issue.setMilestoneDueOn(milestoneNode.path("due_on").asText(null));
+            String dueOn = milestoneNode.path("due_on").asText(null);
+            // "null" 문자열도 처리
+            if ("null".equals(dueOn)) {
+                dueOn = null;
+            }
+            issue.setMilestoneDueOn(dueOn);
+            log.debug("Parsed milestone for issue #{}: title={}, dueOn={}",
+                issue.getNumber(), issue.getMilestoneTitle(), dueOn);
         }
 
         // User (creator)

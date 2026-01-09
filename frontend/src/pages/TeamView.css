@@ -243,7 +243,7 @@
 
 .team-view-content {
     flex: 1;
-    overflow: auto;
+    overflow: visible;  /* auto에서 visible로 변경 - DnD 중첩 스크롤 문제 해결 */
     padding: 0;
     background: transparent;
 }

@@ -441,13 +441,14 @@
 /* 컨텍스트 메뉴 */
 .context-menu {
     position: absolute;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 8px;
     padding: 6px 0;
     min-width: 160px;
     z-index: 200;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 .context-menu-item {
@@ -458,14 +459,14 @@
     padding: 8px 14px;
     border: none;
     background: transparent;
-    color: #ffffff;
+    color: #1e293b;
     font-size: 15px;
     cursor: pointer;
     text-align: left;
 }
 
 .context-menu-item:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(99, 102, 241, 0.15);
 }
 
 .menu-icon {

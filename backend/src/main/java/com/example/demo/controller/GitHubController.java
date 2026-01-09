@@ -1067,6 +1067,8 @@ public class GitHubController {
      * PR을 머지합니다.
      * PUT /api/github/pr/{teamId}/{prNumber}/merge
      * Body: { "commitTitle": "...", "mergeMethod": "merge", "memberNo": 123 }
+     *
+     * 주의: 연결된 태스크가 있는 경우, 태스크의 검증자만 PR을 머지할 수 있습니다.
      */
     @PutMapping("/pr/{teamId}/{prNumber}/merge")
     public ResponseEntity<?> mergePR(
@@ -1100,6 +1102,34 @@ public class GitHubController {
 
             if (!check.connected) {
                 return ResponseEntity.badRequest().body(check.errorMessage);
+            }
+
+            // 연결된 태스크가 있는 경우 검증자 권한 확인
+            TaskGitHubPR prMapping = taskGitHubPRDao.findByPrNumber(teamId, prNumber);
+            if (prMapping != null && prMapping.getTaskId() > 0) {
+                // 태스크에 연결된 PR - 검증자만 머지 가능
+                List<TaskVerifier> verifiers = taskVerifierDao.listByTask(prMapping.getTaskId());
+                boolean isVerifier = verifiers.stream()
+                    .anyMatch(v -> v.getMemberNo() == memberNo);
+
+                // 팀 리더도 머지 가능
+                boolean isTeamLeader = team.getLeaderNo() == memberNo;
+
+                if (!isVerifier && !isTeamLeader) {
+                    // 검증자 이름 목록 생성
+                    String verifierNames = verifiers.stream()
+                        .map(v -> {
+                            Member m = memberDao.findByNo(v.getMemberNo());
+                            return m != null ? m.getName() : "Unknown";
+                        })
+                        .collect(Collectors.joining(", "));
+
+                    String errorMsg = verifiers.isEmpty()
+                        ? "이 PR에 연결된 태스크에 검증자가 지정되지 않았습니다. 검증자를 먼저 지정해주세요."
+                        : "태스크의 검증자만 PR을 머지할 수 있습니다. 검증자: " + verifierNames;
+
+                    return ResponseEntity.status(403).body(errorMsg);
+                }
             }
 
             GitHubMergeResult result = gitHubService.mergePullRequest(

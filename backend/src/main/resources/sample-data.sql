@@ -439,3 +439,41 @@ SELECT t.task_id, m.no, true, true, CURRENT_TIMESTAMP
 FROM task t, member m, columns c, team tm
 WHERE t.column_id = c.column_id AND c.team_id = tm.team_id
   AND tm.team_code = 'DEVTEAM1' AND t.title = '프로젝트 환경 설정' AND m.userid = 'dev';
+
+-- =============================================
+-- 12. DEVTEAM1 검증자 데이터
+-- =============================================
+-- PR 생성 테스트: admin이 검증자 (dev가 담당자이므로 admin이 PR 머지 가능)
+INSERT INTO task_verifier (task_id, member_no, approved, assigned_at)
+SELECT t.task_id, m.no, false, CURRENT_TIMESTAMP
+FROM task t, member m, columns c, team tm
+WHERE t.column_id = c.column_id AND c.team_id = tm.team_id
+  AND tm.team_code = 'DEVTEAM1' AND t.title = 'PR 생성 테스트' AND m.userid = 'admin';
+
+-- 브랜치 뷰 테스트: user1이 검증자
+INSERT INTO task_verifier (task_id, member_no, approved, assigned_at)
+SELECT t.task_id, m.no, false, CURRENT_TIMESTAMP
+FROM task t, member m, columns c, team tm
+WHERE t.column_id = c.column_id AND c.team_id = tm.team_id
+  AND tm.team_code = 'DEVTEAM1' AND t.title = '브랜치 뷰 테스트' AND m.userid = 'user1';
+
+-- AI 머지 충돌 해결 테스트: admin이 검증자
+INSERT INTO task_verifier (task_id, member_no, approved, assigned_at)
+SELECT t.task_id, m.no, false, CURRENT_TIMESTAMP
+FROM task t, member m, columns c, team tm
+WHERE t.column_id = c.column_id AND c.team_id = tm.team_id
+  AND tm.team_code = 'DEVTEAM1' AND t.title = 'AI 머지 충돌 해결 테스트' AND m.userid = 'admin';
+
+-- GitHub Issue 연동 테스트: user2가 검증자
+INSERT INTO task_verifier (task_id, member_no, approved, assigned_at)
+SELECT t.task_id, m.no, false, CURRENT_TIMESTAMP
+FROM task t, member m, columns c, team tm
+WHERE t.column_id = c.column_id AND c.team_id = tm.team_id
+  AND tm.team_code = 'DEVTEAM1' AND t.title = 'GitHub Issue 연동 테스트' AND m.userid = 'user2';
+
+-- 프로젝트 환경 설정 (완료됨): admin이 검증 완료
+INSERT INTO task_verifier (task_id, member_no, approved, assigned_at)
+SELECT t.task_id, m.no, true, CURRENT_TIMESTAMP
+FROM task t, member m, columns c, team tm
+WHERE t.column_id = c.column_id AND c.team_id = tm.team_id
+  AND tm.team_code = 'DEVTEAM1' AND t.title = '프로젝트 환경 설정' AND m.userid = 'admin';

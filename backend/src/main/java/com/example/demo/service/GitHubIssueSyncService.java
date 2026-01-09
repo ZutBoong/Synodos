@@ -1153,32 +1153,9 @@ public class GitHubIssueSyncService {
         }
         log.info("Importing from GitHub repo: {}/{}", repoInfo.owner, repoInfo.repo);
 
-        // 팀의 컬럼 목록 로드 (github_prefix 포함)
-        List<SynodosColumn> columns = columnDao.listByTeam(teamId);
-        if (columns.isEmpty()) {
-            // 컬럼이 없으면 기본 컬럼 자동 생성
-            log.info("Team {} has no columns, creating default column", teamId);
-            SynodosColumn defaultColumn = new SynodosColumn();
-            defaultColumn.setTeamId(teamId);
-            defaultColumn.setTitle("To Do");
-            defaultColumn.setPosition(0);
-            columnDao.insert(defaultColumn);
-            columns.add(defaultColumn);
-            log.info("Created default column 'To Do' for team {}", teamId);
-        }
-        log.info("Columns for team {}: {}", teamId, columns.stream()
-            .map(c -> c.getTitle() + "=" + c.getGithubPrefix())
-            .collect(Collectors.joining(", ")));
-
-        // 기본 컬럼 확인
-        Integer defaultColumnId = team.getGithubDefaultColumnId();
-        if (defaultColumnId == null) {
-            defaultColumnId = columns.get(0).getColumnId();
-        }
-
         String token = member.getGithubAccessToken();
 
-        // 모든 open issues 가져오기 (여러 페이지)
+        // 모든 issues 가져오기 (여러 페이지)
         List<GitHubIssueService.GitHubIssue> allIssues = new ArrayList<>();
         int page = 1;
         while (true) {
@@ -1193,6 +1170,59 @@ public class GitHubIssueSyncService {
 
         log.info("Found {} GitHub issues for team {}", allIssues.size(), teamId);
 
+        // 팀의 컬럼 목록 로드 (github_prefix 포함)
+        List<SynodosColumn> columns = columnDao.listByTeam(teamId);
+
+        // 1단계: 모든 Issue의 prefix를 스캔하여 필요한 컬럼 먼저 생성
+        boolean hasIssueWithoutPrefix = false;
+        for (GitHubIssueService.GitHubIssue issue : allIssues) {
+            // 이미 연결된 Issue는 스킵
+            if (taskGitHubIssueDao.countByTeamAndIssue(teamId, issue.getNumber()) > 0) {
+                continue;
+            }
+            String prefix = extractPrefixFromTitle(issue.getTitle());
+            if (prefix != null) {
+                // prefix가 있으면 해당 컬럼 생성 (없는 경우에만)
+                findOrCreateColumnByTitlePrefix(issue.getTitle(), columns, teamId);
+            } else {
+                // prefix가 없는 Issue 발견
+                hasIssueWithoutPrefix = true;
+            }
+        }
+
+        // 2단계: prefix 없는 Issue가 있고 컬럼이 하나도 없으면 "To Do" 컬럼 생성
+        if (columns.isEmpty() || (hasIssueWithoutPrefix && team.getGithubDefaultColumnId() == null)) {
+            // 기본 컬럼이 설정되지 않았고 prefix 없는 Issue가 있을 때만 To Do 생성
+            boolean needsDefaultColumn = columns.isEmpty() ||
+                (hasIssueWithoutPrefix && columns.stream().noneMatch(c -> "To Do".equals(c.getTitle())));
+
+            if (needsDefaultColumn) {
+                log.info("Creating 'To Do' column for issues without prefix in team {}", teamId);
+                SynodosColumn defaultColumn = new SynodosColumn();
+                defaultColumn.setTeamId(teamId);
+                defaultColumn.setTitle("To Do");
+                defaultColumn.setPosition(columns.stream().mapToInt(SynodosColumn::getPosition).max().orElse(-1) + 1);
+                columnDao.insert(defaultColumn);
+                columns.add(defaultColumn);
+            }
+        }
+
+        log.info("Columns for team {}: {}", teamId, columns.stream()
+            .map(c -> c.getTitle() + "=" + c.getGithubPrefix())
+            .collect(Collectors.joining(", ")));
+
+        // 기본 컬럼 확인
+        Integer defaultColumnId = team.getGithubDefaultColumnId();
+        if (defaultColumnId == null && !columns.isEmpty()) {
+            // "To Do" 컬럼이 있으면 그것을 기본으로, 없으면 첫 번째 컬럼
+            defaultColumnId = columns.stream()
+                .filter(c -> "To Do".equals(c.getTitle()))
+                .map(SynodosColumn::getColumnId)
+                .findFirst()
+                .orElse(columns.get(0).getColumnId());
+        }
+
+        // 3단계: 실제 Task 생성
         for (GitHubIssueService.GitHubIssue issue : allIssues) {
             try {
                 // 이미 연결된 Issue인지 확인
@@ -1201,8 +1231,8 @@ public class GitHubIssueSyncService {
                     continue;
                 }
 
-                // 제목에서 명령어로 컬럼 결정 (매칭되는 컬럼이 없으면 자동 생성)
-                Integer targetColumnId = findOrCreateColumnByTitlePrefix(issue.getTitle(), columns, teamId);
+                // 제목에서 컬럼 결정 (이미 1단계에서 생성됨)
+                Integer targetColumnId = findColumnByTitlePrefix(issue.getTitle(), columns);
                 if (targetColumnId == null) {
                     targetColumnId = defaultColumnId;
                 }
@@ -1229,13 +1259,19 @@ public class GitHubIssueSyncService {
                 task.setPriority(priority);
 
                 // Milestone에서 마감일 추출
-                if (issue.getMilestoneDueOn() != null && !issue.getMilestoneDueOn().isEmpty()) {
+                String milestoneDueOn = issue.getMilestoneDueOn();
+                log.info("Issue #{} milestone info: title={}, dueOn={}",
+                    issue.getNumber(), issue.getMilestoneTitle(), milestoneDueOn);
+                if (milestoneDueOn != null && !milestoneDueOn.isEmpty()) {
                     try {
-                        task.setDueDate(java.time.LocalDate.parse(issue.getMilestoneDueOn().substring(0, 10)));
-                        log.debug("Set due date from milestone: {}", task.getDueDate());
+                        task.setDueDate(java.time.LocalDate.parse(milestoneDueOn.substring(0, 10)));
+                        log.info("Set due date for Issue #{}: {}", issue.getNumber(), task.getDueDate());
                     } catch (Exception e) {
-                        log.warn("Failed to parse milestone due date: {}", issue.getMilestoneDueOn());
+                        log.warn("Failed to parse milestone due date for Issue #{}: {}",
+                            issue.getNumber(), milestoneDueOn, e);
                     }
+                } else {
+                    log.info("Issue #{} has no milestone due date", issue.getNumber());
                 }
 
                 taskDao.insert(task);

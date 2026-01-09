@@ -325,13 +325,21 @@ git push origin main --force
 # ========== Labels 생성 ==========
 Write-Host "7. Labels 생성 중..." -ForegroundColor Yellow
 
-gh label create "feature" --color "0e8a16" --description "New feature" --repo "$Owner/$RepoName" 2>$null
-gh label create "refactor" --color "1d76db" --description "Code refactoring" --repo "$Owner/$RepoName" 2>$null
-gh label create "conflict" --color "d93f0b" --description "Has merge conflict" --repo "$Owner/$RepoName" 2>$null
-gh label create "config" --color "fef2c0" --description "Configuration changes" --repo "$Owner/$RepoName" 2>$null
+gh label create "status:waiting" --color "94a3b8" --description "Task is waiting to be started" --repo "$Owner/$RepoName" 2>$null
+gh label create "status:in-progress" --color "3b82f6" --description "Task is in progress" --repo "$Owner/$RepoName" 2>$null
+gh label create "status:review" --color "f59e0b" --description "Task is under review" --repo "$Owner/$RepoName" 2>$null
+gh label create "status:done" --color "10b981" --description "Task is completed" --repo "$Owner/$RepoName" 2>$null
+gh label create "status:rejected" --color "ef4444" --description "Task was rejected" --repo "$Owner/$RepoName" 2>$null
+gh label create "status:declined" --color "6b7280" --description "Task was declined" --repo "$Owner/$RepoName" 2>$null
+
+# ========== Milestones 생성 ==========
+Write-Host "8. Milestones 생성 중..." -ForegroundColor Yellow
+
+gh api repos/$Owner/$RepoName/milestones -f title="Sprint 1" -f description="First sprint - Configuration updates" -f due_on="2026-01-20T00:00:00Z" 2>$null
+gh api repos/$Owner/$RepoName/milestones -f title="Sprint 2" -f description="Second sprint - Code refactoring" -f due_on="2026-02-05T00:00:00Z" 2>$null
 
 # ========== Issues 생성 ==========
-Write-Host "8. Issues 생성 중..." -ForegroundColor Yellow
+Write-Host "9. Issues 생성 중..." -ForegroundColor Yellow
 
 # Issue #1: Production Config
 gh issue create --repo "$Owner/$RepoName" --title "[Feature] Production Configuration" --body @"
@@ -346,7 +354,7 @@ Update application configuration for production deployment.
 ## Technical Notes
 - File: src/config.js
 - This will conflict with recent hotfix changes on main
-"@ --label "feature,config,conflict"
+"@ --label "status:in-progress" --milestone "Sprint 1"
 
 # Issue #2: Utils Refactor
 gh issue create --repo "$Owner/$RepoName" --title "[Refactor] Modernize Utility Functions" --body @"
@@ -361,10 +369,10 @@ Refactor utility functions to use modern ES6+ syntax.
 ## Technical Notes
 - File: src/utils.js
 - This will conflict with recent utility additions on main
-"@ --label "refactor,conflict"
+"@ --label "status:review" --milestone "Sprint 2"
 
 # ========== PR 생성 (Issue 연결) ==========
-Write-Host "9. Pull Request 생성 중..." -ForegroundColor Yellow
+Write-Host "10. Pull Request 생성 중..." -ForegroundColor Yellow
 
 gh pr create --repo "$Owner/$RepoName" --head feature/config-update --base main --title "feat: Production Configuration Update" --body @"
 ## Summary
@@ -412,10 +420,19 @@ Write-Host "  - feature/config-update -> main: src/config.js 충돌 (중간 난�
 Write-Host "  - feature/utils-refactor -> main: src/utils.js 충돌 (높은 난이도)"
 Write-Host ""
 Write-Host "Issues:" -ForegroundColor Cyan
-Write-Host "  - #1: [Feature] Production Configuration (PR #1과 연결)"
-Write-Host "  - #2: [Refactor] Modernize Utility Functions (PR #2와 연결)"
+Write-Host "  - #1: [Feature] Production Configuration (PR #1과 연결, Sprint 1)"
+Write-Host "  - #2: [Refactor] Modernize Utility Functions (PR #2와 연결, Sprint 2)"
+Write-Host ""
+Write-Host "Milestones (마감일 포함):" -ForegroundColor Cyan
+Write-Host "  - Sprint 1: 2026-01-20"
+Write-Host "  - Sprint 2: 2026-02-05"
 Write-Host ""
 Write-Host "Labels:" -ForegroundColor Cyan
-Write-Host "  - feature, refactor, conflict, config"
+Write-Host "  - status:waiting, status:in-progress, status:review, status:done, status:rejected, status:declined"
+Write-Host ""
+Write-Host "PR 머지 권한 안내:" -ForegroundColor Magenta
+Write-Host "  - 태스크와 연결된 PR은 태스크의 '검증자'만 머지할 수 있습니다."
+Write-Host "  - Synodos에서 GitHub Issue 일괄동기화 후, 각 태스크에 검증자를 지정하세요."
+Write-Host "  - 팀 리더는 검증자 지정 없이도 PR을 머지할 수 있습니다."
 Write-Host ""
 Write-Host "저장소 URL: https://github.com/$Owner/$RepoName" -ForegroundColor Cyan

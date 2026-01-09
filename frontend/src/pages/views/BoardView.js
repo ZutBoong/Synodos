@@ -61,17 +61,16 @@ function BoardView({
 
     // 드래그 스크롤 관련
     const [isDragging, setIsDragging] = useState(false);
+    const [isDndActive, setIsDndActive] = useState(false); // DnD 라이브러리 활성 상태
     const dragStartX = useRef(0);
     const dragScrollLeft = useRef(0);
 
-    // props 변경 시 로컬 상태 동기화
+    // props 변경 시 컬럼만 동기화 (태스크는 로컬에서 관리)
     useEffect(() => {
         setColumns(propColumns || []);
     }, [propColumns]);
 
-    useEffect(() => {
-        setTasks(propTasks || []);
-    }, [propTasks]);
+    // 주의: propTasks useEffect 제거 - DnD 상태 유지를 위해
 
     // 태스크 즐겨찾기/아카이브 로드
     useEffect(() => {
@@ -116,8 +115,12 @@ function BoardView({
         const container = columnsContainerRef.current;
         if (!container) return;
 
+        // DnD 라이브러리가 활성화된 경우 수평 스크롤 드래그 비활성화
+        if (isDndActive) return;
+
         // 태스크 카드나 버튼 등을 클릭한 경우는 드래그 하지 않음
         if (e.target.closest('.task-card') ||
+            e.target.closest('.tasks-container') ||
             e.target.closest('.add-task-btn') ||
             e.target.closest('.add-column') ||
             e.target.closest('button') ||
@@ -243,31 +246,30 @@ function BoardView({
         const columnTasks = tasks.filter(task => task.columnId === columnId);
         const filteredTasks = applyFilters(columnTasks);
 
-        // 정렬: 1) Done은 맨 아래, 2) 긴급(URGENT) 우선, 3) 마감일 빠른 순
+        // 정렬: position 기준 (드래그 앤 드롭 순서 유지)
+        // Done 상태는 맨 아래, 그 외에는 position 순서
         return filteredTasks.sort((a, b) => {
             // Done 상태는 맨 아래
             const aDone = a.workflowStatus === 'DONE' ? 1 : 0;
             const bDone = b.workflowStatus === 'DONE' ? 1 : 0;
             if (aDone !== bDone) return aDone - bDone;
 
-            // 긴급 우선
-            const aUrgent = a.priority === 'URGENT' ? 0 : 1;
-            const bUrgent = b.priority === 'URGENT' ? 0 : 1;
-            if (aUrgent !== bUrgent) return aUrgent - bUrgent;
-
-            // 마감일 빠른 순 (마감일 없는 것은 뒤로)
-            const aDate = a.dueDate ? new Date(a.dueDate) : null;
-            const bDate = b.dueDate ? new Date(b.dueDate) : null;
-
-            if (aDate && bDate) return aDate - bDate;
-            if (aDate && !bDate) return -1;
-            if (!aDate && bDate) return 1;
-            return 0;
+            // position 기준 정렬 (드래그 순서 유지)
+            const aPos = a.position || 999;
+            const bPos = b.position || 999;
+            return aPos - bPos;
         });
+    };
+
+    // DnD 시작
+    const onDragStart = () => {
+        setIsDndActive(true);
+        setIsDragging(false); // 수평 스크롤 드래그 중지
     };
 
     // 드래그 앤 드롭
     const onDragEnd = async (result) => {
+        setIsDndActive(false); // DnD 종료
         const { destination, source, draggableId, type } = result;
 
         if (!destination) return;
@@ -291,6 +293,7 @@ function BoardView({
                 }
             } catch (error) {
                 console.error('컬럼 위치 저장 실패:', error);
+                if (refreshData) refreshData();
             }
             return;
         }
@@ -299,28 +302,25 @@ function BoardView({
             const taskId = parseInt(draggableId.replace('task-', ''));
             const destColumnId = parseInt(destination.droppableId.replace('column-', ''));
 
-            const newTasks = [...tasks];
+            // 로컬 상태 업데이트
+            const newTasks = tasks.map(t => ({ ...t }));
             const taskIndex = newTasks.findIndex(t => t.taskId === taskId);
-            const [movedTask] = newTasks.splice(taskIndex, 1);
+            if (taskIndex === -1) return;
 
-            movedTask.columnId = destColumnId;
+            newTasks[taskIndex].columnId = destColumnId;
+            newTasks[taskIndex].position = destination.index + 1;
+            setTasks(newTasks);
 
-            const destColumnTasks = newTasks.filter(t => t.columnId === destColumnId);
-            destColumnTasks.splice(destination.index, 0, movedTask);
-
-            destColumnTasks.forEach((t, idx) => {
-                t.position = idx + 1;
-            });
-
-            const otherTasks = newTasks.filter(t => t.columnId !== destColumnId);
-            setTasks([...otherTasks, ...destColumnTasks]);
-
+            // API 호출
             try {
-                for (const t of destColumnTasks) {
-                    await taskposition({ taskId: t.taskId, columnId: t.columnId, position: t.position });
-                }
+                await taskposition({
+                    taskId: taskId,
+                    columnId: destColumnId,
+                    position: destination.index + 1
+                });
             } catch (error) {
                 console.error('태스크 위치 저장 실패:', error);
+                if (refreshData) refreshData();
             }
         }
     };
@@ -521,7 +521,7 @@ function BoardView({
                     </div>
                 </div>
             ) : (
-            <DragDropContext onDragEnd={onDragEnd}>
+            <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
                 <div className="columns-wrapper">
                     <Droppable droppableId="board" direction="horizontal" type="column">
                         {(provided) => (
@@ -532,10 +532,6 @@ function BoardView({
                                     columnsContainerRef.current = node;
                                 }}
                                 {...provided.droppableProps}
-                                onMouseDown={handleMouseDown}
-                                onMouseMove={handleMouseMove}
-                                onMouseUp={handleMouseUpOrLeave}
-                                onMouseLeave={handleMouseUpOrLeave}
                             >
                                 {columns.map((column, index) => (
                                     <Draggable
